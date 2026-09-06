@@ -1,0 +1,29 @@
+TamaPoke KO v3.62.0 Mega36 Level Evolutions + PMDCollab Catalog - GitHub Pages
+
+1) 이 ZIP을 압축 해제합니다.
+2) ZIP 안의 내용물(.github, tools, TamaPoke.ino 등)을 GitHub 저장소 최상단에 그대로 업로드합니다.
+   - 저장소 안에 프로젝트 폴더를 한 겹 더 만들지 마세요.
+3) GitHub 저장소 -> Settings -> Pages로 이동합니다.
+4) Build and deployment의 Source를 "GitHub Actions"로 선택합니다. 이 설정은 최초 한 번만 하면 됩니다.
+5) Actions -> "TamaPoke v3.62.0 PMDCatalog - Mega36 Level Evolutions GitHub Pages" -> Run workflow를 실행합니다.
+6) build와 deploy 작업이 모두 초록색으로 끝나면 deploy 요약의 page_url을 누릅니다.
+   일반적인 주소 형태: https://<GitHub아이디>.github.io/<저장소이름>/
+7) 이후 소스/스프라이트를 갱신할 때는 같은 Actions workflow를 다시 실행하면 같은 주소가 자동 갱신됩니다.
+
+GitHub Pages로 배포되는 내용:
+- index.html
+- sprite-manifest.json
+- sprites-extra-*.pak (여러 개)
+- pmd_catalog_report.txt
+- pmd_sprite_report.txt
+- pmd_catalog.json
+- build-info.txt
+- PMDCOLLAB_CREDITS.txt
+
+중요:
+- Netlify는 더 이상 필요하지 않습니다.
+- site/는 Actions 작업 공간에서 생성되어 Pages artifact로 직접 배포됩니다. 대형 sprite pack을 Git 저장소에 커밋하지 않습니다.
+- PMDCollab의 최신 tracker.json을 Actions 실행 시 읽습니다.
+- 승인된 Mega36만 Lv.70 영구 진화로 포함하며, 그 외 메가/거다이맥스/다이맥스/원시회귀/테라스탈 등 전투 기믹은 자동 제외합니다.
+- 실제 PMDCollab 행동 도트 스프라이트가 없는 항목은 억지 대체하지 않고 보고서에 남깁니다.
+- GitHub Pages 게시 사이트가 1GB를 넘으면 workflow가 배포 전에 명확한 오류로 중단됩니다.

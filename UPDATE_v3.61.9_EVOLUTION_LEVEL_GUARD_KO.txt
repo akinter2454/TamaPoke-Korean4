@@ -1,0 +1,36 @@
+TamaPoke KO v3.61.9 — 진화 레벨 오버플로우 수정
+
+확인 결과
+- dex.h 1~827 직접 진화 레벨 전수 검사: 최대 Lv.64, 기본 데이터 자체는 정상.
+  * 망나뇽 계열 Dragonair -> Dragonite: Lv.55
+  * 마기라스 계열 Pupitar -> Tyranitar: Lv.55
+  * 모노두 계열 Zweilous -> Hydreigon: Lv.64
+  * 활화르바 -> 불카모스: Lv.59
+- 동적 PMDCatalog 추가 진화는 sync_pmd_catalog.py에서 2~100 범위로 제한됨.
+- 실제 비정상 수치 원인: 조기 은퇴 후 다음 포켓몬에 붙는 구형 +144레벨 페널티가 MAX_LEVEL=100 환경에 남아 있었음.
+  예: Lv.16 진화 -> Lv.160, Lv.64 진화 -> Lv.208처럼 표시/판정 가능.
+
+수정
+1. EVO_PENALTY_LEVELS 144 -> 12
+2. 기존 NVS evop가 12보다 크면 부팅 시 12로 자동 마이그레이션
+3. 육성 슬롯 snapshot의 과도한 evoPen도 복원 시 12로 제한
+4. effectiveEvolutionLevel() 추가
+   - base evolution level + careMistakes + evoPenalty를 uint16_t로 계산
+   - 최종 요구 레벨을 MAX_LEVEL(100)에서 상한 처리
+   - 카드 UI와 실제 canEvolveNow()가 동일 함수를 사용
+5. careMistakes는 MAX_LEVEL에서 포화
+   - 장기 방치 시 uint8_t 255 -> 0 래핑 방지
+   - NVS/육성 슬롯에서 불러올 때도 100으로 상한
+6. 디버그 MISS 명령도 0~100으로 제한
+7. 조기 은퇴 안내 문구를 '하루 늦게 진화' -> '진화가 조금 늦어져요'로 실제 동작에 맞게 변경
+8. tools/verify_evolution_levels.py 추가
+   - Actions에서 동적 생성된 dex.h의 직접 진화/분기 진화 레벨을 전수 검사
+   - Lv.100 초과 값이 생기면 컴파일 전에 workflow 실패
+
+유지
+- v3.61.8 IV 보상 확률: 훈련 22%/38%, 이벤트 16%, 금빛왕관 8%
+- IV 아이템 상점 미판매, 랜덤 이벤트/훈련 보상 전용
+- v3.61.7 메뉴 잔상 clean full-present 수정
+- v3.61.6 체육관/캐주얼 공격-방어 계산
+- v3.61.5 5분 절전/물리 버튼 wake/화면 OFF SFX 차단
+- 85ms active / 100ms normal 프레임 정책

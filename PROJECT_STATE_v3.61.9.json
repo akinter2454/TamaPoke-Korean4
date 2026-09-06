@@ -1,0 +1,85 @@
+{
+  "project": "TamaPoke KO ESP32-S3 Touch AMOLED 1.75",
+  "version": "3.61.9",
+  "baseline": "v3.61.8 Reward Rate Tune + Menu Redraw Fix + IV Growth + Casual Battle",
+  "hardware": {
+    "board": "Waveshare ESP32-S3-Touch-AMOLED-1.75",
+    "display": "466x466 CO5300 QSPI AMOLED",
+    "touch": "CST9217",
+    "pmu": "AXP2101",
+    "audio": "ES8311 + onboard PA/speaker"
+  },
+  "catalog": {
+    "source": "PMDCollab SpriteCollab tracker.json",
+    "no_gimmicks": true,
+    "forms_independent_species": true,
+    "evolution": "level-only + Eevee-style branching",
+    "id_lock": "tools/catalog_lock.json"
+  },
+  "render": {
+    "active_frame_ms": 85,
+    "normal_frame_ms": 100,
+    "no_recovery_delay": true,
+    "tpk3_bounds": true,
+    "partial_present": true,
+    "overlay_exit_clean_full_present": true
+  },
+  "power": {
+    "auto_screen_off_minutes": 5,
+    "touch_wake": false,
+    "wake_source": "AXP2101 physical side button short press",
+    "screen_off_render": false,
+    "screen_off_sfx": false,
+    "screen_off_pa": false,
+    "touch_idle_timestamp_fix": "safeElapsedMs + post-input millis resync"
+  },
+  "gyms": {
+    "gym_regions": 9,
+    "galar": {
+      "gym_index": 7,
+      "dex_region_id": 7,
+      "version_basis": "Sword",
+      "gimmicks": "ignored"
+    },
+    "paldea": {
+      "gym_index": 8,
+      "dex_region_id": 9,
+      "elite_four": true,
+      "gimmicks": "ignored"
+    },
+    "hisui_traditional_gyms": false
+  },
+  "deployment": {
+    "host": "GitHub Pages",
+    "workflow_name": "TamaPoke v3.61.9 PMDCatalog - Evolution Level Guard + Reward Rate Tune + Menu Redraw Fix GitHub Pages"
+  },
+  "save_note": "User plans to wipe old save data; backward save compatibility is not a blocking constraint.",
+  "latest_changes": [
+    "evolution level overflow guard: effective base + care + retirement gate is clamped to Lv.100",
+    "legacy early-retirement evolution debt reduced from 144 levels to 12 levels",
+    "old saves and care-slot snapshots carrying oversized evoPen values migrate to 12",
+    "careMistakes saturates at MAX_LEVEL instead of wrapping uint8_t 255 -> 0",
+    "generated PMDCatalog evolution levels are audited by tools/verify_evolution_levels.py in GitHub Actions",
+    "direct v3.58 dex evolution table audited: maximum ordinary evolution level is Lv.64",
+    "training IV reward chance remains 22/38%",
+    "random-event IV training kit remains 16%; Gold Crown remains 8% inside the kit",
+    "IV items remain random-event/training-only and are not sold in the shop",
+    "v3.61.7 menu-redraw, v3.61.6 gym/casual-battle and v3.61.5 power/touch protections retained"
+  ],
+  "reward_balance": {
+    "training_iv_drop_good_percent": 22,
+    "training_iv_drop_great_percent": 38,
+    "random_event_iv_kit_percent": 16,
+    "iv_kit_gold_crown_percent": 8,
+    "shop_sales": false
+  },
+  "evolution_balance": {
+    "max_level": 100,
+    "direct_catalog_max_level_audited": 64,
+    "special_method_default_level": 30,
+    "early_retire_penalty_levels": 12,
+    "effective_gate_clamped_to_max_level": true,
+    "legacy_evo_penalty_migration": true,
+    "care_mistake_wrap_guard": true
+  }
+}

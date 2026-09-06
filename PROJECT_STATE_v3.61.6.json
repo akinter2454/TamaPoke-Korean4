@@ -1,0 +1,64 @@
+{
+  "project": "TamaPoke KO ESP32-S3 Touch AMOLED 1.75",
+  "version": "3.61.6",
+  "baseline": "v3.61.5 TouchPowerFix + Galar/Paldea Gyms",
+  "hardware": {
+    "board": "Waveshare ESP32-S3-Touch-AMOLED-1.75",
+    "display": "466x466 CO5300 QSPI AMOLED",
+    "touch": "CST9217",
+    "pmu": "AXP2101",
+    "audio": "ES8311 + onboard PA/speaker"
+  },
+  "catalog": {
+    "source": "PMDCollab SpriteCollab tracker.json",
+    "no_gimmicks": true,
+    "forms_independent_species": true,
+    "evolution": "level-only + Eevee-style branching",
+    "id_lock": "tools/catalog_lock.json"
+  },
+  "render": {
+    "active_frame_ms": 85,
+    "normal_frame_ms": 100,
+    "no_recovery_delay": true,
+    "tpk3_bounds": true,
+    "partial_present": true
+  },
+  "power": {
+    "auto_screen_off_minutes": 5,
+    "touch_wake": false,
+    "wake_source": "AXP2101 physical side button short press",
+    "screen_off_render": false,
+    "screen_off_sfx": false,
+    "screen_off_pa": false,
+    "touch_idle_timestamp_fix": "safeElapsedMs + post-input millis resync"
+  },
+  "gyms": {
+    "gym_regions": 9,
+    "galar": {
+      "gym_index": 7,
+      "dex_region_id": 7,
+      "version_basis": "Sword",
+      "gimmicks": "ignored"
+    },
+    "paldea": {
+      "gym_index": 8,
+      "dex_region_id": 9,
+      "elite_four": true,
+      "gimmicks": "ignored"
+    },
+    "hisui_traditional_gyms": false
+  },
+  "deployment": {
+    "host": "GitHub Pages",
+    "workflow_name": "TamaPoke v3.61.6 PMDCatalog - IV Growth + Casual Battle GitHub Pages"
+  },
+  "save_note": "User plans to wipe old save data; backward save compatibility is not a blocking constraint.",
+  "latest_changes": [
+    "save-compatible IV capsules and Gold Crown",
+    "IV rewards from random event and performance-gated training",
+    "gym battle picker no longer falls to home when live pet is egg / squad fails",
+    "casual battle uses unified Attack/Defense; no physical-special stat split",
+    "post-809 fallback movesets are type- and level-representative",
+    "v3.61.5 touch/power/no-frame-drop protections retained"
+  ]
+}

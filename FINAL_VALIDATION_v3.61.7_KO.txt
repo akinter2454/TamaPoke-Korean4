@@ -1,0 +1,31 @@
+TamaPoke KO v3.61.7 최종 검증 기록
+
+대상: v3.61.6 IV Growth + Casual Battle 기준본에 메뉴 종료 AMOLED 잔상 수정 적용.
+
+정적 검증
+- FW_VERSION == 3.61.7
+- homeCrossBandActive() 존재
+- menuOpen/feedMenuUntil/confirmUntil/choiceKind/pet.isEgg가 cross-band 판정에 포함
+- full present 후 gHomePanelValid = cleanHome
+- cleanHome일 때만 gHomeBottomSig 갱신
+- 기존 canvasPresentBand(0, 312) 경로 유지
+- targetFrameMs 85/100 정책 유지
+- QSPI 80MHz 정책 변경 없음
+- IV 아이템 상점 판매 경로 신규 추가 없음
+
+전환 상태 회귀 모델
+- clean home -> menu open: full present, cache invalid
+- menu open 유지: full present, cache invalid
+- menu close -> first home: full present, cache valid
+- subsequent unchanged home: partial present
+
+GitHub Actions
+- workflow에 위 cache guard grep을 추가함.
+- 실제 ESP32-S3 Arduino 전체 compile은 GitHub Actions 성공을 최종 기준으로 함.
+
+
+v3.61.7 핵심 SHA-256
+f9ed9f616e0bf8b96bcd67a4ee05e57500ee845393b4c4ddb88ac4bb8957c334  TamaPoke.ino
+86c8c4ddec72f59ce284c4bb6fb83325ac0684b936ae3b3f2c4935d9ecc81785  .github/workflows/main.yml
+502b54fa6022f533bd0800fe498cb62ade58baca0e2270a0dc482146c9e98b42  TamaPoke-KO-OneClick-Installer.html
+04200c53546348f96e8dac9d81d44f239f951b7cefba83d4393a7d978ea33d21  tools/pack_pmd_catalog.py

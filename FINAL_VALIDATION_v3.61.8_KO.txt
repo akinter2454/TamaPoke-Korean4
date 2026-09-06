@@ -1,0 +1,35 @@
+TamaPoke KO v3.61.8 최종 검증 — IV 보상 확률 소폭 상향
+
+검증 완료
+- FW_VERSION 3.61.8 반영
+- 훈련 IV 보상 확률: 일반 성적 22%, 우수 성적 38%
+- 랜덤 이벤트 '개체 훈련 키트!' 등장률: 16%
+- 개체 훈련 키트 내 금빛왕관: 8%
+- HP 개체캡슐 전환 비율: 기존 10% 유지
+- IV 아이템 상점 판매 경로 신규 추가 없음
+- v3.61.7 메뉴 종료 clean full-present 보호 유지
+- 공격/특공·방어/특방 통합 캐주얼 전투 유지
+- 체육관 시작 수정 및 5분 절전/물리 버튼 wake 보호 유지
+- 85ms(active)/100ms(normal) 프레임 정책 변경 없음
+
+회귀 검사
+- Python 정적 검사 PASS
+- 보상 경계값 C++ 단위 테스트 PASS
+  * good 미만 = 0%
+  * good 이상 = 22%
+  * great 이상 = 38%
+  * IV 이벤트 분기 0..15 = event 8, 그 외 = event 1..7
+- GitHub Actions workflow YAML parse PASS
+- PMD 관련 Python 도구 py_compile PASS
+- v3.61.7 대비 펌웨어 코드 변경은 FW_VERSION + 보상 확률 로직으로 제한됨
+
+실기/전체 펌웨어 컴파일
+- 현재 로컬 환경에서는 Waveshare ESP32-S3 Arduino 전체 툴체인/라이브러리로 최종 펌웨어 빌드를 수행하지 않음.
+- .github/workflows/main.yml에 v3.61.8 확률값 guard와 기존 Arduino compile/Pages deploy 단계를 유지했으므로 GitHub Actions 성공을 최종 빌드 기준으로 사용.
+
+핵심 SHA-256
+- d9380abf2333874d4724ea726bf956b9cafb350d6b752c80d6573876afaaadd0  TamaPoke.ino
+- a1906cc6d7c3e3156310e5679218ed1be7e9df83294942741d5bfe027e308218  game_extras.cpp
+- f2d2f8855aad12497914c0fe250d7e6e267e5c5c171f043c46f1c67adc1bce60  .github/workflows/main.yml
+- 02fa5e86524d7b2da5013ac0241f84926790b0e7bd6a7f609542c5edb299587d  TamaPoke-KO-OneClick-Installer.html
+- 83b9f821353e3149789f24643a91b843ffb7a2786f087c515a4e906a11bd92be  tools/pack_pmd_catalog.py

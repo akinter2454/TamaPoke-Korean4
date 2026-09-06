@@ -1,0 +1,15 @@
+TamaPoke KO v3.61.1 - PMDCollab 대형 스프라이트 전송/로드 수정
+
+문제:
+- v3.61 동적 카탈로그는 일부 PMDCollab 행동 스프라이트를 최대 24프레임 x 다수 행동으로 그대로 TPK2에 넣음.
+- 펌웨어 PmdMon 로더의 파일 한도는 3 MiB, USB PUT 보호 한도는 4 MiB.
+- 따라서 p1200.bin 같은 큰 개별 TPK2가 전송 단계에서 ERR 또는 로드 실패할 수 있었음.
+
+수정:
+- tools/pack_pmd_catalog.py가 모든 추가 TPK2를 2.8 MiB 이하로 자동 최적화.
+- 우선 전체 PMDCollab 행동/프레임을 보존하고, 큰 경우에만 단계적으로 프레임 수/부가 행동을 축소.
+- Idle, Walk, Hurt, Attack 등 움직임 핵심 행동은 끝까지 유지. 정지 이미지 fallback 없음.
+- Actions에서 활성 추가 스프라이트가 2.8 MiB를 넘는지 전수 검증.
+- 설치기에서도 3 MiB 초과의 구형/수동 팩이면 명확한 용량 오류를 표시.
+
+세이브 데이터 구조 변경 없음.

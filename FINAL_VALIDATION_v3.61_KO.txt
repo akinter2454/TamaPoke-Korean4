@@ -1,0 +1,25 @@
+TamaPoke KO v3.61 FULL PMDCollab Catalog - 최종 정적 검증
+
+검증 완료:
+- Python tools/*.py 문법 검사 통과
+- GitHub Actions YAML 파싱 통과
+- 설치기 inline JavaScript node --check 통과
+- baseline dex.h/noart.h/moves.h C++17 헤더 문법 검사 통과
+- 펌웨어 버전 3.61 확인
+- 메가 전용 source ID/branch 코드 없음 확인
+- generic EXTRA_BRANCH / DEX_NATDEX 구조 확인
+- v3.58 -> v3.61 지역 저장 마이그레이션(r361/regionSchema) 확인
+
+GitHub Actions에서 수행되는 실제 네트워크/기기 빌드 검증:
+- PMDCollab 최신 tracker.json 동기화
+- 현재 공식 포켓몬/공식 폼 탐색
+- 메가/G-Max/Dynamax/Primal/기타 전투 기믹 필터 검증
+- 실제 PMDCollab multi-frame 행동 도트 TPK2 패킹
+- 스프라이트 없는 항목 자동 비활성화 및 보고서 기록
+- PokeAPI 진화 관계를 레벨 진화/분기 테이블로 생성
+- ESP32-S3 arduino-cli 실제 컴파일
+- Netlify site 및 지역별 분할 sprite pak 생성
+
+주의:
+이 환경에서는 외부 GitHub/PokeAPI raw 파일을 실제로 전부 내려받아 ESP32까지
+컴파일할 수 없으므로 GitHub Actions의 성공 결과를 실제 최종 빌드 게이트로 사용한다.

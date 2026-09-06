@@ -1,0 +1,47 @@
+TamaPoke KO v3.61 FULL PMDCollab Catalog - No Gimmicks
+
+[목표]
+PMDCollab SpriteCollab 사이트에 현재 존재하는 공식 포켓몬과 공식 폼을
+TamaPoke의 독립 species로 확장한다. 메가/거다이맥스 등 전투 기믹은 제외한다.
+
+[ID]
+- 1..809 기존 National Dex ID 유지
+- 810..827 v3.58 알로라 폼 ID 유지
+- National Dex 810+ 기본 포켓몬: natdex + 18
+- 그 외 공식 폼: 1200+ append-only catalog_lock.json
+
+[폼]
+- 지역폼/로토무/테오키스/워머담/루가루암 등 PMDCollab의 공식 폼은 별도 species
+- shiny/성별 단순 차이는 별도 species로 만들지 않음
+- 메가, G-Max/Dynamax, Primal, Eternamax, Ultra Burst/Ash-Bond, Crowned,
+  Totem, Terastal/Stellar 등 전투 강화 기믹은 필터링
+
+[진화]
+- 원작의 아이템/교환/시간/장소/친밀도 등 조건은 레벨 조건으로 통일
+- 공식 진화 CSV를 사용해 분기진화를 generic branch table로 생성
+- 둘 이상 진화 가능 시 기존 이브이와 같은 수집 우선 선택 로직
+- 지역폼 계통은 같은 지역폼 계통을 우선 연결
+- 일반 폼의 변형은 독립 species로 레벨 분기 연결
+
+[지역]
+Kanto / Johto / Hoenn / Sinnoh / Unova / Kalos / Alola / Galar / Hisui / Paldea
+- 알 지역 선택과 도감 지역 선택에 가라르/히스이/팔데아 추가
+- 기존 v3.58의 region=7(ALL) 및 eggR[7]을 v3.61 ALL 슬롯으로 1회 마이그레이션
+- CareSnapshot의 지역 배열도 append-only regionSchema로 구버전 호환
+
+[스프라이트]
+- PMDCollab tracker.json에서 실제 sprite_files가 있는 항목만 후보
+- AnimData.xml의 genuine multi-frame PMD 행동 스프라이트를 TPK2로 패킹
+- 일반 스프라이트 자체가 불완전하면 해당 species를 비활성화하고 보고서에 기록
+- static artwork fallback 없음
+- .pak은 약 18 MiB 단위로 지역별 분할
+
+[웹 설치기]
+- 기존 관동~알로라 버튼은 원본 TamaPoke 지역팩 + 해당 지역의 추가 폼 팩을 연속 전송
+- 추가 스프라이트 전체 버튼으로 810+ 및 모든 독립 폼을 한 번에 전송 가능
+- 가라르/히스이/팔데아 개별 전송 버튼 제공
+
+[저장]
+- 기존 species ID는 재번호하지 않음
+- dex/research bitmap은 DEX_COUNT에 따라 확장되며 구 blob은 앞부분만 읽어 유지
+- r361 migration key를 SafeSave 목록에 포함

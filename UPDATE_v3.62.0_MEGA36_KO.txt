@@ -1,0 +1,44 @@
+TamaPoke KO v3.62.0 — PMDCollab Mega36 레벨진화 추가
+
+기준
+- v3.61.9 Evolution Level Guard + Reward Rate Tune + Menu Redraw Fix를 그대로 유지
+- 메가진화를 일시적인 배틀 기믹이 아니라 TamaPoke의 영구 레벨 진화로 단순화
+- PMDCollab에서 실제 행동 sprite가 충분한 36종만 화이트리스트 허용
+
+메가진화
+- 36종 모두 원본 포켓몬에서 Lv.70에 진화
+- 진화 후 별도 TamaPoke species / 별도 도감 등록
+- 알/야생 기본 획득 대상이 아니라 R_EVO 진화 전용
+- 한국어 표시명은 길이를 줄이기 위해 m. 접두사 사용
+- 리자몽 -> m.리자몽X만 허용 (Mega Charizard Y 미포함)
+- 뮤츠 -> m.뮤츠Y만 허용 (Mega Mewtwo X 미포함)
+- 따라서 리자몽과 뮤츠는 메가진화 선택창 없이 일반 단일 진화처럼 동작
+
+분기 레벨 보호
+- 기존 evolutionOptions()는 한 종의 여러 진화 분기 중 가장 낮은 레벨이 열리면 모든 분기를 후보로 넣을 수 있었음
+- v3.62.0에서 evolutionTargetLevel()/effectiveEvolutionTargetLevel() 추가
+- 각 target의 EXTRA_BRANCH_LEVELS를 개별 검사한 뒤 현재 레벨에 도달한 후보만 실제 진화 선택에 사용
+- 예: 플라엣테의 일반 진화는 기존 레벨, m.플라엣테는 Lv.70이 되어야 후보가 됨
+- Lv.70 메가폼이 Lv.30 전후의 일반 폼 분기 때문에 조기 진화하는 문제를 방지
+- `dexEvolutionLevel()`도 실제로 존재하는 outgoing edge만 기준으로 최솟값을 계산하도록 수정
+- 기존 최종진화였던 리자몽/뮤츠처럼 Mega edge만 새로 생긴 종이 Lv.30부터 "진화 가능"으로 잘못 표시되는 구형 fallback 문제도 제거
+
+PMDCollab 동기화
+- 기존 GIMMICK_WORDS의 mega 금지 기본값은 유지
+- APPROVED_MEGA_NATDEX 36종만 예외 허용
+- Charizard는 X, Mewtwo는 Y만 variant whitelist
+- Mega Lucario Z 등 X/Y/Z 추가 변형은 자동 제외
+- Tatsugiri처럼 Mega sprite가 일반 폼 하위 폴더에 있을 수 있어 Mega 전용 recursive tracker scanner 추가
+- Shiny/Female/Male 하위 노드를 별도 species로 오인하지 않도록 차단
+- Actions에서 36종 중 하나라도 PMDCollab behavior sprite가 사라지면 빌드를 실패시켜 save graph가 조용히 바뀌지 않게 함
+
+기존 유지
+- 진화 요구치 Lv.100 상한 / 조기 은퇴 +12 / 구형 144 자동 마이그레이션
+- IV 보상 22%/38%, 이벤트 IV 키트 16%, 금빛왕관 8%, 상점 미판매
+- 공격/특공 및 방어/특방 분화 없는 캐주얼 전투
+- 체육관 배틀 수정
+- 메뉴 종료 AMOLED 잔상 수정
+- 5분 절전, 물리 버튼 wake, 화면 OFF SFX 차단
+- 85ms active / 100ms normal no-frame-drop 정책
+
+메가 36종 전체 목록은 MEGA36_SOURCE_MAP.txt 참조.

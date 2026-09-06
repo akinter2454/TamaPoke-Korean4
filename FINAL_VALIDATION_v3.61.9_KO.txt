@@ -1,0 +1,54 @@
+TamaPoke KO v3.61.9 최종 검증 — Evolution Level Guard
+
+[PASS] 정적 도감 1~827 직접 진화 레벨 범위 검사
+- DEX_COUNT=827
+- 직접 진화 최대 레벨=64
+- Lv.100 초과 직접 진화 없음
+
+[PASS] 진화 요구 레벨 계산 회귀 검사
+- 일반 Lv.16 진화 + 페널티 없음 = Lv.16
+- Lv.16 + 조기 은퇴 페널티 12 = Lv.28
+- Lv.64 + 조기 은퇴 페널티 12 = Lv.76
+- Lv.64 + 돌봄 실수 40 + 페널티 12 = Lv.100 상한
+- 어떤 조합도 Lv.100 초과 불가
+
+[PASS] 저장 마이그레이션 보호
+- v3.61.8 이하 evop 144 등 과도한 값 -> 12
+- care-slot snapshot evoPen >12 -> 12
+- careMistakes >100 -> 100
+- careMistakes 증가가 255->0으로 래핑하지 않음
+
+[PASS] 생성 도감 보호
+- tools/sync_pmd_catalog.py extra evolution level 2~100 clamp
+- tools/verify_evolution_levels.py 추가
+- GitHub Actions catalog sync 직후 및 안정화 guard 단계에서 진화 레벨 검사
+
+[PASS] 회귀 유지
+- IV 훈련 보상 22%/38%
+- IV 이벤트 16%, 금빛왕관 8%
+- IV 아이템 상점 미판매
+- 메뉴 종료 clean full-present
+- 체육관 시작 수정/캐주얼 Attack vs Defense
+- 5분 screen-off/물리 버튼 wake/화면 OFF SFX mute
+- 85ms/100ms no-frame-drop 정책
+
+로컬 검증
+- tools/verify_evolution_levels.py PASS
+- Python 도구 py_compile PASS
+- GitHub Actions YAML parse PASS
+- effective evolution regression PASS
+
+실기/최종 펌웨어
+- 로컬 환경에는 Waveshare ESP32-S3 전체 Arduino 라이브러리 빌드 환경이 없으므로 최종 arduino-cli 전체 컴파일은 GitHub Actions 성공을 기준으로 함.
+- workflow에는 catalog sync -> 진화 레벨 검증 -> sprite pack -> Arduino compile -> Pages deploy 순서를 유지함.
+
+핵심 SHA-256
+d5d7faffffe36b122696290b0a18be19df8e46f3dc86e9fbcc791f12862433f1  TamaPoke.ino
+e77afd240f89f04f7af6e523c008ea75dc9abe9af39843ebe905dc6602273477  pet.cpp
+5da951ef50919410581eab838936d0454086ed2015d401deb172caf77b60a451  pet.h
+f794fae4dc68d1b433558ad4ff64f98d301b866696821e3045bdbe4791f2d663  i18n.cpp
+036894263cc0737d581b5c01cfa26dce210087f6fbc90d1168f045d7499fba7a  .github/workflows/main.yml
+fe34d78de836194018abb2a61c0e8ae61f3a3f95e5611cfec04b21e0967a3c02  TamaPoke-KO-OneClick-Installer.html
+25bae87340660ad71b23e2076e72ad6dde2fcc5c69bbb42f69beb92d09a336b2  tools/sync_pmd_catalog.py
+79f7ebd306727c628ce5c547941123c93837c85bccf36fd8c31055a494dd20fe  tools/verify_evolution_levels.py
+fb4ea8a0a4c3b778681cb877b52cf52c460f9a69e37c6507e0608492b97b26cb  tools/pack_pmd_catalog.py

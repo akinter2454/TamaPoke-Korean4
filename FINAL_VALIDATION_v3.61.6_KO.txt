@@ -1,0 +1,55 @@
+TamaPoke KO v3.61.6 최종 검증 기록
+
+기준
+- v3.61.5 TouchPowerFix + Galar/Paldea Gyms 전체 GitHub 작업본에서 직접 파생
+- v3.61.5의 safeElapsedMs / true screen-off / 물리 버튼 wake / 85ms·100ms 프레임 정책 유지
+
+검증 완료
+1. 저장 호환
+- ExtraItemId 기존 0..5 고정 확인
+- 새 IV 아이템은 6..10에 append
+- GameExtras::begin()의 짧은 xitem NVS prefix 로딩 방식 유지
+
+2. IV 아이템 실행 테스트 (C++ 실제 실행)
+- 공격개체캡슐: 30 -> 31 성공
+- IV 31에서 사용 거부 및 아이템 미소비
+- 금빛왕관: 31 미만인 IV만 +1
+- 네 IV가 모두 31일 때 금빛왕관 사용 거부 및 미소비
+
+3. 캐주얼 전투 실행 테스트 (C++ 실제 실행)
+- 특수 분류 기술에서 SI_SPA/SI_SPD 값을 바꿔도 데미지가 변하지 않음
+- SI_ATK를 올리면 같은 기술의 데미지가 증가
+- Nasty Plot(ST_SPA)이 공격 랭크로 적용되고 legacy SPA stage도 mirror 됨
+- 한국어 UI 소스에서 '특공/특방' 노출 제거
+
+4. 체육관 배틀
+- startTrainerBattle()의 pet.isEgg() 조기 return 제거
+- 선택한 보관 파티가 있으면 live pet이 알이어도 buildSquad() 가능
+- buildSquad 실패 시 pickOpen을 복구하여 홈으로 떨어지지 않음
+
+5. 훈련/랜덤 보상
+- 랜덤 이벤트 1..8 확장 및 IV 훈련 키트 추가
+- 공격/방어/스피드 훈련 결과 전환 시 한 번만 IV 보상 roll
+- 성적별 18% / 32% 드롭 구간 확인
+- 성공 드롭 중 10% HP IV 캡슐 전환
+
+6. 가방 UI
+- 육성 아이템 3페이지로 확장
+- 기존 0..3, 특수/왕관, IV 캡슐 4종으로 분리
+- swipe/tap page count 모두 3으로 일치
+
+7. 신규 포켓몬 기술
+- National Dex 810+ fallback을 타입/레벨별 weak/mid/strong 대표 기술로 변경
+- 사용한 move 상수가 moves.h에 존재함을 확인
+
+8. 정적 검사
+- TamaPoke.ino / battle.cpp / game_extras.cpp/.h / moves.h / pet.h / personality.h 괄호 균형 정상
+- battle.cpp clang++ -fsyntax-only 통과 (Arduino/Preferences 최소 stub)
+- game_extras.cpp clang++ -fsyntax-only 통과 (동일)
+- tools/*.py py_compile 통과
+- .github/workflows/main.yml 과 GITHUB_WORKFLOW_COPY.txt 동일
+
+남은 실제 하드웨어 검증
+- 이 실행 환경에는 arduino-cli ESP32/Waveshare 라이브러리가 설치되어 있지 않아 전체 펌웨어 바이너리 컴파일/기기 플래시는 여기서 수행하지 않음.
+- 전체 ZIP의 GitHub Actions workflow가 arduino-cli compile을 수행하도록 유지했고, v3.61.6 IV/전투/체육관 회귀 grep 검사를 추가함.
+- GitHub에 업로드 후 Actions build/deploy 성공을 최종 바이너리 기준으로 확인할 것.

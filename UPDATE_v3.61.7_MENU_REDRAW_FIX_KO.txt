@@ -1,0 +1,25 @@
+TamaPoke KO v3.61.7 변경사항 — 메뉴 종료 AMOLED 잔상 수정
+
+문제
+- 홈 메뉴를 닫은 직후 화면 상단은 정상 홈으로 돌아오지만, y=312 아래에 메뉴의 하단 행(예: 은퇴/닫기)이 AMOLED에 남는 현상이 실제 기기 사진으로 확인됨.
+
+원인
+- v3.61.3 이후 홈 화면은 프레임 트래픽을 줄이기 위해, 하단 상태/버튼 영역이 변하지 않으면 0..311행만 전송하는 partial present를 사용함.
+- 메뉴가 열린 프레임은 전체 화면을 flush했지만 presentHomeFrame()이 그 프레임을 깨끗한 홈 하단 캐시로 기록함.
+- 메뉴를 닫는 바로 다음 프레임에서 하단 signature가 같으면 0..311만 전송되어 y>=312의 메뉴 픽셀이 물리 AMOLED에 잔류함.
+
+수정
+- homeCrossBandActive()를 추가하여 pet.isEgg/menuOpen/feedMenuUntil/confirmUntil/choiceKind처럼 partial-present 경계(y=312)를 가로지르는 상태를 한 곳에서 판정함.
+- 이런 프레임을 전체 flush하더라도 gHomePanelValid=true로 기록하지 않음.
+- 오버레이가 사라진 첫 홈 프레임은 반드시 466x466 전체 전송하여 잔상을 제거함.
+- 그 다음 프레임부터 기존 canvasPresentBand(0, 312) 최적화로 자동 복귀함.
+
+성능
+- 화면 ON의 85ms(active)/100ms(normal) 프레임 정책은 변경하지 않음.
+- 메뉴가 닫히는 전환 시점에만 1회의 clean full present가 추가되므로 지속 FPS 저하는 없음.
+- QSPI 80MHz 정책도 그대로 유지함.
+
+기존 v3.61.6 기능 유지
+- IV 개체캡슐/금빛왕관은 상점 판매하지 않음. 랜덤 이벤트와 훈련 보상에서만 획득.
+- 공격/특공·방어/특방 분화 없는 캐주얼 전투 유지.
+- 체육관 시작 수정, 5분 true screen-off, 물리 버튼 wake, 화면 OFF 음향 차단 유지.

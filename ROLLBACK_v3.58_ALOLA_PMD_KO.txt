@@ -1,0 +1,27 @@
+TamaPoke KO v3.58 알로라 전용 롤백판
+
+기준
+- 펌웨어: v3.58
+- 도감: 1~827
+- 추가 종: 알로라 폼 18종(810~827)만 유지
+- 메가진화: 제거
+- 히스이: 제거
+
+알로라 스프라이트
+- 출처: PMDCollab/SpriteCollab GitHub
+- 각 포켓몬의 form 0001 행동 스프라이트를 사용
+- 일반형: sprite/NNNN/0001
+- 색이 다른 모습: sprite/NNNN/0001/0001
+- 정지 일러스트/Showdown/PokeAPI fallback을 사용하지 않음
+- AnimData.xml + Idle + Walk가 반드시 존재해야 함
+- 하나라도 없으면 GitHub Actions가 실패하고 tools/alola_sprite_report.txt에 이름을 기록함
+
+GitHub Actions 성공 시 자동 생성
+site/index.html
+site/sprites-alolaforms.pak
+site/alola_sprite_report.txt
+site/build-info.txt
+
+Netlify 수동 배포 시 Actions artifact:
+NETLIFY_UPLOAD_THIS_v3.58_AlolaPMD
+을 내려받아 그대로 배포하면 됨.

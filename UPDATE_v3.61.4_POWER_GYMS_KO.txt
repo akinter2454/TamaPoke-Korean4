@@ -1,0 +1,29 @@
+TamaPoke KO v3.61.4 — Power Save + Galar/Paldea Gyms
+
+[전력 절감]
+- 5분 무입력 시 밝기만 낮추는 것이 아니라 true screenOff로 전환
+- screenOff 중 Canvas->AMOLED render/flush를 전부 건너뜀
+- 화면 OFF 상태에서 터치는 IRQ만 drain하고 절대로 화면을 깨우지 않음
+- 화면 wake는 AXP2101 옆 물리 PWR 버튼 짧은 클릭만 허용
+- OFF 중 audio queue를 비우고 PA를 LOW로 내려 자동 알림/이벤트 SFX를 차단
+- 사용자 사운드 설정값은 변경하지 않으며 wake 후 기존 설정대로 복귀
+- 화면 ON 상태의 85ms active / 100ms normal cadence는 v3.61.3 그대로 유지
+
+[가라르 체육관]
+- Pokemon Sword 순서: Milo, Nessa, Kabu, Bea, Opal, Gordie, Piers, Raihan
+- Dynamax/Gigantamax는 No-Gimmicks 정책에 따라 무시
+- 8 badge 이후 Marnie/Bede/Hop/Rose/Leon으로 endgame ladder 구성
+
+[팔데아 체육관]
+- 레벨 순서: Katy, Brassius, Iono, Kofu, Larry, Ryme, Tulip, Grusha
+- Elite Four: Rika, Poppy, Larry, Hassel / Champion: Geeta
+- Terastallization은 No-Gimmicks 정책에 따라 무시
+
+[배지]
+- 기존 Kanto~Kalos art는 유지
+- Galar/Paldea는 리핑 자산 대신 기기용 오리지널 경량 픽셀 emblem을 사용
+- easy/hard badge mask와 player card/win screen에 정상 표시
+
+[안정성]
+- Galar/Paldea roster가 PMDCollab에서 일시적으로 art가 없는 species를 가리키면 같은 타입의 안정된 classic sprite로 battle-time fallback
+- GYM_REGIONS 7 -> 9, gym region->dex region mapping으로 Hisui를 건너뛰고 Paldea 이름/도감 region ID를 정확히 연결

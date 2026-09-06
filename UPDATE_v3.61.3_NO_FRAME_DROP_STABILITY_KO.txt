@@ -1,0 +1,67 @@
+TamaPoke KO v3.61.3 — No-Frame-Drop Stability Pass
+
+목표
+- v3.61.2에서 깜빡임을 줄이기 위해 PMD-heavy 화면을 120~125ms로 늦추던 방식 제거.
+- 기존 체감 프레임 목표(게임/배틀 85ms, 일반 UI 100ms)를 복원하고, 한 프레임의 실제 처리량을 줄여 안정화.
+- 정상 빌드에서 진단용 Serial 출력이 주기적으로 프레임을 막지 않도록 함.
+
+핵심 변경
+1. 프레임 스케줄러
+- active game/battle: 85ms start-to-start (~11.8fps)
+- 일반 animated UI: 100ms start-to-start (10fps)
+- 오버런 뒤 20~36ms recovery delay를 제거.
+- 프레임이 늦어진 경우 다음 프레임을 인위적으로 건너뛰거나 추가 지연시키지 않음.
+- TAMAPOKE_FRAME_DIAG=0이 기본. 디버그할 때만 1로 켜 FRAME10S/RENDER 로그 사용.
+
+2. Canvas/PMD hot path
+- Arduino_Canvas의 RGB565 framebuffer에 PMD run을 직접 기록.
+- 같은 확대 픽셀 행은 첫 행을 쓴 뒤 memcpy로 반복해 PSRAM write overhead 감소.
+- battle backdrop, avatar/map pixel-art도 동일한 fast framebuffer path 사용.
+
+3. TPK3
+- 기존 관동~지역팩 TPK2는 그대로 읽음.
+- Actions가 새로 만드는 810+ catalog sprite는 TPK3으로 생성.
+- TPK3은 각 animation frame의 실제 불투명 L/T/R/B를 저장.
+- SD에서 큰 sprite를 로드할 때 전체 pixel blob을 다시 훑지 않음.
+- renderer도 현재 frame의 exact bounds만 순회.
+- TPK2는 load 시 frame bounds를 한 번 계산해 backward compatibility 유지.
+
+4. Home 화면 부분 전송
+- 움직이는 scene/Pokemon 영역 0..311만 전송할 수 있도록 full-width band present 추가.
+- y>=312의 care bars/buttons는 값이 실제로 바뀔 때만 다시 그림/전체 전송.
+- 메뉴/확인/알/선택창처럼 경계를 가로지르는 UI는 자동 full present.
+- 화면 재진입도 full present.
+- v3.61.2의 10초 주기 강제 full refresh는 제거: 주기적인 긴 프레임을 만들 이유가 없음.
+- home scene 자체도 보이지 않는 y>=312 terrain을 매 frame 다시 그리지 않음.
+
+전송량 비교(홈의 일반 animation frame)
+- full Canvas: 466 x 466 x 2 = 434,312 bytes
+- upper band: 466 x 312 x 2 = 290,784 bytes
+- QSPI 전송량 약 33% 감소, animation cadence는 유지.
+
+5. 도감 상세
+- 첫 진입/상태 변경은 full present.
+- 이후 등록된 Pokemon의 animation은 sprite가 있는 상단 band만 갱신.
+- 미등록 silhouette은 정적이므로 첫 표시 후 불필요한 재전송 없음.
+
+6. 기타 hot-path 정리
+- crash breadcrumb/heap query는 화면 변경 즉시 + 최대 1초 1회로 제한.
+- PMD action totalMs는 load 시 캐시된 값 계속 사용.
+- PMDCollab action-wide transparent crop(size-safe 2.8MiB) 유지.
+
+안전성
+- PMD graphics의 픽셀/행동/frame duration은 제거하지 않음. TPK3 metadata만 추가.
+- battle/minigame의 85ms 목표를 낮추지 않음.
+- display QSPI는 기존 검증값 80MHz 유지. 더 높은 clock으로 안정성을 희생하지 않음.
+- TPK2/TPK3 양쪽 load 지원.
+
+실기 권장 테스트
+- 큰 PMD Pokemon 홈 화면 10분.
+- 목욕/먹기/진화 준비 CTA/날씨 상태에서 화면 경계 이상 여부.
+- 도감 상세에서 20종 연속 전환.
+- 배틀 10회, PMD 2마리 동시 표시.
+- 공격/방어/스피드 훈련 10분.
+- 30~60분 soak.
+
+프레임 계측이 필요할 때만 TamaPoke.ino의 TAMAPOKE_FRAME_DIAG를 1로 변경.
+FRAME10S의 over가 특정 Pokemon에서만 높다면 전체 FPS를 낮추지 말고 해당 dex의 sprite/canvas/action을 우선 분석할 것.

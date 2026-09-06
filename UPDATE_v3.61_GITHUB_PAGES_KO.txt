@@ -1,0 +1,16 @@
+TamaPoke KO v3.61 - GitHub Pages 배포 전환
+
+- Netlify 수동 업로드 제거
+- GitHub Actions가 생성한 site/를 actions/upload-pages-artifact@v4로 직접 업로드
+- actions/deploy-pages@v4로 github-pages 환경에 자동 배포
+- Pages용 .nojekyll 파일 자동 추가
+- Actions 요약에 최종 page_url 표시
+- generated site/의 대용량 sprite pack은 Git 저장소에 커밋하지 않음
+- dex/catalog lock 및 텍스트 보고서만 기존처럼 저장소에 커밋
+- 게시 사이트 1GB 초과 시 배포 전에 명확하게 실패하도록 크기 검사 추가
+
+최초 1회:
+Settings -> Pages -> Build and deployment -> Source = GitHub Actions
+
+그 뒤:
+Actions -> TamaPoke v3.61.1 FULL PMDCollab Catalog - Size-Safe GitHub Pages -> Run workflow

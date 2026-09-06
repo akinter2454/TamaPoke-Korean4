@@ -1,0 +1,91 @@
+TamaPoke KO v3.62.0 — Mega36 Level Evolution 최종 정적/회귀 검증
+검증일: 2026-09-06
+기준: v3.61.9 EvolutionLevelGuard + RewardRateTune + MenuRedrawFix
+
+1. Mega 화이트리스트
+- APPROVED_MEGA_COUNT = 36 확인
+- APPROVED_MEGA_NATDEX 실제 원소 수 = 36 확인
+- 리자몽: Mega X만 승인 / Mega Y 거부
+- 뮤츠: Mega Y만 승인 / Mega X 거부
+- 루카리오: 일반 Mega 승인 / Mega Lucario Z 거부
+- 비승인 종(예: 이상해꽃 Mega) 자동 거부
+- 싸리용 Curly 하위 Mega 경로 recursive 탐색 확인
+
+2. 합성 PMDCollab tracker 전체 생성 회귀검사
+현재 sync 알고리즘을 별도 임시 저장소에 복사한 뒤, 승인 36종의 실제 tracker 구조를 모사해 전체 catalog 생성 테스트를 실행함.
+결과:
+- enabled Mega species: 36/36
+- approved Mega evolution edge: 36/36
+- 모든 Mega edge level: Lv.70
+- m.리자몽X 1종만 생성
+- m.뮤츠Y 1종만 생성
+- 가짜 Mega Charizard Y / Mega Mewtwo X / Mega Lucario Z가 excluded_gimmicks로 차단됨
+- 싸리용의 중첩 Curly/Mega 경로가 하나의 Mega species로만 생성됨
+- Shiny 하위 폴더는 별도 species로 생성되지 않음
+
+3. 진화 레벨/분기 회귀검사
+- v3.61.9 Lv.100 evolution cap 유지
+- EVO_PENALTY_LEVELS = 12 유지
+- legacy 144 penalty migration 유지
+- evolutionTargetLevel()/effectiveEvolutionTargetLevel() 존재 확인
+- 실제 evolve()는 target별 요구 레벨에 도달한 후보만 선택
+- Mega-only final인 리자몽/뮤츠의 전체 진화 준비 레벨 = Lv.70 확인
+- 일반 진화와 Mega가 같이 있는 종은 일반 target이 먼저 열려도 Mega target은 Lv.70 전까지 제외됨
+- 구형 `dexHasEvolution()이면 무조건 Lv.30` extra-only fallback 제거 확인
+- 합성 generated dex audit: direct_max=64, extra_max=70, MAX_LEVEL=100 통과
+
+4. 도감/획득 정책
+- Mega는 form entry + 독립 internal species ID로 생성
+- DEX_NATDEX에는 원본 NatDex owner를 보존
+- Mega entry rarity = R_EVO
+- 알 기본 후보로 직접 나오지 않고 원본 종에서 진화로만 획득
+- 도감 등록/파티/박스에서는 별도 species로 취급
+- 한국어 표시명 m. 접두사 사용
+
+5. PMDCollab 안정성 정책
+- GIMMICK_WORDS의 mega 기본 차단 유지
+- 승인 36종만 예외 허용
+- Actions sync에서 36종 중 하나라도 current behavior sprite가 사라지면 build fail
+- pack 후 enabled Mega count 및 NatDex 집합을 다시 36종 정확 일치 검사
+- G-Max/Dynamax/Primal/Eternamax/Ultra/Ash/Crowned/Totem/Terastal/Stellar 차단 유지
+- TPK3 normal/shiny output 존재/헤더/2.8MiB 상한 검증 유지
+
+6. 기존 기능 회귀 보호
+- IV 아이템 상점 미판매 유지
+- 훈련 IV 보상 22% / 우수 38% 유지
+- 랜덤 이벤트 IV kit 16%, 금빛왕관 8% 유지
+- 공격/특공 및 방어/특방 분화 없는 캐주얼 전투 유지
+- 체육관 배틀 수정 유지
+- 메뉴 종료 전체 redraw 1회 후 partial present 복귀 유지
+- 5분 절전 / 터치 wake 금지 / 물리 side button wake 유지
+- 화면 OFF render/SFX/PA 차단 유지
+- active 85ms / normal 100ms frame cadence 유지
+
+7. 도구/문법 검사
+- python3 -m py_compile tools/*.py : PASS
+- tools/verify_evolution_levels.py : PASS
+- .github/workflows/main.yml PyYAML parse : PASS
+- PROJECT_STATE_v3.62.0.json JSON parse : PASS
+- workflow copy와 .github/workflows/main.yml byte-identical : PASS
+
+8. 실제 하드웨어 컴파일
+현재 실행 환경에는 arduino-cli/ESP32-S3/Waveshare Arduino dependency가 설치되어 있지 않아 로컬 최종 펌웨어 링크는 수행하지 않음.
+최종 배포 판단은 저장소의 GitHub Actions에서 다음이 모두 성공한 경우로 한다.
+- live PMDCollab catalog sync
+- Mega36 current sprite 확인
+- TPK3 pack
+- evolution/policy regression checks
+- arduino-cli ESP32-S3 compile
+- firmware embed
+- GitHub Pages deploy
+
+핵심 SHA-256
+1558b590c2f1abef66a17ceb9a8941c6a4f773124222f1a5bc65a9e943ebe064  TamaPoke.ino
+f3d8c30bc4b5b20407c1ca9422686c951e74cd0f39c859de15f6cdbc0444c549  pet.cpp
+c816452d3efb95e8b6a713c07df2a5659f0623c470880a669414956035a1b1f0  tools/sync_pmd_catalog.py
+8def70f066fbdaf343f540ce8441538f5af5ead6c1469664ca0bed814a5021fb  tools/pack_pmd_catalog.py
+aef89afcdbff8076bd9722eea84868e4e7287b794af60243cd1d3de3b2dc5bd1  tools/verify_evolution_levels.py
+a95434ae831f99574e1b88674579203749762531e876b4d13c9f858b7d83b74c  .github/workflows/main.yml
+fa976bdd327dadaa8ea84a0b03c14dffa0ae109d490a4d55e65f73e62a531fb0  TamaPoke-KO-OneClick-Installer.html
+4e498c89075d87fe3946405ceb36e8ace455a72836d6f976b8d1a2f07f78602f  PMDCOLLAB_CREDITS.txt
+4c27904e89f882a4ae39f712504388ed0cb3070e7afe7e47fedd952624be4d21  MEGA36_SOURCE_MAP.txt

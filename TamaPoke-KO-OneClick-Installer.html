@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<title>TamaPoke 한국어판 · ESP32-S3 원클릭 설치기</title>
+<style>
+:root{
+  --bg:#f4f0df;--paper:#fffdf7;--ink:#272735;--muted:#6c6a73;
+  --blue:#397fbd;--green:#4baa62;--red:#d94b3d;--amber:#e8a229;--line:#d8d0b8;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Noto Sans KR","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+.wrap{max-width:760px;margin:0 auto;padding:28px 18px 64px}
+.hero{text-align:center;padding:16px 0 8px}.ball{font-size:48px;line-height:1}.hero h1{font-size:30px;margin:8px 0 2px}.hero p{margin:0;color:var(--muted)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px;margin:16px 0;box-shadow:0 2px 0 #00000008}
+.card h2{font-size:19px;margin:0 0 8px}.step{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;background:var(--blue);color:white;margin-right:8px;font-size:14px}
+.warn{border-left:5px solid var(--red);background:#fff5f2}.ok{border-left:5px solid var(--green);background:#f5fff6}.info{border-left:5px solid var(--blue)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+button,.btn{font:inherit;font-weight:700;padding:11px 16px;border-radius:12px;border:1px solid var(--ink);background:white;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+button:hover,.btn:hover{background:#f6f2e7}button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--blue);color:#fff;border-color:var(--blue)}.primary:hover{background:#2f70aa}.green{background:var(--green);color:#fff;border-color:var(--green)}
+.small{font-size:13px;color:var(--muted)}code{background:#0000000a;border-radius:6px;padding:1px 5px}.status{font-weight:700}.good{color:#2d8b48}.bad{color:var(--red)}
+#log{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;background:#1c1d26;color:#dfe4f1;border-radius:12px;padding:12px;max-height:220px;overflow:auto;white-space:pre-wrap;display:none}
+.bar{height:11px;background:#ded8c6;border-radius:8px;overflow:hidden;display:none;margin-top:10px}.bar>div{height:100%;width:0;background:var(--green);transition:width .15s}
+.pill{display:inline-block;background:#edf5fb;border:1px solid #c9dceb;border-radius:999px;padding:3px 9px;font-size:12px;color:#3d607e}
+.hidden{display:none!important}details{margin-top:12px}summary{cursor:pointer;font-weight:700}ul{padding-left:22px}
+.install-choice{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.install-mode{border:2px solid var(--line);border-radius:16px;padding:16px;background:#fff}
+.install-mode.keep{border-color:#91c79d;background:#f6fff7}.install-mode.reset{border-color:#e7a097;background:#fff6f4}
+.install-mode h3{margin:0 0 6px;font-size:18px}.install-mode p{margin:6px 0}.danger{background:var(--red)!important;color:#fff!important;border-color:var(--red)!important}
+@media(max-width:620px){.install-choice{grid-template-columns:1fr}}
+esp-web-install-button{display:inline-block}esp-web-install-button[install-unsupported]{display:none}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="ball">◉</div>
+    <h1>TamaPoke 한국어판</h1>
+    <p>Waveshare ESP32-S3-Touch-AMOLED-1.75 · 466×466 · CO5300 · CST9217</p>
+    <p><span class="pill">한국어 UI</span> <span class="pill">포켓몬 #001–#809 한국 공식 이름</span></p>
+  </section>
+
+  <div id="httpsWarn" class="card warn hidden">
+    <b>이 페이지는 HTTPS 또는 localhost에서 열어야 설치할 수 있습니다.</b>
+    <div class="small">GitHub Pages에 배포된 주소를 Chrome 또는 Edge에서 여세요. <code>file://</code>로 직접 열면 Web Serial 설치가 제한될 수 있습니다.</div>
+  </div>
+
+  <div id="browserWarn" class="card warn hidden">
+    <b>현재 브라우저에서 Web Serial을 사용할 수 없습니다.</b>
+    <div class="small">PC용 Chrome 또는 Edge를 권장합니다. 모바일 Safari/Firefox에서는 설치가 동작하지 않을 수 있습니다.</div>
+  </div>
+
+  <div class="card warn">
+    <h2>보드가 목록에 안 보일 때</h2>
+    <p><b>BOOT을 누른 채 RESET을 한 번 누르고 → BOOT을 놓으세요.</b></p>
+    <p class="small">USB-C 데이터 케이블을 사용하고 허브보다 PC에 직접 연결하는 것을 권장합니다. 다운로드 모드에서는 화면이 그대로여도 정상입니다.</p>
+  </div>
+
+  <div class="card info" id="fwCard">
+    <h2><span class="step">1</span>한국어 펌웨어 설치</h2>
+    <p>기기를 USB로 연결한 뒤 설치 버튼을 누르세요.</p>
+
+    <div id="embeddedReady" class="hidden">
+      <p class="status good">✓ 이 HTML 안에 한국어 펌웨어가 포함되어 있습니다.</p>
+      <p><b>원하는 설치 방식을 직접 선택하세요.</b> 프리즈나 저장 데이터 이상이 의심되면 완전 초기화를, 정상 업데이트라면 세이브 유지를 사용하세요.</p>
+      <div class="install-choice">
+        <div class="install-mode keep">
+          <h3>💾 세이브 유지 업데이트</h3>
+          <p class="small">기존 포켓몬·아이템·뱃지·도감·탐험·라이벌 등 NVS 데이터를 유지합니다. 앱 영역(<code>0x10000</code>)만 기록합니다.</p>
+          <p class="small"><b>설치창에서 데이터 삭제 여부가 나오면 반드시 “삭제하지 않음/유지”를 선택하세요.</b></p>
+          <esp-web-install-button id="installerUpdate">
+            <button class="green" slot="activate">💾 세이브 유지 업데이트</button>
+            <span slot="unsupported">이 브라우저는 설치를 지원하지 않습니다.</span>
+            <span slot="not-allowed">HTTPS에서 열어 주세요.</span>
+          </esp-web-install-button>
+        </div>
+        <div class="install-mode reset">
+          <h3>🧹 완전 초기화 설치</h3>
+          <p class="small"><b>모든 플레이 데이터를 삭제</b>하고 부트로더·파티션·앱을 처음부터 다시 설치합니다. 프리즈/부팅 이상/깨진 세이브를 정리할 때 사용하세요.</p>
+          <p class="small bad"><b>이 작업은 되돌릴 수 없습니다.</b></p>
+          <esp-web-install-button id="installerFull">
+            <button class="danger" slot="activate" onclick="if(!confirm('포켓몬, 아이템, 뱃지, 도감 등 모든 플레이 데이터를 삭제하고 완전히 초기화할까요?')){event.preventDefault();event.stopPropagation();return false;}">🧹 완전 초기화 설치</button>
+            <span slot="unsupported">이 브라우저는 설치를 지원하지 않습니다.</span>
+            <span slot="not-allowed">HTTPS에서 열어 주세요.</span>
+          </esp-web-install-button>
+        </div>
+      </div>
+    </div>
+
+    <div id="needFirmware">
+      <p class="status bad">⚠ 이 소스 파일에는 아직 ESP32용 컴파일 바이너리가 내장되지 않았습니다.</p>
+      <p class="small">아래 4개 파일을 선택하면 이 페이지에서 즉시 설치할 수 있습니다. 파일명은 Arduino 빌드 결과와 동일하게 맞추면 자동 인식합니다.</p>
+      <label class="btn" for="fwFiles">📦 펌웨어 4개 불러오기</label>
+      <input id="fwFiles" type="file" multiple accept=".bin" hidden />
+      <div id="fwList" class="small" style="margin-top:10px"></div>
+      <div id="runtimeInstaller" class="hidden" style="margin-top:12px">
+        <div class="install-choice">
+          <div class="install-mode keep">
+            <h3>💾 세이브 유지</h3>
+            <esp-web-install-button id="installerRuntimeUpdate">
+              <button class="green" slot="activate">💾 불러온 펌웨어로 업데이트</button>
+              <span slot="unsupported">이 브라우저는 설치를 지원하지 않습니다.</span>
+              <span slot="not-allowed">HTTPS에서 열어 주세요.</span>
+            </esp-web-install-button>
+          </div>
+          <div class="install-mode reset">
+            <h3>🧹 완전 초기화</h3>
+            <esp-web-install-button id="installerRuntimeFull">
+              <button class="danger" slot="activate" onclick="if(!confirm('모든 플레이 데이터를 삭제하고 완전히 초기화할까요?')){event.preventDefault();event.stopPropagation();return false;}">🧹 불러온 펌웨어로 초기화</button>
+              <span slot="unsupported">이 브라우저는 설치를 지원하지 않습니다.</span>
+              <span slot="not-allowed">HTTPS에서 열어 주세요.</span>
+            </esp-web-install-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="small" style="border-left:4px solid var(--blue);padding-left:10px;margin-top:14px">
+      <b>v3.37 설치 방식:</b> <b>세이브 유지</b>는 앱 바이너리만 기록하고 ESP Web Tools의 데이터 삭제 선택을 사용자에게 표시합니다.
+      유지하려면 설치창에서 데이터 삭제를 선택하지 마세요. <b>완전 초기화</b>는 전체 플래시를 지운 뒤 4개 펌웨어 영역을 다시 설치합니다.
+    </p>
+    <details>
+      <summary>필요한 4개 파일명 / 주소</summary>
+      <ul class="small">
+        <li><code>bootloader.bin</code> → <code>0x0000</code></li>
+        <li><code>partitions.bin</code> → <code>0x8000</code></li>
+        <li><code>boot_app0.bin</code> → <code>0xE000</code></li>
+        <li><code>app.bin</code> → <code>0x10000</code></li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">2</span>microSD 스프라이트 넣기</h2>
+    <p>펌웨어 설치 후 보드를 정상 부팅하고 microSD 카드를 꽂으세요. <b>기기 연결</b>을 누른 뒤 원하는 지역을 선택하면 스프라이트를 USB Serial로 전송합니다.</p>
+    <p class="small">지역 하나가 약 20–42MB라 몇 분 이상 걸릴 수 있습니다. 전송 중에는 탭과 USB 연결을 유지하세요.</p>
+    <div class="row">
+      <button id="connect">🔌 기기 연결</button>
+      <span id="serialState" class="small">연결 안 됨</span>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <button data-region="kanto" disabled>⬇ 관동</button>
+      <button data-region="johto" disabled>⬇ 성도</button>
+      <button data-region="hoenn" disabled>⬇ 호연</button>
+      <button data-region="sinnoh" disabled>⬇ 신오</button>
+      <button data-region="unova" disabled>⬇ 하나</button>
+      <button data-region="kalos" disabled>⬇ 칼로스</button>
+      <button data-region="alola" disabled>⬇ 알로라(7세대)</button>
+      <button data-extra="added-all" disabled>⬇ 현재 추가 스프라이트 전체</button>
+      <button data-extra="galar" disabled>⬇ 가라르(8세대)</button>
+      <button data-extra="hisui" disabled>⬇ 히스이</button>
+      <button data-extra="paldea" disabled>⬇ 팔데아(9세대)</button>
+    </div>
+    <p class="small"><b>현재 추가 스프라이트 전체</b>는 GitHub Actions 실행 시 PMDCollab의 최신 tracker.json을 읽어, 실제 행동 도트 스프라이트가 있는 810번 이후 포켓몬/공식 폼을 모두 묶습니다. 메가진화·거다이맥스·원시회귀·테라스탈 등 전투 기믹 폼은 제외됩니다.</p>
+    <p class="small">처음 설치할 때는 <b>현재 추가 스프라이트 전체</b>를 한 번 전송하면 810번 이후 신규 세대와 모든 추가 폼이 함께 들어갑니다. 관동~알로라 버튼을 누르면 원본 지역팩 전송 뒤 그 지역에 속한 추가 폼 팩도 자동으로 이어서 전송합니다. 자동 전송이 막히면 <label style="text-decoration:underline;cursor:pointer">생성된 <code>.pak</code> 직접 선택<input id="pakFiles" type="file" accept=".pak" multiple hidden disabled></label>을 사용할 수 있습니다.</p>
+    <p class="small"><a href="./sprite-manifest.json" download>스프라이트 팩 목록</a> · <a href="./pmd_catalog_report.txt" download>카탈로그 보고서</a> · <a href="./pmd_sprite_report.txt" download>스프라이트 보고서</a></p>
+    <div class="bar" id="bar"><div></div></div>
+    <pre id="log"></pre>
+  </div>
+
+  <div class="card ok">
+    <h2>설치 후</h2>
+    <p>보드를 재시작하면 TamaPoke가 실행됩니다. 한국어가 기본 언어이며 포켓몬 이름은 내부 영문 ID를 유지한 채 화면에서만 한국 공식 이름으로 표시됩니다.</p>
+  </div>
+
+  <div class="footer">
+    TamaPoke 원작: Quique Tortosa (socquique/TamaPoke) · Pokémon 관련 권리는 각 권리자에게 있습니다.<br>
+    PMD SpriteCollab 스프라이트는 원 프로젝트의 라이선스/크레딧 조건을 따릅니다.
+  </div>
+</div>
+
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+<script>
+/*
+  SINGLE-FILE FIRMWARE AREA
+  ------------------------------------------------------------------
+  최종 독립형 HTML을 만들 때 아래 4개 문자열에 각 .bin 파일의 Base64를
+  넣으면 manifest.json과 firmware/ 폴더가 필요 없습니다.
+
+  IMPORTANT: 네 파일은 반드시 같은 한국어판 빌드에서 나온 것을 사용하세요.
+*/
+const EMBEDDED_FIRMWARE = {
+  bootloader: "",
+  partitions: "",
+  boot_app0: "",
+  app: ""
+};
+const FW_VERSION = "3.62.0-ko-mega36-lv70-evolevelguard-rewardrate-menuredraw";
+const EMBEDDED_SPRITE_PAKS = {};
+
+const OFFSETS = {
+  bootloader: 0x0000,
+  partitions: 0x8000,
+  boot_app0: 0xE000,
+  app: 0x10000
+};
+
+const supported = 'serial' in navigator;
+if (!supported) document.getElementById('browserWarn').classList.remove('hidden');
+if (!window.isSecureContext) document.getElementById('httpsWarn').classList.remove('hidden');
+
+const log = (m) => {
+  const el = document.getElementById('log');
+  el.style.display = 'block';
+  el.textContent += m + '\n';
+  el.scrollTop = el.scrollHeight;
+};
+
+function base64ToBytes(b64) {
+  const clean = b64.replace(/\s+/g, '');
+  const raw = atob(clean);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+function makeBlobURL(bytes) {
+  return URL.createObjectURL(new Blob([bytes], {type:'application/octet-stream'}));
+}
+
+function setInstallerManifest(el, bins, updateOnly = false) {
+  const urls = {};
+  for (const key of Object.keys(OFFSETS)) urls[key] = makeBlobURL(bins[key]);
+  const parts = updateOnly
+    ? [{path: urls.app, offset: OFFSETS.app}]
+    : [
+        {path: urls.bootloader, offset: OFFSETS.bootloader},
+        {path: urls.partitions, offset: OFFSETS.partitions},
+        {path: urls.boot_app0, offset: OFFSETS.boot_app0},
+        {path: urls.app, offset: OFFSETS.app}
+      ];
+  const manifest = {
+    name: updateOnly ? 'TamaPoke 한국어판 - 세이브 유지 업데이트' : 'TamaPoke 한국어판 - 완전 초기화 설치',
+    version: FW_VERSION,
+    // ESP Web Tools: true = ask the user whether existing data should be erased.
+    // TamaPoke has no Improv Serial, so an update can be classified as a new
+    // installation. The preserve path MUST expose this choice instead of using
+    // the default new-install erase behavior. The reset path intentionally uses
+    // the default full erase before writing all four firmware parts.
+    new_install_prompt_erase: updateOnly ? true : false,
+    builds: [{chipFamily: 'ESP32-S3', parts}]
+  };
+  el.manifest = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type:'application/json'}));
+}
+
+function embeddedBins() {
+  if (!Object.values(EMBEDDED_FIRMWARE).every(Boolean)) return null;
+  return {
+    bootloader: base64ToBytes(EMBEDDED_FIRMWARE.bootloader),
+    partitions: base64ToBytes(EMBEDDED_FIRMWARE.partitions),
+    boot_app0: base64ToBytes(EMBEDDED_FIRMWARE.boot_app0),
+    app: base64ToBytes(EMBEDDED_FIRMWARE.app)
+  };
+}
+
+const builtIn = embeddedBins();
+if (builtIn) {
+  document.getElementById('needFirmware').classList.add('hidden');
+  document.getElementById('embeddedReady').classList.remove('hidden');
+  customElements.whenDefined('esp-web-install-button').then(() => {
+    setInstallerManifest(document.getElementById('installerUpdate'), builtIn, true);
+    setInstallerManifest(document.getElementById('installerFull'), builtIn, false);
+  });
+}
+
+// Development/fallback mode: load the four compiled files without changing HTML.
+const fwPicked = {};
+document.getElementById('fwFiles').addEventListener('change', async (ev) => {
+  Object.keys(fwPicked).forEach(k => delete fwPicked[k]);
+  const rows = [];
+  for (const f of [...ev.target.files]) {
+    const low = f.name.toLowerCase();
+    let key = null;
+    if (low.includes('bootloader')) key = 'bootloader';
+    else if (low.includes('partitions')) key = 'partitions';
+    else if (low.includes('boot_app0')) key = 'boot_app0';
+    else if (low === 'app.bin' || low.endsWith('.ino.bin') || low.includes('tamapoke') && low.endsWith('.bin')) key = 'app';
+    if (key) {
+      fwPicked[key] = new Uint8Array(await f.arrayBuffer());
+      rows.push(`✓ ${key}: ${f.name} (${(f.size/1024).toFixed(1)} KB)`);
+    }
+  }
+  for (const key of Object.keys(OFFSETS)) if (!fwPicked[key]) rows.push(`✗ ${key}: 없음`);
+  document.getElementById('fwList').textContent = rows.join(' · ');
+  if (Object.keys(OFFSETS).every(k => fwPicked[k])) {
+    document.getElementById('runtimeInstaller').classList.remove('hidden');
+    await customElements.whenDefined('esp-web-install-button');
+    setInstallerManifest(document.getElementById('installerRuntimeUpdate'), fwPicked, true);
+    setInstallerManifest(document.getElementById('installerRuntimeFull'), fwPicked, false);
+  } else {
+    document.getElementById('runtimeInstaller').classList.add('hidden');
+  }
+});
+
+// ------------------------------------------------------------------
+// microSD sprite transfer (same PUT protocol as TamaPoke web installer)
+// ------------------------------------------------------------------
+let port, reader, writer, lineBuf = '';
+const enc = new TextEncoder();
+
+async function readLine(timeoutMs = 7000) {
+  const deadline = Date.now() + timeoutMs;
+  while (true) {
+    const nl = lineBuf.indexOf('\n');
+    if (nl >= 0) {
+      const line = lineBuf.slice(0, nl).trim();
+      lineBuf = lineBuf.slice(nl + 1);
+      return line;
+    }
+    if (Date.now() > deadline) return null;
+    const remaining = Math.max(1, deadline - Date.now());
+    const timed = new Promise(resolve => setTimeout(() => resolve({timeout:true}), remaining));
+    const got = reader.read();
+    const result = await Promise.race([got, timed]);
+    if (result && result.timeout) return null;
+    if (!result || result.done) return null;
+    lineBuf += new TextDecoder().decode(result.value);
+  }
+}
+
+async function waitFor(token, timeoutMs = 7000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const line = await readLine(deadline - Date.now());
+    if (line === null) return false;
+    if (line === token) return true;
+    if (line === 'ERR') return false;
+  }
+  return false;
+}
+
+async function sendOne(name, data) {
+  // PmdMon in the firmware deliberately rejects TPK2 files above 3 MiB.
+  // Generated v3.61.6 sprites are compacted below 2.8 MiB, but keep this
+  // guard so an old/manual pack reports the real cause instead of a vague ERR.
+  if (data.length > 3 * 1024 * 1024) {
+    log(`파일이 너무 큼: ${name} ${(data.length/1024/1024).toFixed(2)} MiB (기기 한도 3 MiB)`);
+    return false;
+  }
+  await writer.write(enc.encode(`PUT ${name} ${data.length}\n`));
+  if (!await waitFor('OK')) return false;
+  for (let i = 0; i < data.length; i += 2048) {
+    await writer.write(data.slice(i, i + 2048));
+    if (!await waitFor('#')) return false;
+  }
+  return await waitFor('DONE', 30000);
+}
+
+function parsePak(buf) {
+  const dv = new DataView(buf), td = new TextDecoder();
+  if (td.decode(new Uint8Array(buf, 0, 4)) !== 'TPAK') throw new Error('TPAK 형식이 아닙니다.');
+  const count = dv.getUint16(4, true);
+  let off = 6; const items = [];
+  for (let i = 0; i < count; i++) {
+    const nl = dv.getUint8(off); off += 1;
+    const name = td.decode(new Uint8Array(buf, off, nl)); off += nl;
+    const size = dv.getUint32(off, true); off += 4;
+    items.push({name, size});
+  }
+  let pos = off;
+  for (const item of items) {
+    item.data = new Uint8Array(buf, pos, item.size);
+    pos += item.size;
+  }
+  return items;
+}
+
+async function sendAll(items) {
+  const bar = document.getElementById('bar');
+  const fill = bar.firstElementChild;
+  bar.style.display = 'block'; fill.style.width = '0%';
+  let done = 0, fail = 0;
+  for (const item of items) {
+    if (!await sendOne(item.name, item.data)) { log('실패: ' + item.name); fail++; }
+    done++;
+    fill.style.width = (done / items.length * 100).toFixed(1) + '%';
+  }
+  log(`완료: ${done-fail}/${items.length}. 보드를 재시작하세요.`);
+}
+
+const connectBtn = document.getElementById('connect');
+if (!supported) connectBtn.disabled = true;
+connectBtn.addEventListener('click', async () => {
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({baudRate:115200});
+    reader = port.readable.getReader();
+    writer = port.writable.getWriter();
+    lineBuf = '';
+    document.getElementById('serialState').textContent = '✓ 연결됨';
+    document.getElementById('serialState').className = 'small good';
+    document.querySelectorAll('[data-region]').forEach(b => b.disabled = false);
+    document.querySelectorAll('[data-extra]').forEach(b => b.disabled = false);
+    document.getElementById('pakFiles').disabled = false;
+    connectBtn.disabled = true;
+    log('기기 연결 완료. 지역 또는 현재 PMDCollab 추가 스프라이트를 선택하세요.');
+  } catch (e) {
+    log('연결 실패: ' + e.message);
+  }
+});
+
+const PAK_BASES = [
+  'https://raw.githubusercontent.com/DylanPDao/TamaPoke/main/web/',
+  'https://github.com/DylanPDao/TamaPoke/releases/latest/download/'
+];
+
+async function fetchPak(region) {
+  let lastErr = null;
+  for (const base of PAK_BASES) {
+    try {
+      const r = await fetch(base + `sprites-${region}.pak`, {cache:'no-store'});
+      if (r.ok) return await r.arrayBuffer();
+      lastErr = new Error('HTTP ' + r.status);
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('다운로드 실패');
+}
+
+let extraManifest = null;
+async function getExtraManifest() {
+  if (extraManifest) return extraManifest;
+  const r=await fetch('./sprite-manifest.json',{cache:'no-store'});
+  if(!r.ok) throw new Error(`sprite-manifest.json HTTP ${r.status}`);
+  extraManifest=await r.json(); return extraManifest;
+}
+async function extraPakFiles(kind) {
+  const m=await getExtraManifest();
+  if(kind==='added-all') return m.all||[];
+  return (m.regions&&m.regions[kind])||[];
+}
+
+async function sendExtraPakFiles(files, label) {
+  if(!files.length) return;
+  log(`${label}: 추가 PMDCollab 팩 ${files.length}개 전송...`);
+  for(let i=0;i<files.length;i++) {
+    log(`[${i+1}/${files.length}] ${files[i]} 다운로드 중...`);
+    const r=await fetch('./'+files[i],{cache:'no-store'});
+    if(!r.ok) throw new Error(`${files[i]} HTTP ${r.status}`);
+    const items=parsePak(await r.arrayBuffer());
+    log(`[${i+1}/${files.length}] ${items.length}개 파일 전송...`);
+    await sendAll(items);
+  }
+}
+
+const REGION_KO = {kanto:'관동',johto:'성도',hoenn:'호연',sinnoh:'신오',unova:'하나',kalos:'칼로스',alola:'알로라'};
+for (const b of document.querySelectorAll('[data-region]')) {
+  b.addEventListener('click', async () => {
+    if (!writer) { log('먼저 기기를 연결하세요.'); return; }
+    const region = b.dataset.region;
+    b.disabled = true;
+    try {
+      log(`${REGION_KO[region]} 스프라이트 다운로드 중...`);
+      const items = parsePak(await fetchPak(region));
+      log(`${items.length}개 기본 지역 파일 전송 시작...`);
+      await sendAll(items);
+      // Forms owned by an older generation (Rotom, Deoxys, regional forms,
+      // etc.) have independent TamaPoke IDs and live in the generated local
+      // extra chunks. Send those immediately after the original region pack.
+      await sendExtraPakFiles(await extraPakFiles(region), `${REGION_KO[region]} 추가 폼`);
+      log(`${REGION_KO[region]} 완료.`);
+    } catch (e) {
+      log(`${REGION_KO[region]} 다운로드/전송 실패: ${e.message}`);
+    } finally {
+      b.disabled = false;
+    }
+  });
+}
+
+for (const b of document.querySelectorAll('[data-extra]')) {
+  b.addEventListener('click', async () => {
+    if (!writer) { log('먼저 기기를 연결하세요.'); return; }
+    const kind=b.dataset.extra;
+    const labels={'added-all':'현재 PMDCollab 추가 스프라이트 전체','galar':'가라르 추가 스프라이트','hisui':'히스이 추가 스프라이트','paldea':'팔데아 추가 스프라이트'};
+    const label=labels[kind]||kind; b.disabled=true;
+    try {
+      const files=await extraPakFiles(kind);
+      if(!files.length) throw new Error('이 그룹에 전송할 스프라이트 팩이 없습니다.');
+      log(`${label}: ${files.length}개 팩 전송 시작...`);
+      await sendExtraPakFiles(files,label);
+      log(`${label} 완료.`);
+    } catch(e) { log(`${label} 다운로드/전송 실패: ${e.message}`); }
+    finally { b.disabled=false; }
+  });
+}
+
+document.getElementById('pakFiles').addEventListener('change', async (ev) => {
+  for (const f of [...ev.target.files]) {
+    try {
+      log(`${f.name} 읽는 중...`);
+      const items = parsePak(await f.arrayBuffer());
+      log(`${items.length}개 파일 전송 시작...`);
+      await sendAll(items);
+    } catch (e) { log(`${f.name} 실패: ${e.message}`); }
+  }
+});
+</script>
+</body>
+</html>
