@@ -1,0 +1,26 @@
+TamaPoke KO v3.62.5 - Canonical Forms / AltColor Cleanup
+
+문제
+- PMDCollab의 AltColor/Alternate/Cutscene/Beta 슬롯이 공식 폼처럼 독립 species ID를 받아 도감과 진화 후보에 들어가고 있었다.
+- 실제 저장소의 오래된 catalog_lock에는 이상해씨 Altcolor, 리자몽 Altcolor/Alternate 등 많은 표현용 슬롯이 1200+ ID로 잠겨 있었다.
+- 그 결과 리자드가 정상 리자몽 대신 '리자몽 Altcolor'로 진화할 수 있었고, Mega Charizard X 연결은 정상 리자몽 ID에만 있으므로 이후 메가진화가 끊길 수 있었다.
+- Galar_Alternate 같은 항목은 지역폼 진화 매핑도 애매하게 만들 수 있었다.
+
+v3.62.5 수정
+1. AltColor/Alt Colour, Alternate, Cutscene, Beta를 species 생성 대상에서 전면 제외한다.
+2. 기존 catalog_lock의 해당 항목을 Actions sync에서 제거한다. 단 next_form_id는 낮추지 않아 퇴역 ID를 다른 포켓몬에 재사용하지 않는다.
+3. 퇴역 ID -> 정상 base/지역폼 ID 매핑을 dex.h에 생성한다.
+4. pet/party/care slot 로드 시 잘못 저장된 과거 species ID를 자동 정상화한다. 레벨/IV/닉네임 등 육성 데이터는 그대로 유지한다.
+5. 리자몽 Altcolor/Alternate는 진화 후보에서 사라지고, 정상 리자몽에서 Lv.70 Mega Charizard X로 진화한다.
+6. SDINFO protocol을 3으로 올리고 제한된 DEL 명령을 추가한다. 전체/추가 스프라이트 동기화 시 퇴역 AltColor 계열 pNNN.bin/psNNN.bin을 자동 삭제한다.
+7. sprite-manifest schema 4에 retired_ids/retired_files를 기록한다.
+8. verify_canonical_forms.py가 active catalog/lock/evolution에 표현용 슬롯이 다시 들어오는 것을 Actions에서 차단한다.
+9. canonical-forms-report.txt를 Pages에서 확인할 수 있다.
+
+업데이트 권장 순서
+- 기존 GitHub 저장소의 tools/catalog_lock.json을 삭제하지 않는다.
+- v3.62.5 전체본을 저장소 루트에 덮어쓴다.
+- Actions를 실행하여 cleaned catalog_lock이 자동 커밋되게 한다.
+- build/deploy 성공 후 v3.62.5 펌웨어를 먼저 설치하고 재부팅한다.
+- microSD 메뉴의 '전체 스프라이트' 동기화를 1회 실행한다. 이 과정에서 퇴역 AltColor/Alternate/Cutscene/Beta 파일이 자동 삭제된다.
+- microSD 포맷은 필요 없다.

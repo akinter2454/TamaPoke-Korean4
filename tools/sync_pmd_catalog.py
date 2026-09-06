@@ -4,7 +4,8 @@
 Rules for this build:
 - Start from TamaPoke KO v3.58 (1..809 + fixed Alola forms 810..827).
 - Add every CURRENT PMDCollab base Pokemon/form that has a real behaviour sprite.
-- Treat ordinary/region/form-change forms as independent TamaPoke species.
+- Treat only canonical official/region/form-change forms as independent TamaPoke species.
+- Never turn PMDCollab presentation-only slots (AltColor/Alternate/Cutscene/Beta) into species.
 - Include ONLY the 36 user-approved Mega forms that currently have complete
   PMDCollab behaviour sprites; every other temporary battle gimmick remains excluded.
 - Approved Mega forms are permanent Lv.70 TamaPoke evolutions and independent Dex entries.
@@ -45,7 +46,7 @@ TRACKER_URL = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/t
 POKE = 'https://pokeapi.co/api/v2'
 SPECIES_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv'
 EVOLUTION_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_evolution.csv'
-USER_AGENT = 'TamaPoke-v3.62.4-RegionalEvolution/1.0 (+noncommercial classroom project)'
+USER_AGENT = 'TamaPoke-v3.62.5-CanonicalForms/1.0 (+noncommercial classroom project)'
 FORM_ID_START = 1200
 EVOLUTION_LEVEL_CAP = 100
 MEGA_EVOLVE_LEVEL = 70
@@ -72,7 +73,27 @@ GIMMICK_WORDS = (
 # non-Pokemon utility/special repository slots that must not become hatchable entries.
 SKIP_WORDS = ('missingno', 'substitute doll', 'manaphy egg')
 
-# v3.62.4: retain the Mega36 list while adding regional evolution routing guards
+# PMDCollab deliberately carries several presentation-only slots alongside
+# canonical Pokemon/forms. AltColor is a recolor of the same Pokemon,
+# Alternate is an alternative spritesheet, Cutscene is a scene-specific art
+# slot, and Beta is a prototype resource. None of these are separate species
+# in TamaPoke. Earlier catalogs accidentally assigned them form IDs, which
+# could make normal evolutions branch into e.g. Charizard Altcolor and then
+# lose the real Mega evolution.
+PRESENTATION_VARIANT_WORDS = ('alternate', 'cutscene', 'beta')
+
+def presentation_variant_reason(name:str):
+    n=low(name).replace('_',' ').replace('-',' ')
+    flat=re.sub(r'[^a-z]+','',n)
+    if 'altcolor' in flat or 'altcolour' in flat:
+        return 'AltColor recolor'
+    toks=set(re.findall(r'[a-z0-9]+',n))
+    for w in PRESENTATION_VARIANT_WORDS:
+        if w in toks:
+            return f'{w} presentation slot'
+    return None
+
+# v3.62.5: retain the Mega36 list while adding regional evolution routing guards
 # verified on 2026-09-06.  This is intentionally a NATDEX whitelist rather than
 # "allow every Mega": future SpriteCollab additions must not silently change a
 # player's evolution graph.  Charizard and Mewtwo are restricted to the one
@@ -285,6 +306,24 @@ def is_gimmick(name:str)->bool:
     return any(w in n for w in GIMMICK_WORDS) or any(w in n for w in SKIP_WORDS)
 
 
+def prune_presentation_lock(lock:dict, presentation_excluded:list[dict]):
+    """Remove non-species PMDCollab slots without reusing their numeric IDs."""
+    keys={f"{f['natdex']:04d}/{f['form_key']}" for f in presentation_excluded}
+    retired=[]
+    forms=lock.setdefault('forms',{})
+    for lk,rec in list(forms.items()):
+        reason=presentation_variant_reason(rec.get('label',''))
+        if lk in keys and not reason:
+            reason='presentation-only PMDCollab slot'
+        if not reason:
+            continue
+        retired.append({'lock_key':lk,'id':int(rec['id']),'natdex':int(rec['natdex']),
+                        'form_key':rec.get('form_key',''),'label':rec.get('label',''),
+                        'reason':reason})
+        del forms[lk]
+    return retired
+
+
 def approved_mega_forms(nat:int, node:dict):
     """Recursively find approved Mega nodes with real behaviour sprites.
 
@@ -302,6 +341,9 @@ def approved_mega_forms(nat:int, node:dict):
             if not nm:
                 continue
             if any(x in low(nm) for x in ('shiny','female','male')):
+                continue
+            if presentation_variant_reason(nm):
+                # Never discover a Mega through an alternate-art/recolor tree.
                 continue
             new_keys=keys+[str(key)]
             new_labels=labels+[nm]
@@ -334,9 +376,17 @@ def direct_forms(nat:int,node:dict):
             continue
         name=clean(sub.get('name'))
         if not name: continue
+        path=f'{nat:04d}/{key}'
+        pres_reason=presentation_variant_reason(name)
+        if pres_reason:
+            # Keep it in the excluded report so an existing catalog_lock entry
+            # can be retired, but never expose it as a species/resource.
+            out.append({'excluded':True,'natdex':nat,'form_key':str(key),'pmd_path':path,
+                        'form_name':name,'full_name':f"{clean(node.get('name'))} {name}",
+                        'shiny_path':None,'reason':pres_reason,'presentation':True})
+            continue
         # Prefer art exactly at the form root. If it is a grouping node, choose
         # the first non-shiny/non-gender child that owns real behaviour files.
-        path=f'{nat:04d}/{key}'
         chosen=sub
         chosen_path=path
         if not has_sprite(chosen):
@@ -347,7 +397,7 @@ def direct_forms(nat:int,node:dict):
                 child_full=f"{clean(node.get('name'))} {name} {clean(child.get('name'))}"
                 # Nested gimmicks are handled by the narrow recursive Mega pass;
                 # never let a grouping node masquerade as its Mega/Shiny child.
-                if is_gimmick(child_full): continue
+                if is_gimmick(child_full) or presentation_variant_reason(child_full): continue
                 if has_sprite(child):
                     chosen=child; chosen_path=f'{path}/{ck}'; break
         if not has_sprite(chosen): continue
@@ -540,7 +590,7 @@ def main():
     # Fetch PokeAPI metadata only for post-809 base species and owners of
     # alternate forms. Evolution topology itself comes from the small GitHub CSVs.
     form_owners=set()
-    raw_forms=[]; excluded=[]
+    raw_forms=[]; excluded=[]; presentation_excluded=[]
     seen_form_paths=set()
     for nat in nums:
         node=tracker.get(f'{nat:04d}') or tracker.get(str(nat))
@@ -551,8 +601,11 @@ def main():
             if k in seen_form_paths:
                 continue
             seen_form_paths.add(k)
-            if f['excluded']: excluded.append(f)
-            else: raw_forms.append(f); form_owners.add(nat)
+            if f['excluded']:
+                excluded.append(f)
+                if f.get('presentation'): presentation_excluded.append(f)
+            else:
+                raw_forms.append(f); form_owners.add(nat)
 
     # There is exactly one approved Mega target per National-Dex owner.  If a
     # tracker layout exposes the same sprite through two grouping paths, keep
@@ -592,6 +645,12 @@ def main():
     for (nat,key),iid in FIXED_ALOLA.items():
         lk=f'{nat:04d}/{key}'
         lock['forms'].setdefault(lk,{'id':iid,'natdex':nat,'form_key':key,'label':'Alola'})
+
+    # v3.62.5 canonical-form cleanup. Purge presentation-only IDs that older
+    # catalogs accidentally persisted. next_form_id is deliberately NOT
+    # decreased, so retired IDs are never reused for a different Pokemon.
+    retired_forms=prune_presentation_lock(lock,presentation_excluded)
+
     next_id=max(int(lock.get('next_form_id',FORM_ID_START)),FORM_ID_START)
     discovered={f"{f['natdex']:04d}/{f['form_key']}":f for f in raw_forms}
     for lk,f in sorted(discovered.items(),key=lambda kv:(kv[1]['natdex'],kv[1]['form_key'])):
@@ -821,7 +880,15 @@ def main():
                                         'ALOLA_BRANCH_EVOS[ALOLA_BRANCH_COUNT] = { DEX_A_RAICHU, DEX_A_EXEGGUTOR, DEX_A_MAROWAK }')):
         raise RuntimeError('fixed Alola special branch table changed/missing')
 
-    max_id=max([827,current_max+18]+[int(x['id']) for x in lock['forms'].values()])
+    # Decide where an old save on a retired visual slot should land. A labeled
+    # regional Alternate (e.g. Galar_Alternate Ponyta) returns to the canonical
+    # regional form, while plain AltColor/Alternate/Cutscene/Beta returns to the
+    # ordinary National-Dex species.
+    for r in retired_forms:
+        nat=int(r['natdex']); tag=regional_tag(r.get('label',''),nat)
+        r['canonical_id']=int(by_region_form.get((nat,tag), internal_base_id(nat))) if tag else internal_base_id(nat)
+    retired_ids=[int(x['id']) for x in retired_forms]
+    max_id=max([827,current_max+18]+[int(x['id']) for x in lock['forms'].values()]+retired_ids)
     # Build every positional row; holes are disabled placeholders.
     all_rows=[None]*(max_id+1)
     for i in range(min(828,len(base_rows))): all_rows[i]=copy.deepcopy(base_rows[i])
@@ -843,6 +910,7 @@ def main():
     # move data be reused by alternate forms of #1..809 without a giant
     # hand-maintained switch statement.
     regions=[10]*(max_id+1); enabled=[0]*(max_id+1); natdex_map=[0]*(max_id+1)
+    retired_base_map=[0]*(max_id+1)
     for i in range(1,min(810,max_id+1)):
         regions[i]=gen_region(i); natdex_map[i]=i; enabled[i]=0 if i in NO_ART_BASE else 1
     for (nat,key),iid in FIXED_ALOLA.items():
@@ -850,6 +918,12 @@ def main():
             regions[iid]=6; natdex_map[iid]=nat; enabled[iid]=1 if iid in enabled_ids else 0
     for iid,e in new_entries.items():
         regions[iid]=e['region']; natdex_map[iid]=e['natdex']; enabled[iid]=1 if iid in enabled_ids else 0
+    for r in retired_forms:
+        iid=int(r['id']); nat=int(r['natdex'])
+        if 0 < iid <= max_id:
+            regions[iid]=gen_region(nat)
+            natdex_map[iid]=nat
+            retired_base_map[iid]=int(r.get('canonical_id',internal_base_id(nat)))
 
     # Region starters. IDs are deterministic for base species >809.
     starters={
@@ -889,7 +963,13 @@ def main():
     branch_lines += ['};','// 1 = a real PMDCollab behaviour sprite is available for this entry.',
                      'static const uint8_t DEX_ENABLED[DEX_COUNT + 1] = {']
     for i in range(0,len(enabled),64): branch_lines.append('  '+', '.join(str(x) for x in enabled[i:i+64])+',')
-    branch_lines += ['};','']
+    branch_lines += ['};','// Retired presentation-only PMDCollab IDs migrate back to the canonical base species.',
+                     'static const int16_t DEX_RETIRED_VARIANT_BASE[DEX_COUNT + 1] = {']
+    for i in range(0,len(retired_base_map),32): branch_lines.append('  '+', '.join(str(x) for x in retired_base_map[i:i+32])+',')
+    branch_lines += ['};',
+                     'static inline int16_t canonicalizeRetiredVariant(int16_t d) {',
+                     '  return (d >= 1 && d <= DEX_COUNT && DEX_RETIRED_VARIANT_BASE[d] > 0) ? DEX_RETIRED_VARIANT_BASE[d] : d;',
+                     '}','']
     if insert_marker not in pre: raise RuntimeError('Alola branch marker not found in base dex.h')
     pre=pre.replace(insert_marker,insert_marker+'\n'.join(branch_lines)+'\n')
 
@@ -943,11 +1023,13 @@ def main():
          'national_dex_max':current_max,'dex_count':max_id,'entries':catalog_entries,
          'extra_edges':[{'base':a,'target':b,'level':l,'reason':r} for a,b,l,r in extra_edges],
          'regional_descendant_routes':[{'natdex':n,'base':a,'target':b,'level':l} for n,a,b,l in regional_route_rows],
-         'excluded_gimmicks':excluded}
+         'excluded_gimmicks':[x for x in excluded if not x.get('presentation')],
+         'retired_presentation_variants':retired_forms,
+         'retired_sprite_ids':sorted(retired_ids)}
     CATALOG_PATH.write_text(json.dumps(cat,ensure_ascii=False,indent=2),encoding='utf-8')
     LOCK_PATH.write_text(json.dumps(lock,ensure_ascii=False,indent=2,sort_keys=True),encoding='utf-8')
 
-    # v3.62.4 sprite mapping audit (retained from v3.62.3). The device stores only p<ID>.bin, so a
+    # v3.62.5 sprite mapping audit (retained from v3.62.3). The device stores only p<ID>.bin, so a
     # stale microSD created with a different form-ID lock can show the right
     # Pokemon name with the wrong old sprite.  Publish the exact ID -> NatDex ->
     # PMDCollab path mapping used by this build, and validate that every source
@@ -997,13 +1079,15 @@ def main():
     audit={'schema':1,'generated_utc':cat['generated_utc'],'source':TRACKER_URL,'catalog_fingerprint':fingerprint,
            'dex_count':max_id,'national_dex_max':current_max,'entries':audit_entries}
     AUDIT_PATH.write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
-    map_lines=['TamaPoke v3.62.4 sprite ID/path audit',f'catalog_fingerprint={fingerprint}',
+    map_lines=['TamaPoke v3.62.5 canonical-form sprite ID/path audit',f'catalog_fingerprint={fingerprint}',
                'Rule: internal ID -> NatDex owner -> PMDCollab path first component must agree.',
                f'active_entries={sum(1 for e in audit_entries if e.get("enabled"))}',f'paldea_tauros_entries={len(tauros)}','',
                'PALDEA TAUROS:']
     map_lines += [f"- id {e['id']} / nat#{e['natdex']} / {e['name']} / {e.get('pmd_path')}" for e in tauros]
-    map_lines += ['', 'MANAGED 810+ / FORMS / MEGA:']
+    map_lines += ['', 'MANAGED 810+ / CANONICAL FORMS / MEGA:']
     map_lines += [f"- id {e['id']} / nat#{e['natdex']} / {e['name']} / {e.get('pmd_path') or 'NO-SPRITE'}" for e in audit_entries if int(e['id'])>=810]
+    map_lines += ['', 'RETIRED PRESENTATION-ONLY IDS (not species/resources):']
+    map_lines += [f"- id {r['id']} / nat#{r['natdex']} / {r['label']} / {r['reason']}" for r in retired_forms]
     MAPPING_REPORT_PATH.write_text('\n'.join(map_lines)+'\n',encoding='utf-8')
 
     included=sum(1 for x in catalog_entries if x['enabled'])
@@ -1011,17 +1095,19 @@ def main():
     mega_included=sum(1 for x in catalog_entries if x['enabled'] and x.get('mega'))
     missing=[x for x in catalog_entries if not x['enabled']]
     report=[
-      'TamaPoke v3.62.4 current PMDCollab catalog sync - regional evolution audit + Mega36 + sprite mapping audit',
+      'TamaPoke v3.62.5 current PMDCollab catalog sync - canonical forms + regional evolution + Mega36',
       f'Source: {TRACKER_URL}',f'National Dex detected: 1..{current_max}',f'TamaPoke DEX_COUNT: {max_id}',
       f'Added/managed entries with real current sprite: {included}',f'Form entries with real current sprite: {form_included}',
       f'Approved Mega entries with real current sprite: {mega_included}/{APPROVED_MEGA_COUNT}',
-      f'Excluded non-approved battle-gimmick forms: {len(excluded)}',f'Current new/base locked entries without sprite: {len(missing)}','',
+      f'Excluded non-approved battle-gimmick forms: {sum(1 for x in excluded if not x.get("presentation"))}',
+      f'Retired presentation-only form IDs: {len(retired_forms)}',f'Current new/base locked entries without sprite: {len(missing)}','',
       'APPROVED MEGA EVOLUTIONS:'
     ]
     report += [f"- id {x['id']} nat#{x['natdex']} {x['name']} Lv.{MEGA_EVOLVE_LEVEL} ({x.get('pmd_path')})" for x in catalog_entries if x.get('enabled') and x.get('mega')]
-    report += ['', 'EXCLUDED GIMMICKS:'
-    ]
-    report += [f"- #{x['natdex']} {x['full_name']} ({x['pmd_path']})" for x in excluded]
+    report += ['', 'EXCLUDED GIMMICKS:']
+    report += [f"- #{x['natdex']} {x['full_name']} ({x['pmd_path']})" for x in excluded if not x.get('presentation')]
+    report += ['', 'RETIRED PRESENTATION-ONLY PMDCOLLAB SLOTS:']
+    report += [f"- id {r['id']} nat#{r['natdex']} {r['label']} -> canonical id {r.get('canonical_id')}" for r in retired_forms]
     report += ['', 'NO CURRENT SPRITE / DISABLED:']
     report += [f"- id {x['id']} nat#{x['natdex']} {x['name']}" for x in missing]
     if failures:

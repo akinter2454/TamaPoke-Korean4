@@ -1,10 +1,14 @@
-TamaPoke KO v3.62.4 Regional Evolution Audit + Reliable SD Sync + Sprite Audit + Full Sync + Mega36
+TamaPoke KO v3.62.5 Canonical Forms + Regional Evolution + Reliable SD Sync + Full Sync + Mega36
 
 1) 기존 저장소를 삭제하지 말고 이 ZIP의 파일을 루트에 덮어씁니다.
-2) tools/catalog_lock.json이 이미 있으면 반드시 보존합니다.
-3) GitHub Actions에서 v3.62.4 workflow를 실행합니다.
-4) Sync 단계에서 regional evolution audit OK가 출력되어야 합니다.
-5) build/deploy 성공 후 Pages에서 v3.62.4 펌웨어를 설치합니다.
+2) tools/catalog_lock.json이 이미 있으면 반드시 보존합니다. ZIP에는 이 파일을 새로 덮어쓰지 않습니다.
+3) GitHub Actions에서 v3.62.5 workflow를 실행합니다.
+4) Sync 단계에서 regional evolution audit OK + canonical forms audit OK를 확인합니다.
+5) Actions가 기존 lock의 AltColor/Alternate/Cutscene/Beta 항목을 제거하되 퇴역 ID는 재사용하지 않고 cleaned lock을 저장소에 다시 커밋합니다.
+6) build/deploy 성공 후 Pages에서 v3.62.5 펌웨어를 먼저 설치하고 재부팅합니다.
+7) microSD의 '전체 스프라이트' 동기화를 1회 실행합니다. manifest의 retired_files가 먼저 삭제된 뒤 현재 canonical 리소스가 기록됩니다.
 
-이번 버전은 진화 graph 수정이며 스프라이트 ID를 의도적으로 재배치하지 않습니다. 기존 microSD를 재사용할 수 있습니다.
-지역폼 진화 검수 결과는 Pages의 regional-evolution-report.txt에서 확인할 수 있습니다.
+주의
+- 기존 tools/catalog_lock.json을 삭제하면 1200+ form ID 안정성이 깨질 수 있습니다.
+- microSD를 포맷할 필요는 없습니다.
+- 잘못 저장된 AltColor/Alternate species는 v3.62.5 로드 시 정상 base/지역폼으로 자동 복구됩니다.

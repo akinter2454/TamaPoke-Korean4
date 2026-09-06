@@ -1953,6 +1953,19 @@ void Pet::load() {
     int8_t oldT = prefs.getChar("eggT", 0);
     eggTarget = (oldT >= 0 && oldT < 9) ? OLD2DEX[oldT] : 4;
   }
+  // v3.62.5: catalogs before canonical-form cleanup could persist PMDCollab
+  // presentation slots (AltColor/Alternate/Cutscene/Beta) as if they were
+  // species. They are retired tombstones now; move any live pet/egg back to
+  // the real National-Dex species without touching IVs, level, nickname, etc.
+  {
+    int16_t oldSpecies = speciesId, oldEgg = eggTarget;
+    speciesId = canonicalizeRetiredVariant(speciesId);
+    eggTarget = canonicalizeRetiredVariant(eggTarget);
+    if (speciesId != oldSpecies)
+      Serial.printf("CANONICAL FORM MIGRATION: pet %d -> %d\n", oldSpecies, speciesId);
+    if (eggTarget != oldEgg)
+      Serial.printf("CANONICAL FORM MIGRATION: egg %d -> %d\n", oldEgg, eggTarget);
+  }
   eggTaps = prefs.getUChar("crack", 0);
   careMistakes = prefs.getUChar("mist", 0);
   if (careMistakes > MAX_LEVEL) careMistakes = MAX_LEVEL;

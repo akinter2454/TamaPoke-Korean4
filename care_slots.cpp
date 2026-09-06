@@ -75,6 +75,7 @@ bool CareSlots::validateSnapshot(CareSnapshot &s) const {
   if (s.magic != CARE_SNAPSHOT_MAGIC) return false;
   if (s.regionSchema > 1) return false;
   if (!(s.speciesId == -1 || (s.speciesId >= 1 && s.speciesId <= DEX_COUNT))) return false;
+  if (s.speciesId >= 1) s.speciesId = canonicalizeRetiredVariant(s.speciesId);
 
   if (s.fullness > 100) s.fullness = 100;
   if (s.joy > 100) s.joy = 100;
@@ -96,11 +97,14 @@ bool CareSlots::validateSnapshot(CareSnapshot &s) const {
   s.nick[sizeof(s.nick) - 1] = 0;
   for (uint8_t i = 0; i < MOVE_SLOTS; ++i) if (s.moves[i] >= MOVE_COUNT) s.moves[i] = 0;
   if (s.eggTarget < 1 || s.eggTarget > DEX_COUNT) s.eggTarget = 1;
+  else s.eggTarget = canonicalizeRetiredVariant(s.eggTarget);
   for (uint8_t r = 0; r < CARE_LEGACY_REGIONS; ++r)
     if (s.eggByRegion[r] < 0 || s.eggByRegion[r] > DEX_COUNT) s.eggByRegion[r] = 0;
+    else if (s.eggByRegion[r] > 0) s.eggByRegion[r] = canonicalizeRetiredVariant(s.eggByRegion[r]);
   for (uint8_t r = CARE_LEGACY_REGIONS; r < REGION_COUNT; ++r) {
     int16_t &v = s.eggByRegionExtra[r - CARE_LEGACY_REGIONS];
     if (v < 0 || v > DEX_COUNT) v = 0;
+    else if (v > 0) v = canonicalizeRetiredVariant(v);
   }
   if (s.sleepLevelRemainder >= SLEEP_PROGRESS_QUANTUM)
     s.sleepLevelRemainder %= SLEEP_PROGRESS_QUANTUM;

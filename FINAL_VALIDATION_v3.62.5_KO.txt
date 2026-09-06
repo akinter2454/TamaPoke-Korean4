@@ -1,0 +1,44 @@
+TamaPoke KO v3.62.5 FINAL VALIDATION - Canonical Forms / AltColor Cleanup
+
+정적 검증 결과
+- FW_VERSION = 3.62.5
+- Python tools 전체 py_compile 통과
+- GitHub Actions YAML 파싱 통과
+- 설치기 JavaScript 2개 script block node --check 통과
+- verify_sd_serial_protocol.py 통과: SDINFO proto=3 + reliable PUT + restricted retired-file DEL cleanup
+- verify_evolution_levels.py 통과: direct max Lv.64 / effective cap Lv.100 / retire penalty +12
+- presentation filter 단위검사 통과: AltColor/Alt Colour/Alternate/Cutscene/Beta 제외, Galar/Mega_X/Origin 유지
+- append-only lock prune 단위검사 통과: 표현용 ID만 제거하고 next_form_id 유지
+- synthetic verify_canonical_forms.py 통과: retired tombstone, no retired evolution edge, save migration helper, Charizard -> Mega X Lv.70 확인
+
+핵심 회귀 방지
+- PMDCollab 표현용 AltColor/Alternate/Cutscene/Beta가 active catalog/species/evolution에 다시 들어가면 Actions 실패
+- 기존 catalog_lock의 해당 ID는 퇴역하지만 다른 species에 재사용하지 않음
+- 과거 세이브의 퇴역 ID는 DEX_RETIRED_VARIANT_BASE로 정상 base/지역폼에 자동 복구
+- 리자몽 non-Mega extra form은 0개여야 하고 Mega Charizard X는 정확히 1개 + Lv.70 edge여야 함
+- v3.62.4 regional evolution audit는 계속 실행
+- sprite-manifest schema=4 retired_files를 이용해 전체/added-all 동기화 시 오래된 pNNN.bin/psNNN.bin 자동 삭제
+
+실기/온라인에서 최종 확인할 항목
+- GitHub Actions가 최신 PMDCollab tracker + 기존 실제 catalog_lock.json을 읽어 sync/regional/canonical/pack/Arduino compile/Pages deploy 모두 성공해야 최종 완료
+- Actions 성공 후 cleaned tools/catalog_lock.json이 repo에 자동 commit되는지 확인
+- v3.62.5 펌웨어 설치 후 SDINFO proto=3 사전점검이 통과하는지 확인
+- 전체 스프라이트 동기화 1회 후 AltColor/Alternate/Cutscene/Beta 퇴역 파일 정리 및 canonical sprite 표시 확인
+- 기존 '리자몽 Altcolor' 세이브가 정상 리자몽으로 복구되고 Lv.70 Mega Charizard X 진화가 가능한지 확인
+
+SHA-256
+382f8324a4bb343a6781eb39ffdf29070f85d028d4db21b2fb593d59f9bcde58  TamaPoke.ino
+dcf604933c9fe3f2ada057be52847f5e7245f26eb4c1d1f38e4d28240e6b8d98  dex.h
+ed73b1fecb3212ab4dcdc1f7f6f7d5cede0c83c32090dcf4c5d725a52c230348  pet.cpp
+6e775db6485e8c85ac31a2ae5a2360104e172c938bcc7a5da26746908d999645  party.cpp
+ac54644f1fe30640edd2dd016941453fe62a290b7d4d21c4a087704eb8484b69  care_slots.cpp
+a773af1248578d57b5e6cc62ab6b10fcfb9d6319eb3be0100782ad5cea7a2e43  sdmon.cpp
+e0ac67004498fef68bb975557d7282c439c3741707193f80229b1f7d1528aeba  sdmon.h
+efbadada5ffed85789858dd07de5c4d9180d1ba07f393140c525dc4a130a4a19  TamaPoke-KO-OneClick-Installer.html
+3675c4aad95cacc02b1c3329301e58490774f0450c7b5ef650d75d599ba92f34  .github/workflows/main.yml
+b5008464588919dbb5edaba3f15ecf847dff1628873ad77e8e5d8985792b7261  tools/sync_pmd_catalog.py
+73511564cdfb350aa2ffa8489457cd199b6d5da1cb6623b57c4c6ff2a44659fa  tools/pack_pmd_catalog.py
+7f0a1632c44b189f6e7c97f685be51ecb88b5e6ec3c110b237b443a66a526194  tools/build_sprite_paks.py
+d7758d95d623c32ce5f37c281dfe6009a4ec2aac7a9ee9a4f12877a25da2717c  tools/verify_sd_serial_protocol.py
+6a0d10dd044c38bd92deaf3215389eb1eefa126e3a4753bd29af296ad4730245  tools/verify_regional_evolutions.py
+8facc86674f9a32b5280f5795e6eaa63dc497b41633a388d83a7b8749b498014  tools/verify_canonical_forms.py

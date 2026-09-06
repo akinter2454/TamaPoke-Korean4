@@ -30,6 +30,7 @@ static bool seqNewer(uint32_t a, uint32_t b) { return (int32_t)(a - b) > 0; }
 
 static void sanitizeMon(PartyMon &m) {
   if (m.dex < 1 || m.dex > DEX_COUNT) { m = PartyMon(); return; }
+  m.dex = canonicalizeRetiredVariant(m.dex);
   if (m.level < 1) m.level = 1;
   if (m.level > 100) m.level = 100;
   if (m.ivAtk > 31) m.ivAtk = 31;

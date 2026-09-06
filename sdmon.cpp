@@ -295,46 +295,98 @@ void SdMon::unload() {
 // ---------------------------------------------------------------------------
 // Protocolo de carga por USB (para llenar la SD sin sacarla de la placa):
 //   PUT <ruta> <bytes>\n  + datos crudos   -> "OK" ... "DONE"
-//   LS\n                                   -> listado de /mons
+//   SDINFO\n                               -> SDINFO OK proto=3 ...\n//   DEL mons/pNNN.bin\n                    -> DONE (safe /mons sprite cleanup)\n//   LS\n                                   -> listado de /mons
 // Usar con tools/send_sd.py
 // ---------------------------------------------------------------------------
 
 bool sdSerialCommand(const String &line) {
+  // v3.62.3: the game normally keeps USB TX non-blocking so debug prints can
+  // never stall rendering when no serial monitor is attached.  PUT is the one
+  // exception: the browser uses OK/#/DONE as flow-control.  If those tiny ACKs
+  // are allowed to be dropped, a perfectly good SD transfer can randomly stop
+  // on p001.bin (or hundreds of files later).  While an explicit host transfer
+  // is active, make TX reliable, flush each ACK, then restore non-blocking mode.
+  if (line == "SDINFO") {
+    Serial.setTxTimeoutMs(1000);
+    if (sdReady) {
+      Serial.printf("SDINFO OK proto=3 cardMB=%llu\n",
+                    (unsigned long long)(SD_MMC.cardSize() / (1024ULL * 1024ULL)));
+    } else {
+      Serial.println("SDINFO ERR no-card");
+    }
+    Serial.flush();
+    Serial.setTxTimeoutMs(0);
+    return true;
+  }
+
+  if (line.startsWith("DEL ")) {
+    // v3.62.5: remove only retired sprite binaries. Never expose a generic
+    // filesystem delete primitive over Web Serial.
+    String path = line.substring(4);
+    path.trim();
+    if (!path.startsWith("/")) path = "/" + path;
+    bool safe = path.startsWith("/mons/p") && path.endsWith(".bin") && path.indexOf("..") < 0;
+    Serial.setTxTimeoutMs(1000);
+    bool ok = false;
+    if (sdReady && safe) {
+      if (!SD_MMC.exists(path.c_str())) ok = true;  // idempotent cleanup
+      else ok = SD_MMC.remove(path.c_str());
+    }
+    if (ok) { sdDirty = true; sdArtDirty = true; }
+    Serial.println(ok ? "DONE" : "ERR");
+    Serial.flush();
+    Serial.setTxTimeoutMs(0);
+    return true;
+  }
+
   if (line.startsWith("PUT ")) {
     int sp = line.lastIndexOf(' ');
     String path = line.substring(4, sp);
     uint32_t size = line.substring(sp + 1).toInt();
+    Serial.setTxTimeoutMs(1000);
     if (!sdReady || size == 0 || size > 4 * 1024 * 1024) {
       Serial.println("ERR");
+      Serial.flush();
+      Serial.setTxTimeoutMs(0);
       return true;
     }
     if (!path.startsWith("/")) path = "/" + path;
     File f = SD_MMC.open(path, FILE_WRITE);
     if (!f) {
       Serial.println("ERR");
+      Serial.flush();
+      Serial.setTxTimeoutMs(0);
       return true;
     }
     Serial.println("OK");
+    Serial.flush();
     static uint8_t buf[2048];
     uint32_t remaining = size;
-    Serial.setTimeout(5000);
+    bool writeOk = true;
+    Serial.setTimeout(8000);
     while (remaining > 0) {
       size_t want = remaining > sizeof(buf) ? sizeof(buf) : remaining;
       size_t n = Serial.readBytes(buf, want);
-      if (n == 0) break;  // timeout
-      f.write(buf, n);
+      if (n == 0) { writeOk = false; break; }  // host/data timeout
+      size_t wr = f.write(buf, n);
+      if (wr != n) { writeOk = false; break; }
       remaining -= n;
-      Serial.println("#");  // ack: listo para el siguiente bloque
+      Serial.println("#");  // host may send the next 2 KiB only after this ACK
+      Serial.flush();
+      yield();
     }
     f.close();
     Serial.setTimeout(1000);
-    sdDirty = (remaining == 0);
+    const bool done = writeOk && remaining == 0;
+    sdDirty = done;
     // A pack file just landed, so which regions are playable may have changed.
     // Flag it rather than rescanning here: this runs between the last data block
     // and the DONE the host is waiting on, and 15 file opens belong nowhere near
     // that. loop() picks it up.
-    if (remaining == 0) sdArtDirty = true;
-    Serial.println(remaining == 0 ? "DONE" : "ERR");
+    if (done) sdArtDirty = true;
+    Serial.println(done ? "DONE" : "ERR");
+    Serial.flush();
+    Serial.setTxTimeoutMs(0);
     return true;
   } else if (line == "LS") {
     File dir = SD_MMC.open("/mons");
