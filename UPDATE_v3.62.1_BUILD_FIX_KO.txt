@@ -1,0 +1,14 @@
+TamaPoke KO v3.62.1 - GitHub Actions BuildFix
+
+원인
+- v3.62.1로 FW_VERSION을 올린 뒤 Sync 단계가 여전히 FW_VERSION "3.62.0"을 grep하도록 남아 있어 exit code 1로 중단됨.
+- Pages 빌드 정보도 firmware=3.62.0으로 고정되어 있었음.
+
+수정
+- Sync 단계는 TamaPoke.ino의 FW_VERSION을 동적으로 읽고 x.y.z 형식만 검증함.
+- 이후 펌웨어 버전을 올려도 workflow의 고정 문자열 때문에 실패하지 않음.
+- Pages build-info의 firmware 값도 TamaPoke.ino에서 동적으로 읽음.
+- 게임 로직, Mega36 목록/스프라이트, Lv.70 진화, 세이브 구조는 변경하지 않음.
+
+기준 펌웨어
+- FW_VERSION 3.62.1 유지

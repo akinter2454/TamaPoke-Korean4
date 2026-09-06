@@ -35,7 +35,10 @@ jobs:
           cat "$GITHUB_WORKSPACE/tools/pmd_catalog_report.txt"
           grep -n '#define DEX_COUNT' "$GITHUB_WORKSPACE/dex.h" | head -1
           grep -n '#define REGION_COUNT 11' "$GITHUB_WORKSPACE/dex.h"
-          grep -n '#define FW_VERSION "3.62.0"' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          FW_SOURCE_VERSION="$(sed -n 's/^#define FW_VERSION "\([^"]*\)"/\1/p' "$GITHUB_WORKSPACE/TamaPoke.ino" | head -1)"
+          test -n "$FW_SOURCE_VERSION"
+          [[ "$FW_SOURCE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          echo "Firmware source version: $FW_SOURCE_VERSION"
           python3 "$GITHUB_WORKSPACE/tools/verify_evolution_levels.py"
           grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'MEGA_EVOLVE_LEVEL = 70' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
@@ -238,14 +241,19 @@ jobs:
           cp "$GITHUB_WORKSPACE/tools/pmd_catalog.json" "$GITHUB_WORKSPACE/site/"
           cp "$GITHUB_WORKSPACE/PMDCOLLAB_CREDITS.txt" "$GITHUB_WORKSPACE/site/"
           python3 - <<'PY'
-          import json
+          import json, re
           from pathlib import Path
           c=json.loads(Path('tools/pmd_catalog.json').read_text(encoding='utf-8'))
+          ino=Path('TamaPoke.ino').read_text(encoding='utf-8')
+          m=re.search(r'^#define\s+FW_VERSION\s+"([^"]+)"', ino, re.M)
+          if not m:
+              raise SystemExit('FW_VERSION missing from TamaPoke.ino')
+          fw=m.group(1)
           e=[x for x in c['entries'] if x.get('enabled')]
           f=[x for x in e if x.get('kind')=='form']
           out=[
             'TamaPoke KO v3.62.1 PMDCatalog - Mega36 Level Evolutions',
-            'firmware=3.62.0',
+            f'firmware={fw}',
             f"national_dex_max={c['national_dex_max']}",
             f"dex_count={c['dex_count']}",
             f"managed_enabled={len(e)}",

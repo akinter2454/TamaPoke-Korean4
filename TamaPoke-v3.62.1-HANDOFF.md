@@ -483,3 +483,10 @@ Actions 검증:
 - 기존 v3.61.x microSD를 재사용할 때 `현재 추가 스프라이트 전체` 대신 `메가진화 36종만 추가`를 사용.
 - Actions가 `sprites-extra-mega36-*.pak`을 생성하고 manifest `groups.mega36`에 기록. 정확히 36 normal + 36 shiny/fallback = 72 files를 검증.
 - p1200.bin 오류는 Mega36 자체의 누락이 아니라 전체 추가폼 재전송 경로에서 기존 1200+ 파일을 불필요하게 다시 건드린 현상.
+
+
+## v3.62.1 BuildFix — GitHub Actions 버전 검사
+- Mega36 delta-transfer 기능과 펌웨어는 v3.62.1 그대로 유지한다.
+- `.github/workflows/main.yml`의 Sync 단계에서 `FW_VERSION "3.62.0"`을 고정 grep하던 오류를 제거했다.
+- 이제 `TamaPoke.ino`의 `FW_VERSION`을 동적으로 읽고 `x.y.z` 형식만 확인하므로 이후 버전 업데이트 시 같은 이유로 Actions가 실패하지 않는다.
+- Pages build-info의 `firmware=` 값도 소스의 `FW_VERSION`에서 동적으로 생성한다.

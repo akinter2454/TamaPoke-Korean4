@@ -69,10 +69,12 @@
   },
   "deployment": {
     "host": "GitHub Pages",
-    "workflow_name": "TamaPoke v3.62.1 PMDCatalog - Mega36 Level Evolutions GitHub Pages"
+    "workflow_name": "TamaPoke v3.62.1 PMDCatalog - Mega36 Level Evolutions GitHub Pages",
+    "version_check": "dynamic FW_VERSION parse from TamaPoke.ino"
   },
   "save_note": "User plans to wipe old save data; backward save compatibility is not a blocking constraint.",
   "latest_changes": [
+    "GitHub Actions BuildFix: FW_VERSION gate and Pages firmware metadata now derive dynamically from TamaPoke.ino; no stale 3.62.0 hardcode",
     "Mega36-only microSD delta transfer group added: 36 normal + 36 shiny/fallback files, without resending old 1200+ forms",
     "installer now exposes a dedicated 메가진화 36종만 추가 button for v3.61.x -> v3.62.x upgrades",
     "full added-sprite install still includes 810+ species/forms plus approved Mega36 for fresh microSD installations",

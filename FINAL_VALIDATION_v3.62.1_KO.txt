@@ -16,3 +16,9 @@ TamaPoke KO v3.62.1 FINAL VALIDATION
 [PASS] 실패 시 개별 파일명/크기 표시 후 즉시 중단
 
 실제 PMDCollab sprite 및 Arduino compile은 GitHub Actions 실행 결과를 최종 기준으로 한다.
+
+BuildFix validation:
+- workflow no longer hardcodes FW_VERSION 3.62.0 in Sync gate : PASS
+- FW_VERSION is parsed dynamically from TamaPoke.ino : PASS
+- Pages firmware= metadata is generated dynamically : PASS
+- firmware/game logic remains v3.62.1 : PASS
