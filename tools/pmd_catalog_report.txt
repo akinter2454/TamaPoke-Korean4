@@ -1,4 +1,4 @@
-TamaPoke v3.62.0 current PMDCollab catalog sync - approved Mega36
+TamaPoke v3.62.1 current PMDCollab catalog sync - approved Mega36
 Source: https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/tracker.json
 National Dex detected: 1..1025
 TamaPoke DEX_COUNT: 1904
