@@ -1,4 +1,4 @@
-TamaPoke 한국어판 v3.62.0 PMDCatalog - Mega36 Level Evolutions + Evolution Guard
+TamaPoke 한국어판 v3.62.2 PMDCatalog - Sprite Audit + One-click Full Sync + Mega36
 
 기준선
 - v3.58 Alola PMDCollab 기준에서 확장
@@ -54,7 +54,7 @@ v3.61.4 절전 + 체육관
 GitHub Pages
 1. ZIP 내용물을 GitHub 저장소 루트에 업로드
 2. Settings -> Pages -> Source = GitHub Actions
-3. Actions -> "TamaPoke v3.62.0 PMDCatalog - Mega36 Level Evolutions GitHub Pages" -> Run workflow
+3. Actions -> "TamaPoke v3.62.2 PMDCatalog - Mega36 Level Evolutions GitHub Pages" -> Run workflow
 4. build와 deploy가 모두 성공해야 최종 배포 완료
 5. deploy에 표시되는 GitHub Pages 주소를 Chrome/Edge에서 열어 펌웨어/스프라이트 전송
 
@@ -69,7 +69,10 @@ Actions 최종 검증
 - pmd_catalog_report.txt: 포함/제외/스프라이트 미존재 목록
 - pmd_sprite_report.txt: 실제 PMD 패킹 결과
 - pmd_catalog.json: ID/National Dex/폼/지역/활성 상태
-- sprite-manifest.json: 지역별 분할 .pak 목록
+- sprite-manifest.json: 지역별 분할 .pak 목록 + catalog fingerprint
+- sprite-audit.json: 내부 ID / NatDex / PMDCollab 원본 경로 / 미리보기 매핑
+- sprite-mapping-report.txt: 팔데아 켄타로스 포함 전체 ID↔원본 경로 검수 보고서
+- previews/: 810+ 및 추가폼/Mega36 실제 패킹 원본 미리보기
 
 중요
 - 첫 성공 빌드 이후 생성된 tools/catalog_lock.json은 다른 저장소/ChatGPT 계정으로 이전할 때 반드시 함께 보존
@@ -120,3 +123,12 @@ v3.62.0 Mega36 레벨진화
 - 전체 대상은 MEGA36_SOURCE_MAP.txt 참조
 
 [v3.62.1] 기존 v3.61.x microSD에서 Mega36만 추가할 때는 설치 페이지의 `메가진화 36종만 추가` 버튼을 사용하세요. 기존 추가 스프라이트 전체 재전송은 필요하지 않습니다.
+
+
+v3.62.2 스프라이트 매핑 검수 + 전체 동기화
+- 모든 PMDCollab pmd_path의 첫 폴더 번호가 해당 항목의 National Dex와 같은지 Actions에서 전수 검사합니다.
+- 팔데아 켄타로스는 반드시 PMDCollab 0128 하위 폼에서 가져오도록 별도 회귀 검사를 합니다.
+- 설치 페이지에 '전체 스프라이트' 탭을 추가했습니다. 버튼 한 번으로 관동~알로라 기본팩 이후 현재 810+/가라르/히스이/팔데아/지역폼/추가폼/Mega36을 순차 전송합니다.
+- 설치 페이지의 '리소스 검수' 탭에서 내부 ID, 한국어 이름, NatDex, PMDCollab 원본 경로와 미리보기 이미지를 검색할 수 있습니다.
+- tools/sprite_audit.json과 sprite_mapping_report.txt에 동일한 매핑을 기록하고 catalog_fingerprint로 빌드별 ID 배치를 식별합니다.
+- 기존 저장소의 tools/catalog_lock.json은 절대 삭제하지 마세요. 오래된 SD의 1200번대 매핑이 의심되면 전체 스프라이트 동기화를 한 번 실행하세요. 세이브/NVS는 건드리지 않습니다.

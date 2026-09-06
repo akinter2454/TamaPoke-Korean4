@@ -30,6 +30,9 @@ button:hover,.btn:hover{background:#f6f2e7}button:disabled{opacity:.45;cursor:no
 .install-mode{border:2px solid var(--line);border-radius:16px;padding:16px;background:#fff}
 .install-mode.keep{border-color:#91c79d;background:#f6fff7}.install-mode.reset{border-color:#e7a097;background:#fff6f4}
 .install-mode h3{margin:0 0 6px;font-size:18px}.install-mode p{margin:6px 0}.danger{background:var(--red)!important;color:#fff!important;border-color:var(--red)!important}
+.sprite-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px}.sprite-tab{padding:8px 12px;border-radius:999px}.sprite-tab.active{background:var(--ink);color:#fff}.sprite-tab-panel{display:none}.sprite-tab-panel.active{display:block}
+.audit-controls{display:grid;grid-template-columns:1fr 160px auto;gap:8px;margin:10px 0}.audit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}.audit-card{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;min-width:0}.audit-img{height:112px;width:100%;object-fit:contain;image-rendering:pixelated;background:#f3f1e8;border-radius:8px}.audit-name{font-weight:800;margin-top:6px}.audit-meta{font-size:11px;color:var(--muted);word-break:break-all}.audit-card a{font-size:11px}.audit-bad{border-color:#df7a6f;background:#fff5f2}.audit-ok{border-color:#a8d3b1}.full-install{border:2px solid #91c79d;background:#f6fff7;border-radius:14px;padding:14px}.full-install .primary{font-size:17px;width:100%}
+@media(max-width:620px){.audit-controls{grid-template-columns:1fr}.audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.install-choice{grid-template-columns:1fr}}
 esp-web-install-button{display:inline-block}esp-web-install-button[install-unsupported]{display:none}
 .footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
@@ -142,23 +145,48 @@ esp-web-install-button{display:inline-block}esp-web-install-button[install-unsup
       <button id="connect">🔌 기기 연결</button>
       <span id="serialState" class="small">연결 안 됨</span>
     </div>
-    <div class="grid" style="margin-top:12px">
-      <button data-region="kanto" disabled>⬇ 관동</button>
-      <button data-region="johto" disabled>⬇ 성도</button>
-      <button data-region="hoenn" disabled>⬇ 호연</button>
-      <button data-region="sinnoh" disabled>⬇ 신오</button>
-      <button data-region="unova" disabled>⬇ 하나</button>
-      <button data-region="kalos" disabled>⬇ 칼로스</button>
-      <button data-region="alola" disabled>⬇ 알로라(7세대)</button>
-      <button data-extra="mega36" disabled>⬇ 메가진화 36종만 추가</button>
-      <button data-extra="added-all" disabled>⬇ 현재 추가 스프라이트 전체</button>
-      <button data-extra="galar" disabled>⬇ 가라르(8세대)</button>
-      <button data-extra="hisui" disabled>⬇ 히스이</button>
-      <button data-extra="paldea" disabled>⬇ 팔데아(9세대)</button>
+    <div class="sprite-tabs" role="tablist">
+      <button class="sprite-tab active" data-sprite-tab="region">지역별 설치</button>
+      <button class="sprite-tab" data-sprite-tab="all">전체 스프라이트</button>
+      <button class="sprite-tab" data-sprite-tab="audit">리소스 검수</button>
     </div>
-    <p class="small"><b>메가진화 36종만 추가</b>는 v3.62.0부터 승인된 행동 스프라이트 Mega36의 일반/색이 다른 스프라이트만 전송합니다. 기존 추가 폼을 이미 설치한 기기에서는 이 버튼을 사용하세요. <b>현재 추가 스프라이트 전체</b>는 810번 이후 신규 세대·공식 폼과 승인 Mega36을 모두 묶으며, 거다이맥스·다이맥스·원시회귀·테라스탈 등 다른 전투 기믹 폼은 제외됩니다.</p>
-    <p class="small">처음 설치하는 microSD라면 <b>현재 추가 스프라이트 전체</b>를 한 번 전송하면 810번 이후 신규 세대·추가 폼·Mega36이 함께 들어갑니다. 이미 v3.61.x 스프라이트가 들어 있는 기기를 v3.62.x로 올리는 경우에는 <b>메가진화 36종만 추가</b>만 실행하면 됩니다. 관동~알로라 버튼을 누르면 원본 지역팩 전송 뒤 그 지역에 속한 추가 폼 팩도 자동으로 이어서 전송합니다. 자동 전송이 막히면 <label style="text-decoration:underline;cursor:pointer">생성된 <code>.pak</code> 직접 선택<input id="pakFiles" type="file" accept=".pak" multiple hidden disabled></label>을 사용할 수 있습니다.</p>
-    <p class="small"><a href="./sprite-manifest.json" download>스프라이트 팩 목록</a> · <a href="./pmd_catalog_report.txt" download>카탈로그 보고서</a> · <a href="./pmd_sprite_report.txt" download>스프라이트 보고서</a></p>
+    <div id="spritePanelRegion" class="sprite-tab-panel active">
+      <div class="grid" style="margin-top:12px">
+        <button data-region="kanto" disabled>⬇ 관동</button>
+        <button data-region="johto" disabled>⬇ 성도</button>
+        <button data-region="hoenn" disabled>⬇ 호연</button>
+        <button data-region="sinnoh" disabled>⬇ 신오</button>
+        <button data-region="unova" disabled>⬇ 하나</button>
+        <button data-region="kalos" disabled>⬇ 칼로스</button>
+        <button data-region="alola" disabled>⬇ 알로라(7세대)</button>
+        <button data-extra="mega36" disabled>⬇ 메가진화 36종만 추가</button>
+        <button data-extra="added-all" disabled>⬇ 현재 추가 스프라이트 전체</button>
+        <button data-extra="galar" disabled>⬇ 가라르(8세대)</button>
+        <button data-extra="hisui" disabled>⬇ 히스이</button>
+        <button data-extra="paldea" disabled>⬇ 팔데아(9세대)</button>
+      </div>
+      <p class="small"><b>메가진화 36종만 추가</b>는 Mega36의 일반/색이 다른 스프라이트만 전송합니다. <b>현재 추가 스프라이트 전체</b>는 810번 이후 신규 세대·공식 폼·Mega36을 현재 카탈로그 ID대로 모두 다시 기록합니다.</p>
+    </div>
+    <div id="spritePanelAll" class="sprite-tab-panel">
+      <div class="full-install">
+        <b>microSD의 스프라이트를 현재 카탈로그와 한 번에 맞춥니다.</b>
+        <p class="small">관동→성도→호연→신오→하나→칼로스→알로라 기본팩을 차례로 전송한 뒤, 가라르·히스이·팔데아·지역폼·추가폼·Mega36 전체를 현재 ID로 덮어씁니다. 플레이 세이브는 건드리지 않습니다. 예전 catalog_lock으로 받은 1200번대 스프라이트가 섞였을 때 이 기능을 한 번 실행하는 것을 권장합니다.</p>
+        <button id="installAllSprites" class="primary" disabled>⬇ 모든 스프라이트 한 번에 설치/동기화</button>
+      </div>
+    </div>
+    <div id="spritePanelAudit" class="sprite-tab-panel">
+      <p class="small">현재 빌드가 사용하는 <b>내부 ID → 포켓몬 이름 → National Dex → PMDCollab 원본 경로</b>를 직접 확인할 수 있습니다. 810번 이후 항목은 실제 TPK3 생성에 사용한 원본에서 뽑은 미리보기 PNG를 표시합니다.</p>
+      <div class="audit-controls">
+        <input id="auditSearch" type="search" placeholder="이름 / ID / NatDex / PMD 경로 검색" />
+        <select id="auditKind"><option value="all">전체</option><option value="managed">810+ / 추가폼</option><option value="form">폼만</option><option value="mega">메가36</option><option value="paldea">팔데아</option></select>
+        <button id="loadAudit">🔎 현재 리소스 불러오기</button>
+      </div>
+      <div id="auditSummary" class="small"></div>
+      <div id="auditGrid" class="audit-grid"></div>
+      <button id="auditMore" class="hidden" style="margin-top:10px">더 보기</button>
+    </div>
+    <p class="small">자동 전송이 막히면 <label style="text-decoration:underline;cursor:pointer">생성된 <code>.pak</code> 직접 선택<input id="pakFiles" type="file" accept=".pak" multiple hidden disabled></label>을 사용할 수 있습니다.</p>
+    <p class="small"><a href="./sprite-manifest.json" download>스프라이트 팩 목록</a> · <a href="./sprite-audit.json" download>스프라이트 ID/원본 매핑</a> · <a href="./sprite-mapping-report.txt" download>매핑 검수 보고서</a> · <a href="./pmd_catalog_report.txt" download>카탈로그 보고서</a> · <a href="./pmd_sprite_report.txt" download>스프라이트 보고서</a></p>
     <div class="bar" id="bar"><div></div></div>
     <pre id="log"></pre>
   </div>
@@ -190,7 +218,7 @@ const EMBEDDED_FIRMWARE = {
   boot_app0: "",
   app: ""
 };
-const FW_VERSION = "3.62.1-ko-mega36-delta-lv70-evolevelguard-rewardrate-menuredraw";
+const FW_VERSION = "3.62.2-ko-sprite-audit-full-install-mega36";
 const EMBEDDED_SPRITE_PAKS = {};
 
 const OFFSETS = {
@@ -384,8 +412,8 @@ async function sendAll(items) {
     done++;
     fill.style.width = (done / items.length * 100).toFixed(1) + '%';
   }
-  if (fail) log(`중단: ${done}/${items.length} 전송 완료. 실패 파일부터 다시 시도할 수 있습니다.`);
-  else log(`완료: ${done}/${items.length}. 보드를 재시작하세요.`);
+  if (fail) { log(`중단: ${done}/${items.length} 전송 완료. 실패 파일부터 다시 시도할 수 있습니다.`); return false; }
+  log(`완료: ${done}/${items.length}.`); return true;
 }
 
 const connectBtn = document.getElementById('connect');
@@ -401,9 +429,10 @@ connectBtn.addEventListener('click', async () => {
     document.getElementById('serialState').className = 'small good';
     document.querySelectorAll('[data-region]').forEach(b => b.disabled = false);
     document.querySelectorAll('[data-extra]').forEach(b => b.disabled = false);
+    document.getElementById('installAllSprites').disabled = false;
     document.getElementById('pakFiles').disabled = false;
     connectBtn.disabled = true;
-    log('기기 연결 완료. 지역 또는 현재 PMDCollab 추가 스프라이트를 선택하세요.');
+    log('기기 연결 완료. 지역별 설치 또는 전체 스프라이트 동기화를 선택하세요.');
   } catch (e) {
     log('연결 실패: ' + e.message);
   }
@@ -435,7 +464,7 @@ async function getExtraManifest() {
 }
 async function extraPakFiles(kind) {
   const m=await getExtraManifest();
-  if(kind==='added-all') return m.all||[];
+  if(kind==='added-all') return (m.groups&&m.groups['added-all'])||m.all||[];
   if(kind==='mega36') return (m.groups&&m.groups.mega36)||m.mega36||[];
   return (m.regions&&m.regions[kind])||[];
 }
@@ -449,7 +478,7 @@ async function sendExtraPakFiles(files, label) {
     if(!r.ok) throw new Error(`${files[i]} HTTP ${r.status}`);
     const items=parsePak(await r.arrayBuffer());
     log(`[${i+1}/${files.length}] ${items.length}개 파일 전송...`);
-    await sendAll(items);
+    if(!await sendAll(items)) throw new Error(`${files[i]} 전송 중단`);
   }
 }
 
@@ -463,7 +492,7 @@ for (const b of document.querySelectorAll('[data-region]')) {
       log(`${REGION_KO[region]} 스프라이트 다운로드 중...`);
       const items = parsePak(await fetchPak(region));
       log(`${items.length}개 기본 지역 파일 전송 시작...`);
-      await sendAll(items);
+      if(!await sendAll(items)) throw new Error(`${REGION_KO[region]} 기본팩 전송 중단`);
       // Forms owned by an older generation (Rotom, Deoxys, regional forms,
       // etc.) have independent TamaPoke IDs and live in the generated local
       // extra chunks. Send those immediately after the original region pack.
@@ -493,6 +522,84 @@ for (const b of document.querySelectorAll('[data-extra]')) {
     finally { b.disabled=false; }
   });
 }
+
+// v3.62.2: sprite installer tabs
+for (const t of document.querySelectorAll('[data-sprite-tab]')) {
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.sprite-tab').forEach(x=>x.classList.toggle('active',x===t));
+    const key=t.dataset.spriteTab;
+    for(const [k,id] of Object.entries({region:'spritePanelRegion',all:'spritePanelAll',audit:'spritePanelAudit'}))
+      document.getElementById(id).classList.toggle('active',k===key);
+  });
+}
+
+const ALL_BASE_REGIONS=['kanto','johto','hoenn','sinnoh','unova','kalos','alola'];
+document.getElementById('installAllSprites').addEventListener('click', async (ev)=>{
+  const b=ev.currentTarget;
+  if(!writer){log('먼저 기기를 연결하세요.');return;}
+  if(!confirm('현재 카탈로그 기준으로 모든 스프라이트를 다시 전송합니다. 시간이 오래 걸릴 수 있습니다. 계속할까요?')) return;
+  b.disabled=true;
+  try{
+    const m=await getExtraManifest();
+    log(`전체 동기화 시작 · catalog ${m.catalog_fingerprint||'unknown'}`);
+    for(let i=0;i<ALL_BASE_REGIONS.length;i++){
+      const region=ALL_BASE_REGIONS[i];
+      log(`[기본 ${i+1}/${ALL_BASE_REGIONS.length}] ${REGION_KO[region]} 다운로드...`);
+      const items=parsePak(await fetchPak(region));
+      log(`[기본 ${i+1}/${ALL_BASE_REGIONS.length}] ${items.length}개 전송...`);
+      if(!await sendAll(items)) throw new Error(`${REGION_KO[region]} 기본팩에서 중단`);
+    }
+    const extra=await extraPakFiles('added-all');
+    log(`[추가] 현재 810+ / 공식 폼 / Mega36 ${extra.length}개 팩 동기화...`);
+    await sendExtraPakFiles(extra,'현재 추가 스프라이트 전체');
+    log(`전체 스프라이트 동기화 완료 · catalog ${m.catalog_fingerprint||'unknown'} · 보드를 재시작하세요.`);
+  }catch(e){log('전체 스프라이트 동기화 실패: '+e.message);}
+  finally{b.disabled=false;}
+});
+
+let auditData=null,auditShown=0;
+const AUDIT_PAGE=48;
+function auditFiltered(){
+  if(!auditData)return[];
+  const q=(document.getElementById('auditSearch').value||'').trim().toLocaleLowerCase('ko');
+  const kind=document.getElementById('auditKind').value;
+  return auditData.entries.filter(e=>{
+    if(kind==='managed' && Number(e.id)<810)return false;
+    if(kind==='form' && e.kind!=='form')return false;
+    if(kind==='mega' && !e.mega)return false;
+    if(kind==='paldea' && Number(e.region)!==9)return false;
+    if(!q)return true;
+    return [e.id,e.natdex,e.name,e.pmd_path,e.form_name].some(v=>String(v??'').toLocaleLowerCase('ko').includes(q));
+  });
+}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function renderAudit(reset=true){
+  if(!auditData)return;
+  if(reset){auditShown=0;document.getElementById('auditGrid').innerHTML='';}
+  const rows=auditFiltered();
+  const end=Math.min(rows.length,auditShown+AUDIT_PAGE);
+  const frag=document.createDocumentFragment();
+  for(const e of rows.slice(auditShown,end)){
+    const c=document.createElement('div');c.className='audit-card '+(e.enabled?'audit-ok':'audit-bad');
+    const img=e.local_preview||e.preview_url;
+    c.innerHTML=`${img?`<img class="audit-img" loading="lazy" src="${esc(img)}" alt="${esc(e.name)}" onerror="this.style.opacity=.18">`:'<div class="audit-img"></div>'}
+      <div class="audit-name">${esc(e.name)}</div>
+      <div class="audit-meta">ID ${esc(e.id)} · Nat#${esc(e.natdex)} · ${e.mega?'MEGA · ':''}${esc(e.kind)}${e.form_name?`<br>원본 폼: ${esc(e.form_name)}`:''}<br>PMD: ${esc(e.pmd_path||'sprite 없음')}</div>
+      ${e.source_url?`<a href="${esc(e.source_url)}" target="_blank" rel="noopener">PMDCollab 원본 폴더 ↗</a>`:''}`;
+    frag.appendChild(c);
+  }
+  document.getElementById('auditGrid').appendChild(frag);auditShown=end;
+  document.getElementById('auditSummary').textContent=`catalog ${auditData.catalog_fingerprint||'unknown'} · 검색 ${rows.length}개 · ${auditShown}개 표시`;
+  document.getElementById('auditMore').classList.toggle('hidden',auditShown>=rows.length);
+}
+async function loadAudit(){
+  const r=await fetch('./sprite-audit.json',{cache:'no-store'});if(!r.ok)throw new Error(`sprite-audit.json HTTP ${r.status}`);
+  auditData=await r.json();renderAudit(true);
+}
+document.getElementById('loadAudit').addEventListener('click',async()=>{try{await loadAudit();}catch(e){log('리소스 검수 목록 실패: '+e.message);}});
+document.getElementById('auditSearch').addEventListener('input',()=>renderAudit(true));
+document.getElementById('auditKind').addEventListener('change',()=>renderAudit(true));
+document.getElementById('auditMore').addEventListener('click',()=>renderAudit(false));
 
 document.getElementById('pakFiles').addEventListener('change', async (ev) => {
   for (const f of [...ev.target.files]) {

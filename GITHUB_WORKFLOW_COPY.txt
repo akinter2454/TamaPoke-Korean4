@@ -1,4 +1,4 @@
-name: TamaPoke v3.62.1 PMDCatalog - Mega36 Level Evolutions GitHub Pages
+name: TamaPoke v3.62.2 PMDCatalog - Mega36 Level Evolutions GitHub Pages
 
 on:
   workflow_dispatch:
@@ -43,6 +43,8 @@ jobs:
           grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'MEGA_EVOLVE_LEVEL = 70' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'effectiveEvolutionTargetLevel' "$GITHUB_WORKSPACE/pet.cpp"
+          test -s "$GITHUB_WORKSPACE/tools/sprite_audit.json"
+          test -s "$GITHUB_WORKSPACE/tools/sprite_mapping_report.txt"
           grep -n 'XITEM_IV_ATK' "$GITHUB_WORKSPACE/game_extras.h"
           grep -n 'XITEM_GOLD_CROWN' "$GITHUB_WORKSPACE/game_extras.h"
           grep -n 'score >= great ? 38 : (score >= good ? 22 : 0)' "$GITHUB_WORKSPACE/TamaPoke.ino"
@@ -58,6 +60,20 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/tools/sdcard/mons"
           python3 "$GITHUB_WORKSPACE/tools/pack_pmd_catalog.py"
           cat "$GITHUB_WORKSPACE/tools/pmd_sprite_report.txt"
+          test -d "$GITHUB_WORKSPACE/tools/web_extra/previews"
+          test "$(find "$GITHUB_WORKSPACE/tools/web_extra/previews" -type f -name 'p*.png' | wc -l)" -gt 0
+          python3 - <<'PYPREV'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('tools/sprite_audit.json').read_text(encoding='utf-8'))
+          missing=[]
+          for e in a.get('entries',[]):
+              if e.get('enabled') and int(e.get('id',0))>=810:
+                  lp=e.get('local_preview')
+                  if not lp or not (Path('tools/web_extra')/lp).is_file(): missing.append((e.get('id'),e.get('name'),lp))
+          if missing: raise SystemExit('missing generated sprite previews: '+repr(missing[:20]))
+          print('managed preview audit OK:', sum(1 for e in a.get('entries',[]) if e.get('enabled') and int(e.get('id',0))>=810))
+          PYPREV
 
       - name: Verify catalog policy and generated TPK3 files
         run: |
@@ -96,6 +112,17 @@ jobs:
           bynat={int(e['natdex']):e for e in megas}
           if 'x' not in (bynat[6].get('name') or '').lower() or 'y' not in (bynat[150].get('name') or '').lower():
               raise SystemExit('Charizard X / Mewtwo Y one-way Mega targets missing')
+          audit=json.loads(Path('tools/sprite_audit.json').read_text(encoding='utf-8'))
+          for a in audit.get('entries',[]):
+              pp=a.get('pmd_path')
+              if pp:
+                  owner=pp.split('/',1)[0]
+                  if not owner.isdigit() or int(owner)!=int(a['natdex']):
+                      raise SystemExit(f'cross-species sprite mapping: {a}')
+          tau=[a for a in audit.get('entries',[]) if int(a.get('natdex',0))==128 and int(a.get('region',10))==9 and a.get('enabled')]
+          if any(not str(a.get('pmd_path') or '').startswith('0128/') for a in tau):
+              raise SystemExit('Paldea Tauros PMD owner mismatch: '+repr(tau))
+          print('sprite_catalog_fingerprint=',audit.get('catalog_fingerprint'),'paldea_tauros=',[(a['id'],a.get('pmd_path')) for a in tau])
           print('national_dex_max=',cat['national_dex_max'])
           print('dex_count=',cat['dex_count'],'enabled_managed=',enabled,'forms=',forms,'mega36=',len(megas))
           print('excluded_gimmicks=',len(cat.get('excluded_gimmicks',[])))
@@ -105,7 +132,7 @@ jobs:
               print('WARNING: upstream PokeAPI National Dex currently reports below 1025')
           PY
 
-      - name: Verify v3.62.1 Mega36 plus existing reward/menu/IV/power/gym guards
+      - name: Verify v3.62.2 Mega36 plus existing reward/menu/IV/power/gym guards
         run: |
           set -euxo pipefail
           grep -q 'targetFrameMs = activeAnimated ? 85UL : 100UL' "$GITHUB_WORKSPACE/TamaPoke.ino"
@@ -164,6 +191,9 @@ jobs:
           import json
           from pathlib import Path
           m=json.loads(Path('tools/web_extra/sprite-manifest.json').read_text(encoding='utf-8'))
+          assert m.get('schema') == 3, m
+          assert m.get('catalog_fingerprint'), m
+          assert m.get('groups',{}).get('added-all') == m.get('all'), 'added-all group mismatch'
           parts=m.get('groups',{}).get('mega36',[])
           assert parts, 'Mega36 delta pack list missing'
           assert m.get('counts',{}).get('mega36_files') == 72, m.get('counts')
@@ -201,7 +231,7 @@ jobs:
           cp "$GITHUB_WORKSPACE"/*.cpp "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
           cp "$GITHUB_WORKSPACE"/*.h "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
 
-      - name: Compile TamaPoke v3.62.1 Mega36 catalog firmware
+      - name: Compile TamaPoke v3.62.2 Mega36 catalog firmware
         run: |
           set -euxo pipefail
           mkdir -p "$GITHUB_WORKSPACE/build"
@@ -226,7 +256,7 @@ jobs:
             "$GITHUB_WORKSPACE/oneclick-firmware" \
             "$GITHUB_WORKSPACE/index.html"
           test -s "$GITHUB_WORKSPACE/index.html"
-          grep -q '3.62.1-ko-mega36-delta-lv70-evolevelguard-rewardrate-menuredraw' "$GITHUB_WORKSPACE/index.html"
+          grep -q '3.62.2-ko-sprite-audit-full-install-mega36' "$GITHUB_WORKSPACE/index.html"
 
       - name: Prepare complete GitHub Pages site
         run: |
@@ -239,11 +269,15 @@ jobs:
           cp "$GITHUB_WORKSPACE/tools/pmd_catalog_report.txt" "$GITHUB_WORKSPACE/site/"
           cp "$GITHUB_WORKSPACE/tools/pmd_sprite_report.txt" "$GITHUB_WORKSPACE/site/"
           cp "$GITHUB_WORKSPACE/tools/pmd_catalog.json" "$GITHUB_WORKSPACE/site/"
+          cp "$GITHUB_WORKSPACE/tools/sprite_audit.json" "$GITHUB_WORKSPACE/site/sprite-audit.json"
+          cp "$GITHUB_WORKSPACE/tools/sprite_mapping_report.txt" "$GITHUB_WORKSPACE/site/sprite-mapping-report.txt"
+          if [ -d "$GITHUB_WORKSPACE/tools/web_extra/previews" ]; then cp -R "$GITHUB_WORKSPACE/tools/web_extra/previews" "$GITHUB_WORKSPACE/site/previews"; fi
           cp "$GITHUB_WORKSPACE/PMDCOLLAB_CREDITS.txt" "$GITHUB_WORKSPACE/site/"
           python3 - <<'PY'
           import json, re
           from pathlib import Path
           c=json.loads(Path('tools/pmd_catalog.json').read_text(encoding='utf-8'))
+          a=json.loads(Path('tools/sprite_audit.json').read_text(encoding='utf-8'))
           ino=Path('TamaPoke.ino').read_text(encoding='utf-8')
           m=re.search(r'^#define\s+FW_VERSION\s+"([^"]+)"', ino, re.M)
           if not m:
@@ -252,10 +286,11 @@ jobs:
           e=[x for x in c['entries'] if x.get('enabled')]
           f=[x for x in e if x.get('kind')=='form']
           out=[
-            'TamaPoke KO v3.62.1 PMDCatalog - Mega36 Level Evolutions',
+            'TamaPoke KO v3.62.2 PMDCatalog - Mega36 Level Evolutions',
             f'firmware={fw}',
             f"national_dex_max={c['national_dex_max']}",
             f"dex_count={c['dex_count']}",
+            f"sprite_catalog={a.get('catalog_fingerprint')}",
             f"managed_enabled={len(e)}",
             f"independent_forms={len(f)}",
             f"excluded_battle_gimmicks={len(c.get('excluded_gimmicks',[]))}",
@@ -279,11 +314,12 @@ jobs:
           git add -f \
             dex.h ko_species.h noart.h \
             tools/catalog_lock.json tools/pmd_catalog.json \
-            tools/pmd_catalog_report.txt tools/pmd_sprite_report.txt
+            tools/pmd_catalog_report.txt tools/pmd_sprite_report.txt \
+            tools/sprite_audit.json tools/sprite_mapping_report.txt
           if git diff --cached --quiet; then
             echo "No generated changes to commit"
           else
-            git commit -m "Build v3.62.1 Mega36 PMDCollab catalog [skip ci]"
+            git commit -m "Build v3.62.2 Mega36 PMDCollab catalog [skip ci]"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
@@ -328,5 +364,5 @@ jobs:
 
       - name: Show TamaPoke installer URL
         run: |
-          echo "### TamaPoke v3.62.1 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
+          echo "### TamaPoke v3.62.2 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
           echo "${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"

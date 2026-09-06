@@ -1,0 +1,48 @@
+TamaPoke KO v3.62.2 FINAL VALIDATION - Sprite Audit + One-click Full Sprite Sync
+
+Purpose
+- Diagnose and prevent internal ID / microSD sprite mismatches such as Paldean Tauros displaying a stale Lapras p<ID>.bin.
+- Let the user visually inspect the current build's sprite mapping and previews.
+- Provide a one-click tab that re-synchronizes every active sprite without touching game save/NVS.
+
+Implemented guards
+1. sync_pmd_catalog.py publishes tools/sprite_audit.json and tools/sprite_mapping_report.txt.
+2. Every non-empty PMDCollab pmd_path is checked so its first numeric folder equals the entry National Dex owner.
+3. Every enabled Paldea Tauros entry is explicitly required to use 0128/*.
+4. Duplicate internal IDs and duplicate active PMDCollab source paths fail catalog sync.
+5. A catalog_fingerprint identifies the exact ID/NatDex/path mapping for each successful build.
+6. pack_pmd_catalog.py creates a cropped preview PNG for every enabled 810+ entry from the same PMDCollab source path used to build its TPK3.
+7. GitHub Actions verifies every enabled 810+ entry has a generated preview.
+8. Installer '리소스 검수' tab shows ID, name, NatDex, original form label, PMDCollab path, preview and source-folder link.
+9. Installer '전체 스프라이트' tab performs one user click but transfers split packs sequentially: Kanto, Johto, Hoenn, Sinnoh, Unova, Kalos, Alola, then all current 810+/forms/Mega36 chunks.
+10. Full sprite sync only writes sprite files through the existing SD PUT protocol. It does not erase NVS/save data.
+11. Existing tools/catalog_lock.json must be retained; successful Actions commits the current lock/audit/report back to the branch.
+
+Static validation performed in this environment
+- Python py_compile: sync_pmd_catalog.py, pack_pmd_catalog.py, build_sprite_paks.py, verify_evolution_levels.py: PASS
+- Evolution guard audit against source dex: PASS (direct max Lv.64, cap Lv.100, retire penalty +12)
+- GitHub Actions YAML parse with PyYAML: PASS
+- Installer HTML parse, required tab/control IDs, no duplicate IDs: PASS
+- Installer JavaScript syntax via node --check: PASS
+- Firmware version guard: FW_VERSION 3.62.2: PASS
+- Installer version marker 3.62.2-ko-sprite-audit-full-install-mega36: PASS
+- Manifest schema target 3 / groups.added-all / catalog_fingerprint guards present: PASS
+
+Runtime validation delegated to GitHub Actions
+- Download latest PMDCollab tracker/PokeAPI data.
+- Generate actual catalog_lock/dex/audit/report.
+- Verify all current sprite source owners and Paldea Tauros 0128/* mapping.
+- Download/pack every enabled 810+ PMDCollab sprite and build previews.
+- Verify Mega36 exactly 36 species / 72 normal+shiny/fallback files.
+- Arduino CLI compile for ESP32-S3 and GitHub Pages deploy.
+
+Important operational note
+- If a microSD was populated when a different catalog_lock ID layout was active, merely updating firmware can leave stale p1200+.bin contents. Run the new '전체 스프라이트' sync once after the v3.62.2 Pages build succeeds. This overwrites every active current ID with the current catalog's sprite while preserving game save/NVS.
+
+SHA-256
+81b2cb4b092baa8c7725a6aebd12432733f34623d4352dcefd421ce13d9a9007  TamaPoke.ino
+22b2a1580cade9d9e9ddd8097fe2ab12b941a2d440223e3d0030b8e75bb3fd2a  TamaPoke-KO-OneClick-Installer.html
+c3db753e91b05603ac8e9f5dd7d4767725eed5dbc2d836ee71b442170d98440a  .github/workflows/main.yml
+73f9f6f332a9dec4b218ce551de7b67b9a0b8060fbcd9b0056f812ec03ead413  tools/sync_pmd_catalog.py
+b08f85beca195e9103d4ac082a6478614f0690ff4fed08ebffe29ce7599c400f  tools/pack_pmd_catalog.py
+5b465c7eeb7193eb63cd6c3d3f4a7edc6cca8e5a8d0df6cc72c49091f3cb277e  tools/build_sprite_paks.py

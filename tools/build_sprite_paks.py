@@ -43,7 +43,8 @@ def chunks(fs):
 def main():
     cat=json.loads(CAT.read_text(encoding='utf-8'));entries=cat['entries'];OUT.mkdir(parents=True,exist_ok=True)
     for p in OUT.glob('sprites-extra-*.pak'):p.unlink()
-    manifest={'schema':2,'regions':{},'groups':{},'all':[]}
+    audit=json.loads((HERE/'sprite_audit.json').read_text(encoding='utf-8')) if (HERE/'sprite_audit.json').is_file() else {}
+    manifest={'schema':3,'catalog_fingerprint':audit.get('catalog_fingerprint'),'regions':{},'groups':{},'all':[],'audit':'sprite-audit.json'}
     total=0
     for r,name in enumerate(REGIONS):
         fs=files_for([e for e in entries if int(e.get('region',10))==r]);parts=[]
@@ -51,7 +52,7 @@ def main():
             fn=f'sprites-extra-{name}-{idx}.pak';write_pak(OUT/fn,ch);parts.append(fn);manifest['all'].append(fn)
         manifest['regions'][name]=parts;total+=len(fs)
         print(f'{name}: {len(fs)} files, {len(parts)} chunk(s)')
-    # v3.62.1 update path: users who already have the existing 810+/1200+
+    # v3.62.2 retained upgrade path: users who already have the existing 810+/1200+
     # catalog on microSD should not have to resend every older form just to add
     # the new Mega36 set. Build a dedicated delta group from catalog entries
     # explicitly marked mega=True. These files are also still present in their
@@ -62,6 +63,7 @@ def main():
         fn=f'sprites-extra-mega36-{idx}.pak'
         write_pak(OUT/fn,ch); mega_parts.append(fn)
     manifest['groups']['mega36']=mega_parts
+    manifest['groups']['added-all']=list(manifest['all'])
     manifest['counts']={'all_files':total,'mega36_files':len(mega_fs)}
     if len(mega_fs) != 72:
         raise SystemExit(f'Mega36 delta expected 72 normal/shiny files, got {len(mega_fs)}')

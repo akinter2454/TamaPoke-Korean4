@@ -24,6 +24,7 @@ import copy
 import csv
 import io
 import json
+import hashlib
 import os
 import re
 import time
@@ -38,11 +39,13 @@ BASE_KO = HERE/'ko_species_base_v358.h'
 LOCK_PATH = HERE/'catalog_lock.json'
 CATALOG_PATH = HERE/'pmd_catalog.json'
 REPORT_PATH = HERE/'pmd_catalog_report.txt'
+AUDIT_PATH = HERE/'sprite_audit.json'
+MAPPING_REPORT_PATH = HERE/'sprite_mapping_report.txt'
 TRACKER_URL = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/tracker.json'
 POKE = 'https://pokeapi.co/api/v2'
 SPECIES_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv'
 EVOLUTION_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_evolution.csv'
-USER_AGENT = 'TamaPoke-v3.62.1-Mega36/1.0 (+noncommercial classroom project)'
+USER_AGENT = 'TamaPoke-v3.62.2-SpriteAudit/1.0 (+noncommercial classroom project)'
 FORM_ID_START = 1200
 EVOLUTION_LEVEL_CAP = 100
 MEGA_EVOLVE_LEVEL = 70
@@ -69,7 +72,7 @@ GIMMICK_WORDS = (
 # non-Pokemon utility/special repository slots that must not become hatchable entries.
 SKIP_WORDS = ('missingno', 'substitute doll', 'manaphy egg')
 
-# v3.62.1: Mega forms with sufficiently complete PMDCollab behaviour sprites
+# v3.62.2: Mega forms with sufficiently complete PMDCollab behaviour sprites
 # verified on 2026-09-06.  This is intentionally a NATDEX whitelist rather than
 # "allow every Mega": future SpriteCollab additions must not silently change a
 # player's evolution graph.  Charizard and Mewtwo are restricted to the one
@@ -833,10 +836,14 @@ def main():
     # Fixed Alola entries: path from discovered tracker if available, otherwise v3.58 known 0001.
     for (nat,key),iid in FIXED_ALOLA.items():
         f=discovered.get(f'{nat:04d}/{key}')
-        catalog_entries.append({'id':iid,'natdex':nat,'pmd_path':(f or {}).get('pmd_path') or f'{nat:04d}/{key}',
-                                'shiny_path':(f or {}).get('shiny_path'),'name':ko_names[iid],'region':6,'kind':'form','enabled':bool(enabled[iid])})
+        catalog_entries.append({'id':iid,'natdex':nat,'lock_key':f'{nat:04d}/{key}','form_key':key,
+                                'form_name':(f or {}).get('form_name') or 'Alola',
+                                'pmd_path':(f or {}).get('pmd_path') or f'{nat:04d}/{key}',
+                                'shiny_path':(f or {}).get('shiny_path'),'name':ko_names[iid],'region':6,'kind':'form','enabled':bool(enabled[iid]),'mega':False})
     for iid,e in sorted(new_entries.items()):
-        catalog_entries.append({'id':iid,'natdex':e['natdex'],'pmd_path':e.get('pmd_path'),'shiny_path':e.get('shiny_path'),'name':e['ko_name'],
+        catalog_entries.append({'id':iid,'natdex':e['natdex'],'lock_key':(f"{e['natdex']:04d}/{e.get('form_key','')}" if e['kind']=='form' else None),
+                                'form_key':e.get('form_key'),'form_name':e.get('form_name'),
+                                'pmd_path':e.get('pmd_path'),'shiny_path':e.get('shiny_path'),'name':e['ko_name'],
                                 'region':e['region'],'kind':e['kind'],'enabled':bool(e['enabled']),'mega':bool(e.get('mega'))})
     cat={'schema':1,'generated_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'source':TRACKER_URL,
          'national_dex_max':current_max,'dex_count':max_id,'entries':catalog_entries,
@@ -845,12 +852,71 @@ def main():
     CATALOG_PATH.write_text(json.dumps(cat,ensure_ascii=False,indent=2),encoding='utf-8')
     LOCK_PATH.write_text(json.dumps(lock,ensure_ascii=False,indent=2,sort_keys=True),encoding='utf-8')
 
+    # v3.62.2 sprite mapping audit.  The device stores only p<ID>.bin, so a
+    # stale microSD created with a different form-ID lock can show the right
+    # Pokemon name with the wrong old sprite.  Publish the exact ID -> NatDex ->
+    # PMDCollab path mapping used by this build, and validate that every source
+    # path belongs to the same National-Dex owner before packing anything.
+    audit_entries=[]
+    for nat in range(1,min(809,current_max)+1):
+        node=tracker.get(f'{nat:04d}') or tracker.get(str(nat)) or {}
+        bp=base_sprite_path(nat,node) if isinstance(node,dict) else None
+        nm=base_ko[nat] if nat < len(base_ko) else (base_rows[nat]['name'] if nat < len(base_rows) else str(nat))
+        audit_entries.append({'id':nat,'natdex':nat,'name':nm,'region':gen_region(nat),'kind':'base','enabled':bool(bp) and nat not in NO_ART_BASE,
+                              'pmd_path':bp,'local_preview':None,
+                              'preview_url':(f'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/sprite/{bp}/Idle-Anim.png' if bp else None),
+                              'source_url':(f'https://github.com/PMDCollab/SpriteCollab/tree/master/sprite/{bp}' if bp else None)})
+    for e in catalog_entries:
+        pp=e.get('pmd_path')
+        audit_entries.append({'id':int(e['id']),'natdex':int(e['natdex']),'name':e.get('name') or str(e['id']),
+                              'region':int(e.get('region',10)),'kind':e.get('kind','form'),'enabled':bool(e.get('enabled')),
+                              'mega':bool(e.get('mega')),'form_name':e.get('form_name'),'form_key':e.get('form_key'),'lock_key':e.get('lock_key'),
+                              'pmd_path':pp,'local_preview':None,
+                              'preview_url':(f'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/sprite/{pp}/Idle-Anim.png' if pp else None),
+                              'source_url':(f'https://github.com/PMDCollab/SpriteCollab/tree/master/sprite/{pp}' if pp else None)})
+    ids={}
+    paths={}
+    mapping_errors=[]
+    for e in audit_entries:
+        iid=int(e['id']); nat=int(e['natdex']); pp=e.get('pmd_path')
+        if iid in ids: mapping_errors.append(f'duplicate internal id {iid}: {ids[iid]} / {e.get("name")}')
+        ids[iid]=e.get('name')
+        if pp:
+            owner=pp.split('/',1)[0]
+            if not owner.isdigit() or int(owner)!=nat:
+                mapping_errors.append(f'cross-species source id {iid} {e.get("name")}: nat#{nat} -> {pp}')
+            if e.get('enabled'):
+                if pp in paths and paths[pp]!=iid:
+                    mapping_errors.append(f'duplicate active PMD path {pp}: ids {paths[pp]} and {iid}')
+                paths[pp]=iid
+    # Explicit regression for the photographed bug: every Paldea Tauros entry
+    # must source from PMDCollab owner 0128, never a stale Lapras/other-species path.
+    tauros=[e for e in audit_entries if int(e['natdex'])==128 and int(e.get('region',10))==9 and e.get('enabled')]
+    for e in tauros:
+        if not str(e.get('pmd_path') or '').startswith('0128/'):
+            mapping_errors.append(f'Paldea Tauros wrong source: id {e["id"]} -> {e.get("pmd_path")}')
+    if mapping_errors:
+        raise RuntimeError('sprite mapping audit failed: '+ '; '.join(mapping_errors[:30]))
+    fp_src='\n'.join(f"{int(e['id'])}:{int(e['natdex'])}:{e.get('pmd_path') or '-'}:{e.get('name') or ''}" for e in sorted(audit_entries,key=lambda x:int(x['id'])) if e.get('enabled'))
+    fingerprint=hashlib.sha256(fp_src.encode('utf-8')).hexdigest()[:16]
+    audit={'schema':1,'generated_utc':cat['generated_utc'],'source':TRACKER_URL,'catalog_fingerprint':fingerprint,
+           'dex_count':max_id,'national_dex_max':current_max,'entries':audit_entries}
+    AUDIT_PATH.write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
+    map_lines=['TamaPoke v3.62.2 sprite ID/path audit',f'catalog_fingerprint={fingerprint}',
+               'Rule: internal ID -> NatDex owner -> PMDCollab path first component must agree.',
+               f'active_entries={sum(1 for e in audit_entries if e.get("enabled"))}',f'paldea_tauros_entries={len(tauros)}','',
+               'PALDEA TAUROS:']
+    map_lines += [f"- id {e['id']} / nat#{e['natdex']} / {e['name']} / {e.get('pmd_path')}" for e in tauros]
+    map_lines += ['', 'MANAGED 810+ / FORMS / MEGA:']
+    map_lines += [f"- id {e['id']} / nat#{e['natdex']} / {e['name']} / {e.get('pmd_path') or 'NO-SPRITE'}" for e in audit_entries if int(e['id'])>=810]
+    MAPPING_REPORT_PATH.write_text('\n'.join(map_lines)+'\n',encoding='utf-8')
+
     included=sum(1 for x in catalog_entries if x['enabled'])
     form_included=sum(1 for x in catalog_entries if x['enabled'] and x['kind']=='form')
     mega_included=sum(1 for x in catalog_entries if x['enabled'] and x.get('mega'))
     missing=[x for x in catalog_entries if not x['enabled']]
     report=[
-      'TamaPoke v3.62.1 current PMDCollab catalog sync - approved Mega36',
+      'TamaPoke v3.62.2 current PMDCollab catalog sync - Mega36 + sprite mapping audit',
       f'Source: {TRACKER_URL}',f'National Dex detected: 1..{current_max}',f'TamaPoke DEX_COUNT: {max_id}',
       f'Added/managed entries with real current sprite: {included}',f'Form entries with real current sprite: {form_included}',
       f'Approved Mega entries with real current sprite: {mega_included}/{APPROVED_MEGA_COUNT}',
@@ -867,6 +933,6 @@ def main():
         report += ['', 'METADATA WARNINGS:']+['- '+x for x in failures]
     REPORT_PATH.write_text('\n'.join(report)+'\n',encoding='utf-8')
     print('\n'.join(report[:9]))
-    print('generated dex.h, ko_species.h, noart.h, pmd_catalog.json, catalog_lock.json')
+    print('generated dex.h, ko_species.h, noart.h, pmd_catalog.json, catalog_lock.json, sprite_audit.json, sprite_mapping_report.txt')
 
 if __name__=='__main__': main()

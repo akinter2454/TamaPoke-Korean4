@@ -23,8 +23,11 @@ CAT=HERE/'pmd_catalog.json'
 OUT=HERE/'sdcard'/'mons'
 CACHE=HERE/'pmd_cache_catalog'
 REPORT=HERE/'pmd_sprite_report.txt'
+AUDIT=HERE/'sprite_audit.json'
+WEB=HERE/'web_extra'
+PREV=WEB/'previews'
 RAW='https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/sprite'
-UA='TamaPoke-v3.62.1-Mega36/1.0'
+UA='TamaPoke-v3.62.2-SpriteAudit/1.0'
 SLOW,MIN_MS,ALPHA_T=1.4,70,128
 # Firmware PmdMon::load() accepts at most 3 MiB. Keep generated sprites below
 # that hard limit with margin so PUT transfer and PSRAM loading stay reliable.
@@ -214,6 +217,28 @@ def patch_enabled(catalog):
     body='\n'.join('  '+', '.join(str(x) for x in vals[i:i+64])+',' for i in range(0,len(vals),64))
     p.write_text(s[:m.start()]+m.group(1)+body+m.group(3)+s[m.end():],encoding='utf-8')
 
+def make_preview(relroot:str,outpath:Path):
+    """Save one cropped pixel-perfect Idle frame from the exact PMD source used for TPK3."""
+    safe=relroot.replace('/','_'); folder=CACHE/safe
+    xml=fetch(f'{relroot}/AnimData.xml',folder/'AnimData.xml')
+    anims=load_animdata(xml)
+    pick=None
+    for pref in ('Idle','Walk','Pose','Attack','Hurt'):
+        v=anims.get(pref)
+        if v and v[2]: pick=v; break
+    if not pick:
+        pick=next((v for v in anims.values() if v and v[2]),None)
+    if not pick: raise RuntimeError('preview animation unavailable')
+    fw,fh,durs,src=pick
+    png=folder/f'{src}-Anim.png'; fetch(f'{relroot}/{src}-Anim.png',png)
+    im=Image.open(png).convert('RGBA')
+    fr=im.crop((0,0,min(fw,im.width),min(fh,im.height)))
+    alpha=fr.getchannel('A').point(lambda a:255 if a>=ALPHA_T else 0)
+    box=alpha.getbbox()
+    if box: fr=fr.crop(box)
+    outpath.parent.mkdir(parents=True,exist_ok=True)
+    fr.save(outpath,optimize=True)
+
 def worker(e):
     iid=int(e['id']); name=e.get('name',str(iid)); rel=e.get('pmd_path')
     if not e.get('enabled') or not rel:return iid,False,f'SKIP {iid} {name}: tracker has no behavior sprite'
@@ -221,6 +246,7 @@ def worker(e):
     normal.unlink(missing_ok=True);shiny.unlink(missing_ok=True)
     try:
         used=pack_one(iid,rel,normal)
+        make_preview(rel,PREV/f'p{iid:03d}.png')
     except Exception as ex:
         return iid,False,f'MISSING {iid} {name} [{rel}]: {ex}'
     shiny_note='same animated normal (no separate shiny behavior sprite)'
@@ -236,8 +262,9 @@ def worker(e):
 def main():
     cat=json.loads(CAT.read_text(encoding='utf-8'))
     OUT.mkdir(parents=True,exist_ok=True)
+    PREV.mkdir(parents=True,exist_ok=True)
     managed=[e for e in cat['entries'] if int(e['id'])>=810]
-    lines=['TamaPoke v3.62.1 PMDCollab behavior-sprite pack report',f"Source: {cat.get('source')}",
+    lines=['TamaPoke v3.62.2 PMDCollab behavior-sprite pack report + previews',f"Source: {cat.get('source')}",
            'Policy: real PMDCollab animated pixel assets only; approved Mega36 only; no G-Max/static-art fallback','']
     results=[]
     with cf.ThreadPoolExecutor(max_workers=12) as ex:
@@ -252,6 +279,18 @@ def main():
     lines += ['',f'PACKED ADDED ENTRIES: {okn}',f'DISABLED/MISSING: {miss}']
     REPORT.write_text('\n'.join(lines)+'\n',encoding='utf-8')
     CAT.write_text(json.dumps(cat,ensure_ascii=False,indent=2),encoding='utf-8')
+    if AUDIT.is_file():
+        audit=json.loads(AUDIT.read_text(encoding='utf-8'))
+        byid_a={int(x['id']):x for x in audit.get('entries',[])}
+        for e in cat['entries']:
+            iid=int(e['id']); a=byid_a.get(iid)
+            if not a: continue
+            prev=PREV/f'p{iid:03d}.png'
+            a['enabled']=bool(e.get('enabled'))
+            a['local_preview']=f'previews/p{iid:03d}.png' if prev.is_file() else None
+            e['preview']=a['local_preview']
+        AUDIT.write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
+        CAT.write_text(json.dumps(cat,ensure_ascii=False,indent=2),encoding='utf-8')
     patch_enabled(cat)
     if okn==0:raise SystemExit('No current added PMDCollab sprites could be packed')
     print(f'Packed {okn} added species/forms; {miss} unavailable entries were safely disabled.')

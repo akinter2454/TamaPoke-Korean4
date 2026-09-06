@@ -1,0 +1,11 @@
+TamaPoke KO v3.62.2 - Sprite Mapping Audit + One-click Full Sprite Sync
+
+- 팔데아 켄타로스가 라프라스로 보이는 현상 조사: 이름/도감이 아니라 microSD p<ID>.bin과 새 catalog_lock ID 세대가 어긋날 때 발생 가능.
+- 모든 활성 항목의 내부 ID -> National Dex -> PMDCollab pmd_path 첫 경로를 자동 검증. 서로 다른 종 경로가 섞이면 Actions 실패.
+- 팔데아 켄타로스는 PMDCollab owner 0128 경로만 허용하는 회귀검사 추가.
+- tools/sprite_audit.json / sprite_mapping_report.txt 생성 및 Pages 공개.
+- 810+ 생성 스프라이트는 실제 패킹 원본에서 Idle 첫 프레임 미리보기 PNG를 생성하여 설치기 '리소스 검수' 탭에서 확인 가능.
+- 설치기에 '전체 스프라이트' 탭 추가: 관동~알로라 기본팩 + 현재 810+/지역폼/추가폼/Mega36을 한 번에 순차 전송해 SD를 현재 카탈로그와 재동기화.
+- 기존 세이브/NVS는 건드리지 않음.
+- sprite-manifest schema 3에 catalog_fingerprint와 added-all 그룹 추가.
+- catalog_lock.json은 성공한 Actions가 저장소에 다시 커밋하여 다음 빌드 ID를 고정.
