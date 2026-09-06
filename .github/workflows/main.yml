@@ -1,4 +1,4 @@
-name: TamaPoke v3.62.4 PMDCatalog - Regional Evolutions + Reliable SD Sync + Mega36 GitHub Pages
+name: TamaPoke v3.62.5 PMDCatalog - Canonical Forms + Regional Evolutions + Reliable SD Sync + Mega36 GitHub Pages
 
 on:
   workflow_dispatch:
@@ -28,7 +28,7 @@ jobs:
         run: |
           python3 -m pip install --quiet pillow
 
-      - name: Sync ALL current PMDCollab Pokemon and official forms
+      - name: Sync current PMDCollab Pokemon and canonical official forms
         run: |
           set -euxo pipefail
           python3 "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
@@ -42,6 +42,8 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/verify_evolution_levels.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_regional_evolutions.py"
           cat "$GITHUB_WORKSPACE/tools/regional_evolution_report.txt"
+          python3 "$GITHUB_WORKSPACE/tools/verify_canonical_forms.py"
+          cat "$GITHUB_WORKSPACE/tools/canonical_forms_report.txt"
           python3 "$GITHUB_WORKSPACE/tools/verify_sd_serial_protocol.py"
           grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'MEGA_EVOLVE_LEVEL = 70' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
@@ -86,7 +88,8 @@ jobs:
           cat=json.loads(Path('tools/pmd_catalog.json').read_text(encoding='utf-8'))
           banned=('gigantamax','g-max','gmax','dynamax','primal','eternamax',
                   'ultra necrozma','ash-greninja','ash greninja','crowned','totem',
-                  'terastal','stellar forme','stellar form','tera forme','tera form')
+                  'terastal','stellar forme','stellar form','tera forme','tera form',
+                  'altcolor','alternate','cutscene',' beta')
           expected_mega={6,65,80,94,115,142,150,208,227,229,248,282,302,303,308,310,323,334,354,362,
                          380,381,384,428,448,475,491,530,604,670,691,718,719,780,807,978}
           bad=[]; missing=[]; enabled=0; forms=0; megas=[]
@@ -135,7 +138,7 @@ jobs:
               print('WARNING: upstream PokeAPI National Dex currently reports below 1025')
           PY
 
-      - name: Verify v3.62.4 regional evolutions + reliable SD sync + existing guards
+      - name: Verify v3.62.5 canonical forms + regional evolutions + reliable SD sync + existing guards
         run: |
           set -euxo pipefail
           grep -q 'targetFrameMs = activeAnimated ? 85UL : 100UL' "$GITHUB_WORKSPACE/TamaPoke.ino"
@@ -164,7 +167,10 @@ jobs:
           grep -q 'approved Mega evolution' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_evolution_levels.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_regional_evolutions.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_canonical_forms.py"
           grep -q 'regional-form descendant evolution' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
+          grep -q 'PRESENTATION_VARIANT_WORDS' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
+          grep -q 'canonicalizeRetiredVariant' "$GITHUB_WORKSPACE/pet.cpp"
           grep -q 'now = millis();' "$GITHUB_WORKSPACE/TamaPoke.ino"
           test "$(grep -c 'screenOff = off;' "$GITHUB_WORKSPACE/TamaPoke.ino")" -eq 1
           if grep -q 'uint32_t idle = now - lastInteract' "$GITHUB_WORKSPACE/TamaPoke.ino"; then
@@ -198,12 +204,14 @@ jobs:
           import json
           from pathlib import Path
           m=json.loads(Path('tools/web_extra/sprite-manifest.json').read_text(encoding='utf-8'))
-          assert m.get('schema') == 3, m
+          assert m.get('schema') == 4, m
           assert m.get('catalog_fingerprint'), m
           assert m.get('groups',{}).get('added-all') == m.get('all'), 'added-all group mismatch'
           parts=m.get('groups',{}).get('mega36',[])
           assert parts, 'Mega36 delta pack list missing'
           assert m.get('counts',{}).get('mega36_files') == 72, m.get('counts')
+          assert m.get('counts',{}).get('retired_files') == len(m.get('retired_files',[])), m.get('counts')
+          assert len(m.get('retired_files',[])) == len(set(m.get('retired_files',[]))), 'duplicate retired files'
           for fn in parts:
               assert (Path('tools/web_extra')/fn).is_file(), fn
           print('Mega36 delta manifest OK:', len(parts), 'pak(s), 72 files')
@@ -238,7 +246,7 @@ jobs:
           cp "$GITHUB_WORKSPACE"/*.cpp "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
           cp "$GITHUB_WORKSPACE"/*.h "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
 
-      - name: Compile TamaPoke v3.62.4 regional-evolution catalog firmware
+      - name: Compile TamaPoke v3.62.5 canonical-form catalog firmware
         run: |
           set -euxo pipefail
           mkdir -p "$GITHUB_WORKSPACE/build"
@@ -263,7 +271,7 @@ jobs:
             "$GITHUB_WORKSPACE/oneclick-firmware" \
             "$GITHUB_WORKSPACE/index.html"
           test -s "$GITHUB_WORKSPACE/index.html"
-          grep -q '3.62.4-ko-regional-evolution-reliable-fullsync-mega36' "$GITHUB_WORKSPACE/index.html"
+          grep -q '3.62.5-ko-canonical-forms-regional-evolution-reliable-fullsync-mega36' "$GITHUB_WORKSPACE/index.html"
 
       - name: Prepare complete GitHub Pages site
         run: |
@@ -279,6 +287,7 @@ jobs:
           cp "$GITHUB_WORKSPACE/tools/sprite_audit.json" "$GITHUB_WORKSPACE/site/sprite-audit.json"
           cp "$GITHUB_WORKSPACE/tools/sprite_mapping_report.txt" "$GITHUB_WORKSPACE/site/sprite-mapping-report.txt"
           cp "$GITHUB_WORKSPACE/tools/regional_evolution_report.txt" "$GITHUB_WORKSPACE/site/regional-evolution-report.txt"
+          cp "$GITHUB_WORKSPACE/tools/canonical_forms_report.txt" "$GITHUB_WORKSPACE/site/canonical-forms-report.txt"
           if [ -d "$GITHUB_WORKSPACE/tools/web_extra/previews" ]; then cp -R "$GITHUB_WORKSPACE/tools/web_extra/previews" "$GITHUB_WORKSPACE/site/previews"; fi
           cp "$GITHUB_WORKSPACE/PMDCOLLAB_CREDITS.txt" "$GITHUB_WORKSPACE/site/"
           python3 - <<'PY'
@@ -294,7 +303,7 @@ jobs:
           e=[x for x in c['entries'] if x.get('enabled')]
           f=[x for x in e if x.get('kind')=='form']
           out=[
-            'TamaPoke KO v3.62.4 PMDCatalog - Regional Evolution Audit + Reliable SD Sync + Mega36',
+            'TamaPoke KO v3.62.5 PMDCatalog - Canonical Forms + Regional Evolution + Reliable SD Sync + Mega36',
             f'firmware={fw}',
             f"national_dex_max={c['national_dex_max']}",
             f"dex_count={c['dex_count']}",
@@ -302,6 +311,8 @@ jobs:
             f"managed_enabled={len(e)}",
             f"independent_forms={len(f)}",
             f"excluded_battle_gimmicks={len(c.get('excluded_gimmicks',[]))}",
+            f"retired_presentation_variants={len(c.get('retired_presentation_variants',[]))}",
+            'forms=canonical only; PMDCollab AltColor/Alternate/Cutscene/Beta are not species',
             'evolution=level-only; split evolution uses Eevee-style branch selection',
             'regional_evolution=form-aware Alola/Galar/Hisui; White Basculin is Hisui-origin; Paldea Wooper guard enabled',
             'sprites=PMDCollab behavior pixel sprites only',
@@ -324,11 +335,11 @@ jobs:
             dex.h ko_species.h noart.h \
             tools/catalog_lock.json tools/pmd_catalog.json \
             tools/pmd_catalog_report.txt tools/pmd_sprite_report.txt \
-            tools/sprite_audit.json tools/sprite_mapping_report.txt tools/regional_evolution_report.txt
+            tools/sprite_audit.json tools/sprite_mapping_report.txt tools/regional_evolution_report.txt tools/canonical_forms_report.txt
           if git diff --cached --quiet; then
             echo "No generated changes to commit"
           else
-            git commit -m "Build v3.62.4 regional evolution audit PMDCollab catalog [skip ci]"
+            git commit -m "Build v3.62.5 canonical-form PMDCollab catalog [skip ci]"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
@@ -373,5 +384,5 @@ jobs:
 
       - name: Show TamaPoke installer URL
         run: |
-          echo "### TamaPoke v3.62.4 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
+          echo "### TamaPoke v3.62.5 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
           echo "${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
