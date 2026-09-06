@@ -1,0 +1,25 @@
+TamaPoke v3.57.1 저장 알고리즘 감사 결과
+
+확정된 위험 경로
+1. CareSlots::switchTo(): carea를 먼저 바꾼 뒤 새 pet scalar를 저장 -> 중간 reset 시 인접 슬롯 복제/덮어쓰기 가능.
+2. v3.58/59 -> v3.57 rollback: PartyMon stride 32 -> 30 및 CareSnapshot 확대/carev 2 때문에 구 v3.57이 비활성 슬롯/party/box를 읽지 못함.
+3. party와 box를 별도 blob으로 순차 저장 -> swap 중 reset 시 한쪽만 반영 가능.
+4. active pet은 많은 scalar NVS key로 나눠 저장 -> 중간 reset 시 한 시점의 완전한 creature record가 없었음.
+
+v3.57.1 수정
+- care switch transaction journal(caretx/carefrom/careto)
+- care slot CRC A/B checkpoint
+- every Pet::save() -> active care checkpoint
+- party+box unified CRC A/B bank
+- v3.58/59 append-only rollback migration
+- species/move/IV/basic state validation
+
+호스트 검증
+- CARE TRANSACTION RECOVERY PASS
+- CARE v2 -> v3.57.1 PREFIX MIGRATION PASS
+- PARTY/BOX ROLLBACK + A/B RECOVERY PASS
+- changed C++ syntax-only checks PASS
+- brace balance PASS
+
+주의
+이미 이전 버전이 빈 상태를 같은 NVS key에 다시 저장해 원본 bytes를 덮어쓴 데이터는 소프트웨어만으로 복원할 수 없습니다.

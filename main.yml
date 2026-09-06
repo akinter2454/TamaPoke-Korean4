@@ -1,0 +1,313 @@
+name: TamaPoke v3.62.0 PMDCatalog - Mega36 Level Evolutions GitHub Pages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python sprite tools
+        run: |
+          python3 -m pip install --quiet pillow
+
+      - name: Sync ALL current PMDCollab Pokemon and official forms
+        run: |
+          set -euxo pipefail
+          python3 "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
+          cat "$GITHUB_WORKSPACE/tools/pmd_catalog_report.txt"
+          grep -n '#define DEX_COUNT' "$GITHUB_WORKSPACE/dex.h" | head -1
+          grep -n '#define REGION_COUNT 11' "$GITHUB_WORKSPACE/dex.h"
+          grep -n '#define FW_VERSION "3.62.0"' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          python3 "$GITHUB_WORKSPACE/tools/verify_evolution_levels.py"
+          grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
+          grep -n 'MEGA_EVOLVE_LEVEL = 70' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
+          grep -n 'effectiveEvolutionTargetLevel' "$GITHUB_WORKSPACE/pet.cpp"
+          grep -n 'XITEM_IV_ATK' "$GITHUB_WORKSPACE/game_extras.h"
+          grep -n 'XITEM_GOLD_CROWN' "$GITHUB_WORKSPACE/game_extras.h"
+          grep -n 'score >= great ? 38 : (score >= good ? 22 : 0)' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -n 'random(100) < 16 ? 8' "$GITHUB_WORKSPACE/game_extras.cpp"
+          grep -n 'random(100) < 8 ? XITEM_GOLD_CROWN' "$GITHUB_WORKSPACE/game_extras.cpp"
+          grep -n 'uint16_t A = effStat(atk, SI_ATK)' "$GITHUB_WORKSPACE/battle.cpp"
+          ! grep -q 'idx >= TRAINER_COUNT || pet.isEgg()' "$GITHUB_WORKSPACE/TamaPoke.ino"
+
+      - name: Pack every available added PMDCollab behavior sprite
+        run: |
+          set -euxo pipefail
+          rm -rf "$GITHUB_WORKSPACE/tools/sdcard/mons" "$GITHUB_WORKSPACE/tools/web_extra"
+          mkdir -p "$GITHUB_WORKSPACE/tools/sdcard/mons"
+          python3 "$GITHUB_WORKSPACE/tools/pack_pmd_catalog.py"
+          cat "$GITHUB_WORKSPACE/tools/pmd_sprite_report.txt"
+
+      - name: Verify catalog policy and generated TPK3 files
+        run: |
+          python3 - <<'PY'
+          import json,re
+          from pathlib import Path
+          cat=json.loads(Path('tools/pmd_catalog.json').read_text(encoding='utf-8'))
+          banned=('gigantamax','g-max','gmax','dynamax','primal','eternamax',
+                  'ultra necrozma','ash-greninja','ash greninja','crowned','totem',
+                  'terastal','stellar forme','stellar form','tera forme','tera form')
+          expected_mega={6,65,80,94,115,142,150,208,227,229,248,282,302,303,308,310,323,334,354,362,
+                         380,381,384,428,448,475,491,530,604,670,691,718,719,780,807,978}
+          bad=[]; missing=[]; enabled=0; forms=0; megas=[]
+          for e in cat['entries']:
+              if not e.get('enabled'): continue
+              enabled+=1
+              if e.get('kind')=='form': forms+=1
+              if e.get('mega'): megas.append(e)
+              nm=(e.get('name') or '').lower()
+              if any(x in nm for x in banned): bad.append((e['id'],e.get('name')))
+              if int(e['id'])>=810:
+                  for pref in ('p','ps'):
+                      p=Path('tools/sdcard/mons')/f"{pref}{int(e['id']):03d}.bin"
+                      if not p.is_file() or p.stat().st_size<64 or p.read_bytes()[:4]!=b'TPK3':
+                          missing.append(str(p))
+                      elif p.stat().st_size > 2800*1024:
+                          missing.append(f'{p} oversized={p.stat().st_size}')
+          got_mega={int(e['natdex']) for e in megas}
+          if len(megas)!=36 or got_mega!=expected_mega:
+              raise SystemExit(f'Mega36 pack mismatch: count={len(megas)} missing={sorted(expected_mega-got_mega)} extra={sorted(got_mega-expected_mega)}')
+          edges=cat.get('extra_edges',[])
+          edge_targets={(int(x['target']),int(x['level'])) for x in edges if x.get('reason')=='approved Mega evolution'}
+          wanted={(int(e['id']),70) for e in megas}
+          if edge_targets != wanted:
+              raise SystemExit(f'Mega evolution edge mismatch: got={sorted(edge_targets)} wanted={sorted(wanted)}')
+          bynat={int(e['natdex']):e for e in megas}
+          if 'x' not in (bynat[6].get('name') or '').lower() or 'y' not in (bynat[150].get('name') or '').lower():
+              raise SystemExit('Charizard X / Mewtwo Y one-way Mega targets missing')
+          print('national_dex_max=',cat['national_dex_max'])
+          print('dex_count=',cat['dex_count'],'enabled_managed=',enabled,'forms=',forms,'mega36=',len(megas))
+          print('excluded_gimmicks=',len(cat.get('excluded_gimmicks',[])))
+          if bad: raise SystemExit('non-approved battle gimmicks leaked into catalog: '+repr(bad[:20]))
+          if missing: raise SystemExit('missing/invalid TPK3: '+', '.join(missing[:30]))
+          if cat['national_dex_max'] < 1025:
+              print('WARNING: upstream PokeAPI National Dex currently reports below 1025')
+          PY
+
+      - name: Verify v3.62.0 Mega36 plus existing reward/menu/IV/power/gym guards
+        run: |
+          set -euxo pipefail
+          grep -q 'targetFrameMs = activeAnimated ? 85UL : 100UL' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q '#define TAMAPOKE_FRAME_DIAG 0' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'memcpy(dst, row0, rowBytes)' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'canvasFillRectFast' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'canvasPresentBand(0, 312)' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'static bool homeCrossBandActive()' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'gHomePanelValid = cleanHome;' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'if (cleanHome) gHomeBottomSig = sig;' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'frameL\[24\]' "$GITHUB_WORKSPACE/sdmon.h"
+          grep -q 'memcmp(blob, "TPK3", 4)' "$GITHUB_WORKSPACE/sdmon.cpp"
+          grep -q "f.write(b'TPK3')" "$GITHUB_WORKSPACE/tools/pack_pmd_catalog.py"
+          grep -q 'crop the union of visible pixels' "$GITHUB_WORKSPACE/tools/pack_pmd_catalog.py"
+          grep -q '#define GYM_REGIONS 9' "$GITHUB_WORKSPACE/trainers.h"
+          grep -q 'TRAINERS_GALAR' "$GITHUB_WORKSPACE/trainers.h"
+          grep -q 'TRAINERS_PALDEA' "$GITHUB_WORKSPACE/trainers.h"
+          grep -q 'gymRegionDexRegion' "$GITHUB_WORKSPACE/trainers.h"
+          grep -q 'if (screenOff) {' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'audioSetScreenAwake(!off)' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'Only the physical AXP2101 side button' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q 'safeElapsedMs(now, lastInteract)' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          grep -q '#define EVO_PENALTY_LEVELS ((uint8_t)12)' "$GITHUB_WORKSPACE/pet.h"
+          grep -q 'effectiveEvolutionLevel' "$GITHUB_WORKSPACE/pet.cpp"
+          grep -q 'evolutionTargetLevel' "$GITHUB_WORKSPACE/pet.cpp"
+          grep -q 'approved Mega evolution' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_evolution_levels.py"
+          grep -q 'now = millis();' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          test "$(grep -c 'screenOff = off;' "$GITHUB_WORKSPACE/TamaPoke.ino")" -eq 1
+          if grep -q 'uint32_t idle = now - lastInteract' "$GITHUB_WORKSPACE/TamaPoke.ino"; then
+            echo 'Unsafe stale-time idle subtraction returned'
+            exit 1
+          fi
+          grep -q 'if (!gReady || !gScreenAwake || !gQ' "$GITHUB_WORKSPACE/audio.cpp"
+          python3 - <<'PYREG'
+          def safe_elapsed(now, then):
+              d=(now-then) & 0xffffffff
+              if d & 0x80000000:
+                  return 0
+              return d
+          assert safe_elapsed(1000,1003)==0, 'future touch timestamp must be 0 idle'
+          assert safe_elapsed(1004,1003)==1
+          assert safe_elapsed(0x10,0xfffffff0)==0x20, 'millis wrap must remain valid'
+          assert safe_elapsed(301001,1000)==300001
+          print('power/touch idle regression OK')
+          PYREG
+          python3 -m py_compile "$GITHUB_WORKSPACE/tools/pack_pmd_catalog.py"
+
+      - name: Build chunked web sprite packs for every region
+        run: |
+          set -euxo pipefail
+          python3 "$GITHUB_WORKSPACE/tools/build_sprite_paks.py"
+          test -s "$GITHUB_WORKSPACE/tools/web_extra/sprite-manifest.json"
+          cat "$GITHUB_WORKSPACE/tools/web_extra/sprite-manifest.json"
+          if find "$GITHUB_WORKSPACE/tools/web_extra" -maxdepth 1 -type f -name 'sprites-extra-*.pak' -size +19M -print -quit | grep -q .; then
+            echo 'A sprite chunk exceeded the safe 19 MiB limit'
+            exit 1
+          fi
+
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install ESP32-S3 core
+        run: |
+          arduino-cli config init --overwrite
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.3.10
+
+      - name: Install Arduino libraries
+        run: |
+          arduino-cli lib update-index
+          arduino-cli lib install "GFX Library for Arduino"
+          arduino-cli lib install "SensorLib"
+          arduino-cli lib install "XPowersLib"
+          arduino-cli lib install "U8g2"
+
+      - name: Prepare generated Arduino sketch
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/_sketch"
+          mkdir -p "$GITHUB_WORKSPACE/_sketch/TamaPoke"
+          cp "$GITHUB_WORKSPACE"/*.ino "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
+          cp "$GITHUB_WORKSPACE"/*.cpp "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
+          cp "$GITHUB_WORKSPACE"/*.h "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
+
+      - name: Compile TamaPoke v3.62.0 Mega36 catalog firmware
+        run: |
+          set -euxo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/build"
+          FQBN='esp32:esp32:esp32s3:CDCOnBoot=cdc,FlashSize=16M,PSRAM=opi,PartitionScheme=app3M_fat9M_16MB'
+          arduino-cli compile --fqbn "$FQBN" --output-dir "$GITHUB_WORKSPACE/build" "$GITHUB_WORKSPACE/_sketch/TamaPoke"
+
+      - name: Collect four flash binaries
+        run: |
+          set -euxo pipefail
+          mkdir -p "$GITHUB_WORKSPACE/oneclick-firmware"
+          cp "$GITHUB_WORKSPACE/build/TamaPoke.ino.bootloader.bin" "$GITHUB_WORKSPACE/oneclick-firmware/bootloader.bin"
+          cp "$GITHUB_WORKSPACE/build/TamaPoke.ino.partitions.bin" "$GITHUB_WORKSPACE/oneclick-firmware/partitions.bin"
+          cp "$GITHUB_WORKSPACE/build/TamaPoke.ino.bin" "$GITHUB_WORKSPACE/oneclick-firmware/app.bin"
+          BOOTAPP="$(find "$GITHUB_WORKSPACE/build" "$HOME/.arduino15/packages/esp32" -type f -name boot_app0.bin | head -1)"
+          test -n "$BOOTAPP"
+          cp "$BOOTAPP" "$GITHUB_WORKSPACE/oneclick-firmware/boot_app0.bin"
+
+      - name: Embed compiled firmware in installer
+        run: |
+          python3 "$GITHUB_WORKSPACE/tools/embed_tamapoke_firmware.py" \
+            "$GITHUB_WORKSPACE/TamaPoke-KO-OneClick-Installer.html" \
+            "$GITHUB_WORKSPACE/oneclick-firmware" \
+            "$GITHUB_WORKSPACE/index.html"
+          test -s "$GITHUB_WORKSPACE/index.html"
+          grep -q '3.62.0-ko-mega36-lv70-evolevelguard-rewardrate-menuredraw' "$GITHUB_WORKSPACE/index.html"
+
+      - name: Prepare complete GitHub Pages site
+        run: |
+          set -euxo pipefail
+          rm -rf "$GITHUB_WORKSPACE/site"
+          mkdir -p "$GITHUB_WORKSPACE/site"
+          cp "$GITHUB_WORKSPACE/index.html" "$GITHUB_WORKSPACE/site/index.html"
+          cp "$GITHUB_WORKSPACE/tools/web_extra/sprite-manifest.json" "$GITHUB_WORKSPACE/site/"
+          cp "$GITHUB_WORKSPACE/tools/web_extra"/sprites-extra-*.pak "$GITHUB_WORKSPACE/site/"
+          cp "$GITHUB_WORKSPACE/tools/pmd_catalog_report.txt" "$GITHUB_WORKSPACE/site/"
+          cp "$GITHUB_WORKSPACE/tools/pmd_sprite_report.txt" "$GITHUB_WORKSPACE/site/"
+          cp "$GITHUB_WORKSPACE/tools/pmd_catalog.json" "$GITHUB_WORKSPACE/site/"
+          cp "$GITHUB_WORKSPACE/PMDCOLLAB_CREDITS.txt" "$GITHUB_WORKSPACE/site/"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          c=json.loads(Path('tools/pmd_catalog.json').read_text(encoding='utf-8'))
+          e=[x for x in c['entries'] if x.get('enabled')]
+          f=[x for x in e if x.get('kind')=='form']
+          out=[
+            'TamaPoke KO v3.62.0 PMDCatalog - Mega36 Level Evolutions',
+            'firmware=3.62.0',
+            f"national_dex_max={c['national_dex_max']}",
+            f"dex_count={c['dex_count']}",
+            f"managed_enabled={len(e)}",
+            f"independent_forms={len(f)}",
+            f"excluded_battle_gimmicks={len(c.get('excluded_gimmicks',[]))}",
+            'evolution=level-only; split evolution uses Eevee-style branch selection',
+            'sprites=PMDCollab behavior pixel sprites only',
+            'power=5min auto screen-off; physical side button only wake; screen-off SFX muted',
+            'gyms=galar sword ladder + paldea gym/elite4/champion',
+            'badges=galar/paldea original device pixel emblems',
+            'mega=approved 36 PMDCollab behavior sprites; permanent level evolution at Lv.70',
+            'charizard=one-way Mega X; mewtwo=one-way Mega Y',
+            'gigantamax=excluded','dynamax=excluded','primal=excluded','terastal=excluded',
+          ]
+          Path('site/build-info.txt').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+          ls -lh "$GITHUB_WORKSPACE/site" | tail -n +1
+
+      - name: Commit generated catalog lock source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f \
+            dex.h ko_species.h noart.h \
+            tools/catalog_lock.json tools/pmd_catalog.json \
+            tools/pmd_catalog_report.txt tools/pmd_sprite_report.txt
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit"
+          else
+            git commit -m "Build v3.62.0 Mega36 PMDCollab catalog [skip ci]"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Add GitHub Pages no-Jekyll marker
+        run: touch "$GITHUB_WORKSPACE/site/.nojekyll"
+
+      - name: Verify GitHub Pages published size
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('site')
+          total=sum(p.stat().st_size for p in root.rglob('*') if p.is_file())
+          print(f'GitHub Pages site bytes={total:,} ({total/1024/1024:.1f} MiB)')
+          # GitHub Pages published sites are limited to 1 GB. Fail before deployment
+          # with a clear message instead of producing a confusing deploy error.
+          if total > 1024*1024*1024:
+              raise SystemExit('Generated Pages site exceeds GitHub Pages 1 GB published-site limit')
+          PY
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Show TamaPoke installer URL
+        run: |
+          echo "### TamaPoke v3.62.0 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"

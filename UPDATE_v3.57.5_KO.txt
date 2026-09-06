@@ -1,0 +1,18 @@
+TamaPoke KO v3.57.5 - Dual Speed Level
+
+[성장 속도]
+- 깨어 있을 때: 2분마다 1레벨
+- 수면 중: 10분마다 1레벨
+- 수면 성장 중에는 레벨업 효과음을 재생하지 않음
+
+[정확한 수면 누적]
+- 수면 5분마다 깨어있는 성장 1분에 해당하는 진행량을 적립
+- 5분 미만의 수면 잔여 시간도 lvslp 키에 저장
+- 예: 수면 7분 -> 재부팅 -> 3분 추가 수면 = 정확히 1레벨
+- 육성 슬롯 전환 시에도 수면 잔여 시간을 snapshot에 함께 보존
+
+[호환성]
+- v3.57.4의 현재 레벨은 업데이트 직후 그대로 유지
+- PartyMon / 파티 / 박스 구조는 변경하지 않음
+- CareSnapshot 끝에 sleepLevelRemainder만 append하여 구버전 CRC A/B snapshot을 계속 읽음
+- SafeSave / BatteryGauge / 도감 찾기 시스템 그대로 유지

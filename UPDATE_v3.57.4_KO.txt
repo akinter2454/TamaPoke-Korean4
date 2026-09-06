@@ -1,0 +1,29 @@
+TamaPoke KO v3.57.4 - Fast Awake Level
+
+1. 레벨업 속도
+- 기존 10분/레벨 -> 2분/레벨
+- PET_TICK_MS는 1분 그대로이므로 배고픔/기력/위생 감소 속도는 빨라지지 않습니다.
+
+2. 수면 중 경험치/레벨 정지
+- ageMinutes(생활 시간)와 levelMinutes(깨어있는 레벨 진행 시간)를 분리했습니다.
+- 잠든 동안 ageMinutes는 계속 흐르므로 수면 회복과 돌봄 시간은 정상 작동합니다.
+- levelMinutes는 잠들어 있는 동안 증가하지 않습니다.
+- 수동 수면, 자동 수면, 오프라인/비활성 육성 슬롯의 수면 상태 모두 같은 규칙입니다.
+
+3. 기존 세이브 마이그레이션
+- v3.57.3 이하에는 levelMinutes가 없으므로 첫 부팅 때 기존 10분/레벨 기준의 현재 레벨을 계산하여
+  새 2분/레벨 진행 값으로 변환합니다. 업데이트 직후 레벨이 갑자기 5배 오르거나 1로 떨어지지 않습니다.
+- 새 NVS 키: lvmin (uint32)
+- 기존 파티/박스 레코드는 변경하지 않습니다.
+
+4. 육성 슬롯 저장 호환
+- CareSnapshot 끝에 levelMinutes를 append-only로 추가했습니다.
+- SafeSave A/B record 포맷을 v2로 올렸지만 v1 record도 CRC 검증 후 그대로 읽습니다.
+- 기존 raw care0/care1/care2 snapshot도 짧은 레코드로 인식해 자동 변환합니다.
+- care slot store version: 4
+
+5. 유지되는 기능
+- v3.57.1 SafeSave
+- v3.57.2 BatteryGauge
+- v3.57.3 Pokedex Search
+- 대형 스프라이트 자동 크기 보정

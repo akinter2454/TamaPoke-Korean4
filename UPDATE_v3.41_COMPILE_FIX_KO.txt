@@ -1,0 +1,7 @@
+TamaPoke KO v3.41 Compile Fix
+
+- GitHub Actions / Arduino 빌드에서 발생한 `AudioToggleKind has not been declared` 오류를 수정했습니다.
+- Arduino .ino 자동 프로토타입 생성기가 사용자 정의 enum보다 먼저 함수 선언을 만드는 문제였습니다.
+- 오디오 토글 종류 인자를 `uint8_t` + 상수 매크로로 변경하여 전처리 순서와 무관하게 컴파일됩니다.
+- 기능/화면 구성은 v3.41과 동일합니다.
+- `TouchDrvCSTXXX.hpp is deprecated` 메시지는 기존 라이브러리의 경고이며 빌드 실패 원인이 아닙니다.

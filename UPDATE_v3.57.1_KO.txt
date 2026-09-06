@@ -1,0 +1,31 @@
+TamaPoke KO v3.57.1 SafeSave
+
+기준: v3.57 LargeSpriteAutoScale 기능을 그대로 유지하고 저장 안정성만 보강한 롤백용 버전입니다.
+
+[확인된 원인 1 - 육성 슬롯 복제/소실]
+기존 CareSlots::switchTo()는 새 활성 슬롯 번호(carea)를 먼저 저장한 뒤 새 포켓몬의 scalar 데이터를 저장했습니다.
+이 짧은 사이에 전원 차단/리셋이 발생하면 다음 부팅에서 이전 포켓몬의 scalar 데이터가 새 슬롯의 snapshot을 덮어쓸 수 있어, 옆 슬롯으로 복제되고 원래 포켓몬이 사라질 수 있었습니다.
+
+수정:
+- caretx/carefrom/careto 전환 저널 추가
+- 전환 중 재부팅 시 scalar 데이터를 신뢰하지 않고 완전한 슬롯 snapshot으로 복구
+- 각 육성 슬롯에 CRC 검증 A/B snapshot(c0a/c0b 등) 추가
+- 매 Pet 저장 후 현재 활성 슬롯도 안전 snapshot으로 체크포인트
+- snapshot species/move/IV/상태 범위 검증 추가
+
+[확인된 원인 2 - 파티/박스 교환]
+기존에는 party와 box를 서로 다른 NVS blob으로 순차 저장했습니다. 교환 중 전원이 꺼지면 한쪽만 갱신되어 복제/소실이 발생할 수 있었습니다.
+
+수정:
+- 파티 6마리 + 박스 18마리를 하나의 논리 bank로 묶음
+- bankA/bankB CRC A/B 복사본 중 최신 정상본을 부팅 때 선택
+- 안전 bank를 먼저 저장하고 기존 party/box 키는 호환용 mirror로 나중에 기록
+
+[v3.58/59 -> v3.57 롤백 보호]
+- v3.57 PartyMon은 30바이트, v3.58/59는 form 필드 추가로 32바이트 stride가 될 수 있어 구 v3.57이 그대로 읽지 못했습니다.
+- v3.57.1은 슬롯별 prefix migration으로 form 부분만 버리고 기존 포켓몬 데이터를 보존합니다.
+- CareSnapshot도 v3.58/59의 더 긴 blob을 v3.57 prefix로 안전하게 읽습니다.
+- carev=2를 이유로 비활성 육성 슬롯을 초기화하지 않습니다.
+
+주의:
+이미 이전 펌웨어가 빈 슬롯/빈 파티 상태를 NVS에 다시 저장해 원본 데이터 자체가 덮어써졌다면 그 데이터는 자동 복구할 수 없습니다. 아직 raw blob이 남아 있으면 v3.57.1이 마이그레이션합니다.

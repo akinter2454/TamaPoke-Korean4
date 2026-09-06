@@ -1,0 +1,45 @@
+v3.57.3 도감 찾기 알고리즘/저장 점검 결과
+
+1. 저장 구조
+PASS - PartyMon 구조 변경 없음
+PASS - CareSnapshot 구조 변경 없음
+PASS - 파티/박스 SafeSave A/B 저장 로직 변경 없음
+PASS - 육성 슬롯 SafeSave/전환 저널 변경 없음
+PASS - 찾기 상태는 단일 uint32 NVS 키로만 저장
+PASS - magic 0xA573 + dex(10bit) + pity(3bit) 범위 검증
+
+2. 전원 차단 순서
+PASS - 새 eggTarget 및 전체 Pet 상태를 먼저 save()
+PASS - 그 다음에만 pity hit/miss를 별도 키에 커밋
+결과: 두 저장 사이 전원이 끊기면 사용자가 pity를 1회 더 유지할 수는 있어도, 저장되지 않은 알 때문에 pity가 사라지지는 않음
+
+3. 천장
+PASS - 적격 실패 1~5회 누적
+PASS - pity=5 상태의 다음 적격 알(6번째)은 목표 계열 강제
+PASS - 성공 시 pity=0
+PASS - 지역 변경 rollInRegion은 pity를 증가/소모하지 않음
+
+4. 희귀도 보존
+PASS - 기존 tier 결정 로직(일반/희귀/전설)을 먼저 실행
+PASS - 목표 가중치는 목표의 hatchable base가 실제 선택 tier에 포함될 때만 작동
+PASS - 일반 목표가 희귀/전설 알을 강제로 일반 알로 바꾸지 않음
+PASS - 전설 목표도 전설 tier가 뽑힌 경우에만 탐색 진행
+
+5. 가중치
+PASS - 목표 tier에서는 완성/미완성 도감과 무관하게 전체 tier pool을 사용
+PASS - target 1개 + virtual target 2개 방식으로 총 3배 가중치
+PASS - 도감 완성 상태에서 target만 후보로 남아 100%가 되는 오류 방지
+샘플: 망나뇽 계열(미뇽) 관동 희귀 pool 20종 기준 5.0% -> 약 13.64% (2.73x)
+샘플: 리자몽 계열(파이리) 관동 일반 pool 43종 기준 2.33% -> 약 6.67% (2.87x)
+
+6. 진화계열 해석
+PASS - 리자몽 -> 파이리
+PASS - 망나뇽 -> 미뇽
+PASS - 메타그로스 -> 메탕
+PASS - 크로뱃 -> 주뱃
+PASS - 블래키/님피아 등 이브이 8진화 -> 이브이
+
+7. 소스 무결성
+PASS - modified C++ brace balance
+PASS - 직렬화 구조체 diff 동일
+PASS - 디버그 EGGS 명령은 pity를 변경하지 않도록 countHunt=false

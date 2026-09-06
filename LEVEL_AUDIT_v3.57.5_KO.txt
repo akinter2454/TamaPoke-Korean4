@@ -1,0 +1,17 @@
+v3.57.5 LEVEL / SLEEP AUDIT
+
+PASS: 깨어 있음 2분 -> +1 레벨
+PASS: 수면 10분 -> +1 레벨
+PASS: 수면 7분 + 재부팅 + 수면 3분 -> +1 레벨
+PASS: 수면 4분 + 육성 슬롯 전환 + 수면 6분 -> +1 레벨
+PASS: 깨어 있음 1분 + 수면 5분 -> +1 레벨
+PASS: v3.57.4 기존 levelMinutes의 표시 레벨 유지
+PASS: PartyMon / 파티 / 박스 구조 변경 없음
+PASS: 수면 잔여 시간 NVS 저장(lvslp)
+PASS: CareSnapshot append-only 저장 및 CRC A/B 호환
+
+성장 단위:
+- levelMinutes 2 = 1레벨
+- 깨어 있음 1분 = levelMinutes +1
+- 수면 5분 = levelMinutes +1
+따라서 깨어 있음 2분 또는 수면 10분이 각각 1레벨에 해당합니다.

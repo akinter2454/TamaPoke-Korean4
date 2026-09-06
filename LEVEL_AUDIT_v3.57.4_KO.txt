@@ -1,0 +1,29 @@
+v3.57.4 LEVEL / SLEEP AUDIT
+
+검증 목표
+- 2분마다 1레벨
+- 수면 시간은 레벨 진행에 포함되지 않음
+- 기존 v3.57.x의 현재 레벨 보존
+- SafeSave 육성 슬롯과 호환
+
+정적/알고리즘 검사
+[PASS] MINUTES_PER_LEVEL = 2
+[PASS] PET_TICK_MS = 60000ms 유지
+[PASS] level()은 levelMinutes 기반
+[PASS] 수면 branch에서는 levelMinutes 증가 없음
+[PASS] 깨어있는 tick에서만 levelMinutes +1
+[PASS] syncClock 오프라인 수면 branch에서는 levelMinutes 증가 없음
+[PASS] 비활성 care slot 수면 branch에서도 levelMinutes 증가 없음
+[PASS] 레벨 진행 UI는 ageMinutes가 아닌 levelClockMinutes 사용
+[PASS] battle/debug에서 강제 레벨 설정 시 levelMinutes도 동기화
+[PASS] 기존 10분 clock -> 2분 clock 변환 시 Lv.1~100 전 구간 visible level 보존
+[PASS] PartyMon 구조 변경 없음
+[PASS] CareSnapshot 새 필드는 구조 끝에 append
+[PASS] 기존 SafeSave v1 A/B blob CRC 읽기 지원
+[PASS] 새 SafeSave v2 A/B blob 쓰기
+
+예시
+- Lv.1, 깨어있음 2분 -> Lv.2
+- Lv.1, 수면 120분 -> Lv.1
+- Lv.1, 깨어있음 1분 -> 수면 120분 -> 깨어있음 1분 -> Lv.2
+- 기존 ageMinutes=150 (구버전 Lv.16) -> 업데이트 후에도 Lv.16

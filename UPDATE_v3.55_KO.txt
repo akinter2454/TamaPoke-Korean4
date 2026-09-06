@@ -1,0 +1,14 @@
+TamaPoke KO v3.55
+
+[PC 시뮬레이터에서 확정한 이름 라벨 값 반영]
+- HEADER_NAME_Y_NUDGE = 5
+- HEADER_TEXT_LIFT = -2
+- 이름 라벨 높이 = 29px
+- 이름 글자 크기 = 24px 상당 (QuanPixel 8px × uiSetTextSize(3))
+
+[시뮬레이터 동기화]
+- tools/TamaPoke-PC-Simulator.html의 기본값도 동일하게 5 / -2 / 29 / 24로 변경
+- 브라우저에 남아 있던 이전 시뮬레이터 값이 새 기본값을 덮어쓰지 않도록 저장 키를 v3.55용으로 변경
+
+[유지 사항]
+- 저장 보호, 프레임 안정화, 체육관 지역 수정, 방어게임 효과음, 타입별 배경, 구름 가독성 보정, 안개 제거 등 기존 기능 유지
