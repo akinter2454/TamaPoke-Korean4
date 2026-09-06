@@ -1,0 +1,40 @@
+TamaPoke KO v3.62.4 FINAL VALIDATION - Regional Form Evolution Routing
+
+검증 완료
+- FW_VERSION = 3.62.4
+- tools/*.py py_compile 통과
+- verify_sd_serial_protocol.py 통과 (proto=2 reliable ACK/preflight 유지)
+- verify_evolution_levels.py 통과 (Lv.100 상한/은퇴 페널티 12 유지)
+- GitHub Actions YAML parse 통과
+- installer inline JavaScript node --check 통과
+- Basculin White -> Hisui region/tag special policy 단위검사 통과
+- regional descendant source policy 10종 검사 통과
+- synthetic generated catalog/dex에서 verify_regional_evolutions.py 52조건 통과
+- workflow가 sync 후 regional verifier/report를 실행/게시/commit하도록 확인
+
+수정 대상
+Galar form-only descendants:
+- Galar Linoone -> Obstagoon
+- Galar Meowth -> Perrserker
+- Galar Corsola -> Cursola
+- Galar Farfetch'd -> Sirfetch'd
+- Galar Mr. Mime -> Mr. Rime
+- Galar Yamask -> Runerigus
+
+Hisui form-only descendants:
+- Basculin White -> Basculegion (Hisui-origin 분류 포함)
+- Hisui Sneasel -> Sneasler
+- Hisui Qwilfish -> Overqwil
+
+Same ambiguity guard:
+- Paldea Wooper -> Clodsire
+
+Alola regression:
+- 8개 fixed direct regional-form evolution edge
+- Pikachu -> Alola Raichu
+- Exeggcute -> Alola Exeggutor
+- Cubone -> Alola Marowak
+
+주의
+- 이 로컬 환경은 PMDCollab tracker/PokeAPI runtime 다운로드 및 Arduino ESP32 전체 컴파일을 수행할 수 없으므로 실제 최신 catalog 생성 + Arduino compile + Pages deploy 성공은 GitHub Actions가 최종 기준이다.
+- tools/catalog_lock.json이 기존 저장소에 있으면 삭제하지 말 것.

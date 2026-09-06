@@ -1,27 +1,17 @@
-이 ZIP과 TamaPoke-v3.62.2-HANDOFF.md는 내가 계속 개발하는 TamaPoke KO 프로젝트의 최신 기준본입니다.
+이 ZIP과 TamaPoke-v3.62.4-HANDOFF.md는 내가 계속 개발하는 TamaPoke KO 프로젝트의 최신 기준본입니다.
 
-대상 기기는 Waveshare ESP32-S3-Touch-AMOLED-1.75 (466x466 원형 AMOLED)이고 현재 기준 버전은 v3.62.2입니다.
+대상 기기는 Waveshare ESP32-S3-Touch-AMOLED-1.75 (466x466 원형 AMOLED)이고 현재 기준 버전은 v3.62.4입니다.
 
-먼저 HANDOFF 문서와 전체 GitHub 프로젝트 구조를 읽고 현재 구현 상태를 파악해 주세요. 앞으로 수정할 때 반드시 지켜야 할 핵심 조건은 다음과 같습니다.
+반드시 v3.62.4를 최신 기준선으로 사용하고 과거 실험판으로 롤백하지 마세요.
+기존 GitHub 저장소의 tools/catalog_lock.json은 1200+ form ID 안정성에 필수이므로 삭제하지 마세요.
 
-1. v3.62.2를 최신 기준선으로 사용하고 과거 실험판으로 롤백하지 마세요.
-2. PMDCollab의 실제 behavior pixel sprite만 사용합니다. 메가는 승인된 36종만 Lv.70 영구 진화로 포함하고, 그 외 Mega/Gigantamax/Dynamax/Primal/Terastal 등 전투 기믹은 제외합니다.
-3. 공식 일반 폼/지역폼은 독립 species로 취급하며, 분기진화는 Eevee-style selector를 사용합니다. 진화 조건은 레벨업으로 단순화합니다.
-4. GitHub Actions가 최신 PMDCollab 카탈로그를 동기화하고 GitHub Pages로 배포합니다. catalog_lock.json의 ID 고정 규칙을 유지하세요.
-5. v3.61.3 no-frame-drop 안정화(85ms active / 100ms normal, direct Canvas blit, partial present, TPK3 bounds/crop)를 제거하거나 FPS를 낮추지 마세요.
-6. v3.61.9 절전 정책: 5분 무입력 true screen-off, 화면 OFF에서는 터치가 wake하지 않으며 AXP2101 옆 물리 버튼만 wake합니다. OFF 중 render/flush와 게임 SFX/PA는 정지합니다. v3.61.4의 터치 직후 unsigned idle 언더플로우 버그는 safeElapsedMs + 입력 후 millis 재동기화로 수정되었으므로 이 보호 로직을 제거하지 마세요.
-7. 가라르/팔데아 체육관은 trainers.h의 9개 gym ladder 구조를 유지합니다. Hisui는 전통 체육관이 없어 gym ladder에서 건너뜁니다.
-8. 가라르는 Sword 기준 Milo/Nessa/Kabu/Bea/Opal/Gordie/Piers/Raihan, 이후 Champion Cup/endgame과 Leon을 사용합니다. Dynamax/Gigantamax는 사용하지 않습니다.
-9. 팔데아는 Katy/Brassius/Iono/Kofu/Larry/Ryme/Tulip/Grusha + Rika/Poppy/Larry/Hassel + Geeta를 사용하며 Terastallization은 사용하지 않습니다.
-10. 저장 호환성보다 현재 구조의 안정성이 우선입니다. 사용자는 기존 세이브를 지울 예정이라고 명시했습니다.
-11. 실제 최종 빌드는 GitHub Actions의 arduino-cli compile + GitHub Pages deploy 성공을 기준으로 합니다.
-12. 수정 후에는 전체 GitHub ZIP과 HANDOFF를 함께 갱신해 주세요.
+v3.62.4 핵심:
+- Alola/Galar/Hisui 지역폼 진화를 internal species ID 기준으로 전수검사.
+- Hisui Qwilfish -> Overqwil, Hisui Sneasel -> Sneasler 복구.
+- Galar regional-only descendants 6종을 normal parent가 아니라 Galar form ID에서 연결.
+- Basculin White는 PMDCollab 이름에 Hisui가 없지만 Hisui-origin으로 분류하여 Basculegion으로 연결.
+- Paldea Wooper -> Clodsire 동일 유형 guard.
+- verify_regional_evolutions.py / regional-evolution-report.txt 유지.
+- v3.62.3 reliable SDINFO/PUT, 전체 스프라이트 탭, 리소스 검수, catalog fingerprint, Mega36, IV, 진화 Lv.100 상한을 유지.
 
-v3.62.2는 v3.61.9의 진화 레벨 오버플로우 보호와 v3.61.8의 IV 보상 확률 조정을 모두 유지하면서 PMDCollab Mega36을 추가했습니다. 구형 조기 은퇴 페널티 144레벨을 12레벨로 정상화하고, 기본 진화 레벨 + 돌봄 실수 + 은퇴 페널티의 최종 진화 요구 레벨이 절대 Lv.100을 넘지 않도록 단일 계산 함수를 사용합니다. 기존 세이브/육성 슬롯에 남아 있는 과도한 페널티도 자동으로 12로 마이그레이션합니다. IV 아이템은 상점에서 판매하지 않고 랜덤 이벤트/훈련 보상으로만 지급합니다.
-
-지금부터 v3.62.2 이후 TamaPoke KO 개발을 이어가 주세요.
-
-Mega36 핵심: 승인 36종은 원본 종에서 Lv.70에 영구 진화하고 도감에 별도 등록됩니다. 리자몽은 Mega Charizard X만, 뮤츠는 Mega Mewtwo Y만 사용하며 반대편 X/Y sprite가 없으므로 선택 분기 없이 단일 진화합니다. 표시명은 m. 접두사를 사용합니다. tools/sync_pmd_catalog.py의 APPROVED_MEGA_NATDEX 및 MEGA36_SOURCE_MAP.txt를 기준으로 하며 임의로 다른 Mega를 자동 허용하지 마세요.
-
-
-v3.62.2 추가 핵심: 스프라이트 매핑 감사와 one-click 전체 동기화를 유지하세요. 모든 PMDCollab pmd_path는 NatDex owner와 일치해야 하며, 팔데아 켄타로스는 반드시 0128 하위 source여야 합니다. 설치 페이지의 리소스 검수 탭(sprite-audit.json + previews)과 전체 스프라이트 탭(기본 7지역 + 현재 added-all 순차 전송)을 제거하지 마세요. 기존 GitHub 저장소의 tools/catalog_lock.json은 1200+ ID 안정성에 필수이므로 보존하세요.
+다음 작업에서도 지역폼 진화는 National Dex 번호만으로 추정하지 말고 PMDCollab form/internal ID를 확인하세요.

@@ -1,40 +1,10 @@
-TamaPoke KO v3.62.2 Sprite Audit + One-click Full Sprite Sync + Mega36 - GitHub Pages
+TamaPoke KO v3.62.4 Regional Evolution Audit + Reliable SD Sync + Sprite Audit + Full Sync + Mega36
 
-1) 이 ZIP을 압축 해제합니다.
-2) ZIP 안의 내용물(.github, tools, TamaPoke.ino 등)을 GitHub 저장소 최상단에 그대로 업로드합니다.
-   - 저장소 안에 프로젝트 폴더를 한 겹 더 만들지 마세요.
-3) GitHub 저장소 -> Settings -> Pages로 이동합니다.
-4) Build and deployment의 Source를 "GitHub Actions"로 선택합니다. 이 설정은 최초 한 번만 하면 됩니다.
-5) Actions -> "TamaPoke v3.62.2 PMDCatalog - Mega36 Level Evolutions GitHub Pages" -> Run workflow를 실행합니다.
-6) build와 deploy 작업이 모두 초록색으로 끝나면 deploy 요약의 page_url을 누릅니다.
-   일반적인 주소 형태: https://<GitHub아이디>.github.io/<저장소이름>/
-7) 이후 소스/스프라이트를 갱신할 때는 같은 Actions workflow를 다시 실행하면 같은 주소가 자동 갱신됩니다.
+1) 기존 저장소를 삭제하지 말고 이 ZIP의 파일을 루트에 덮어씁니다.
+2) tools/catalog_lock.json이 이미 있으면 반드시 보존합니다.
+3) GitHub Actions에서 v3.62.4 workflow를 실행합니다.
+4) Sync 단계에서 regional evolution audit OK가 출력되어야 합니다.
+5) build/deploy 성공 후 Pages에서 v3.62.4 펌웨어를 설치합니다.
 
-GitHub Pages로 배포되는 내용:
-- index.html
-- sprite-manifest.json
-- sprites-extra-*.pak (여러 개)
-- pmd_catalog_report.txt
-- pmd_sprite_report.txt
-- pmd_catalog.json
-- sprite-audit.json
-- sprite-mapping-report.txt
-- previews/ (810+ / 추가폼 / Mega36 실제 원본 미리보기)
-- build-info.txt
-- PMDCOLLAB_CREDITS.txt
-
-중요:
-- Netlify는 더 이상 필요하지 않습니다.
-- site/는 Actions 작업 공간에서 생성되어 Pages artifact로 직접 배포됩니다. 대형 sprite pack을 Git 저장소에 커밋하지 않습니다.
-- PMDCollab의 최신 tracker.json을 Actions 실행 시 읽습니다.
-- 승인된 Mega36만 Lv.70 영구 진화로 포함하며, 그 외 메가/거다이맥스/다이맥스/원시회귀/테라스탈 등 전투 기믹은 자동 제외합니다.
-- 실제 PMDCollab 행동 도트 스프라이트가 없는 항목은 억지 대체하지 않고 보고서에 남깁니다.
-- GitHub Pages 게시 사이트가 1GB를 넘으면 workflow가 배포 전에 명확한 오류로 중단됩니다.
-
-
-[v3.62.2 중요 - 기존 저장소 갱신]
-- 기존 GitHub 저장소에 tools/catalog_lock.json이 이미 있으면 절대 삭제하지 마세요. 1200번대 폼 ID를 고정하는 파일입니다.
-- 전체 ZIP은 기존 저장소의 파일 위에 덮어쓰는 방식으로 올리는 것을 권장합니다. 저장소를 비운 뒤 새로 올리면 catalog_lock이 사라질 수 있습니다.
-- Actions가 성공하면 현재 catalog_lock.json, sprite_audit.json, sprite_mapping_report.txt를 자동 커밋합니다.
-- Pages 설치 페이지의 '전체 스프라이트' 탭은 기존 SD의 모든 활성 sprite ID를 현재 catalog 기준으로 다시 덮어써 오래된 ID-파일 불일치를 복구합니다.
-- '리소스 검수' 탭에서는 각 ID의 이름/NatDex/PMDCollab 경로/미리보기를 직접 확인할 수 있습니다.
+이번 버전은 진화 graph 수정이며 스프라이트 ID를 의도적으로 재배치하지 않습니다. 기존 microSD를 재사용할 수 있습니다.
+지역폼 진화 검수 결과는 Pages의 regional-evolution-report.txt에서 확인할 수 있습니다.

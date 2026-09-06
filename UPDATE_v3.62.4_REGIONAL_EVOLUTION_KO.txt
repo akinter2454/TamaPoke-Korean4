@@ -1,0 +1,23 @@
+TamaPoke KO v3.62.4 - Regional Form Evolution Routing Audit
+
+문제
+- PokeAPI species 관계는 National Dex parent만 제공하므로 지역폼 전용 진화가 일반폼 parent에 잘못 연결될 수 있었음.
+- 대표적으로 #211 -> #904를 그대로 쓰면 일반 침바루 -> 장침바루가 되고 히스이 침바루에는 진화가 없어짐.
+
+수정
+- 새 National Dex 종이 특정 지역폼에서만 진화하는 경우 해당 TamaPoke form ID를 source로 강제.
+- 가라르: 직구리->가로막구리, 나옹->나이킹, 코산호->산호르곤, 파오리->창파나이트, 마임맨->마임꽁꽁, 데스마스->데스판.
+- 히스이: 포푸니->포푸니크, 침바루->장침바루.
+- 배쓰나이 White는 PMDCollab 이름에 Hisui가 없지만 Hisui-origin으로 분류해 히스이 알/도감 풀에 넣고 대쓰여너로 연결.
+- 팔데아: 우파->토오도 같은 원인의 재발 방지 대상으로 form-aware routing 적용.
+- 알로라 18종의 기존 direct 진화와 피카츄/아라리/탕구리 분기를 회귀검사.
+
+검증
+- tools/verify_regional_evolutions.py 추가.
+- catalog 생성 후 알로라/가라르/히스이(+팔데아 guard) 총 52개 조건을 검사.
+- 잘못된 일반폼 parent edge가 존재하면 Actions 실패.
+- tools/regional_evolution_report.txt를 Pages에 게시.
+
+기존 기능
+- v3.62.3 reliable SD sync, 전체 스프라이트 동기화, 리소스 검수, Mega36, IV, 진화 Lv.100 상한, 메뉴/절전/체육관 수정 유지.
+- 내부 species ID와 catalog_lock 정책은 변경하지 않으므로 세이브 구조 변경 없음.

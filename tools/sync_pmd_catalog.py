@@ -45,7 +45,7 @@ TRACKER_URL = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/t
 POKE = 'https://pokeapi.co/api/v2'
 SPECIES_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv'
 EVOLUTION_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_evolution.csv'
-USER_AGENT = 'TamaPoke-v3.62.2-SpriteAudit/1.0 (+noncommercial classroom project)'
+USER_AGENT = 'TamaPoke-v3.62.4-RegionalEvolution/1.0 (+noncommercial classroom project)'
 FORM_ID_START = 1200
 EVOLUTION_LEVEL_CAP = 100
 MEGA_EVOLVE_LEVEL = 70
@@ -72,7 +72,7 @@ GIMMICK_WORDS = (
 # non-Pokemon utility/special repository slots that must not become hatchable entries.
 SKIP_WORDS = ('missingno', 'substitute doll', 'manaphy egg')
 
-# v3.62.2: Mega forms with sufficiently complete PMDCollab behaviour sprites
+# v3.62.4: retain the Mega36 list while adding regional evolution routing guards
 # verified on 2026-09-06.  This is intentionally a NATDEX whitelist rather than
 # "allow every Mega": future SpriteCollab additions must not silently change a
 # player's evolution graph.  Charizard and Mewtwo are restricted to the one
@@ -114,6 +114,29 @@ REGIONAL_TOKENS = {
     'galar':7, 'galarian':7,
     'hisui':8, 'hisuian':8,
     'paldea':9, 'paldean':9,
+}
+
+# Some later-generation species officially evolve ONLY from a regional/form
+# variant of an older National-Dex species. PokeAPI's species CSV necessarily
+# stores only the National-Dex parent (e.g. #211 -> #904), so blindly mirroring
+# that edge would create Normal Qwilfish -> Overqwil and leave Hisuian
+# Qwilfish with no evolution. Route these descendants through the actual form
+# entry instead. Basculin is the one special case whose Hisui-origin source is
+# named White-Striped rather than Hisui in upstream form metadata.
+REGIONAL_DESCENDANT_SOURCES = {
+    # Galar
+    862: {'parent_nat':264, 'tag':'galar'},   # Galarian Linoone -> Obstagoon
+    863: {'parent_nat':52,  'tag':'galar'},   # Galarian Meowth -> Perrserker
+    864: {'parent_nat':222, 'tag':'galar'},   # Galarian Corsola -> Cursola
+    865: {'parent_nat':83,  'tag':'galar'},   # Galarian Farfetch'd -> Sirfetch'd
+    866: {'parent_nat':122, 'tag':'galar'},   # Galarian Mr. Mime -> Mr. Rime
+    867: {'parent_nat':562, 'tag':'galar'},   # Galarian Yamask -> Runerigus
+    # Hisui
+    902: {'parent_nat':550, 'tag':'hisui'},       # White-Striped Basculin -> Basculegion
+    903: {'parent_nat':215, 'tag':'hisui'},   # Hisuian Sneasel -> Sneasler
+    904: {'parent_nat':211, 'tag':'hisui'},   # Hisuian Qwilfish -> Overqwil
+    # Paldea (same ambiguity class; keep it correct while auditing region forms)
+    980: {'parent_nat':194, 'tag':'paldea'},  # Paldean Wooper -> Clodsire
 }
 REGION_NAMES = ['KANTO','JOHTO','HOENN','SINNOH','UNOVA','KALOS','ALOLA','GALAR','HISUI','PALDEA','ALL']
 TYPE_ENUM = {
@@ -353,14 +376,19 @@ def gen_region(nat:int)->int:
 
 
 def form_region(name:str,nat:int)->int:
+    # White-Striped Basculin is a Hisui-origin form, but PMDCollab labels it
+    # simply 'Basculin White' rather than including the word Hisui. Keep it in
+    # the Hisui regional pool so it can hatch there and evolve to Basculegion.
+    if nat==550 and 'white' in low(name): return 8
     toks=re.findall(r'[a-z]+',low(name))
     for t in toks:
         if t in REGIONAL_TOKENS:return REGIONAL_TOKENS[t]
     return gen_region(nat)
 
 
-def regional_tag(name:str):
+def regional_tag(name:str,nat:int|None=None):
     n=low(name)
+    if nat==550 and 'white' in n: return 'hisui'
     for tag in ('alola','galar','hisui','paldea'):
         if tag in n or (tag+'n') in n:
             return tag
@@ -582,17 +610,22 @@ def main():
     # the original v3.58 single evolvesTo field could not represent.
     parent_of={b:a for (a,b),lvl in base_edges.items()}
 
-    # map regional form by (nat,region tag) to internal id after IDs are known.
+    # Map CURRENT enabled regional forms by (National Dex, region tag) to the
+    # independent TamaPoke species ID. Keep a second all/locked map only for
+    # diagnostics: evolution routing must never point at a stale disabled form.
     form_entries=[]
     by_region_form={}
+    by_region_form_all={}
     for lk,rec in sorted(lock['forms'].items(),key=lambda kv:int(kv[1]['id'])):
         nat=int(rec['natdex']); iid=int(rec['id']); f=discovered.get(lk)
         enabled=bool(f)
         label=(f or {}).get('form_name') or rec.get('label','Form')
         full=(f or {}).get('full_name') or f"{nat} {label}"
         region=form_region(full,nat)
-        tag=regional_tag(full)
-        if tag: by_region_form[(nat,tag)]=iid
+        tag=regional_tag(full,nat)
+        if tag:
+            by_region_form_all[(nat,tag)]=iid
+            if enabled: by_region_form[(nat,tag)]=iid
         form_entries.append({'lock_key':lk,'id':iid,'natdex':nat,'form_key':rec.get('form_key',''),
                              'form_name':label,'full_name':full,'pmd_path':(f or {}).get('pmd_path'),
                              'shiny_path':(f or {}).get('shiny_path'), 'enabled':enabled,'region':region,'regional_tag':tag,
@@ -673,6 +706,34 @@ def main():
                           'form_name':f['form_name'],'mega':bool(f.get('mega')),**meta}
         if f['enabled']:enabled_ids.add(iid)
 
+    def resolve_regional_descendant_source(target_nat:int):
+        """Resolve the independent form ID that may evolve into target_nat.
+
+        This is intentionally form-aware rather than National-Dex-only. If an
+        expected current form disappears or its tracker label changes, fail the
+        catalog build instead of silently restoring a biologically wrong edge.
+        """
+        spec=REGIONAL_DESCENDANT_SOURCES.get(int(target_nat))
+        if not spec: return None
+        parent=int(spec['parent_nat'])
+        tag=spec.get('tag')
+        if tag:
+            iid=by_region_form.get((parent,tag))
+            if iid: return iid
+            stale=by_region_form_all.get((parent,tag))
+            if stale:
+                raise RuntimeError(f'regional evolution source disabled: nat#{parent} {tag} id {stale} -> nat#{target_nat}')
+            raise RuntimeError(f'regional evolution source missing: nat#{parent} {tag} -> nat#{target_nat}')
+        need=set(spec.get('tokens') or ())
+        matches=[]
+        for f in form_entries:
+            if not f.get('enabled') or int(f.get('natdex',0))!=parent: continue
+            toks=set(normalize_tokens((f.get('form_name') or '')+' '+(f.get('full_name') or '')))
+            if need.issubset(toks): matches.append(int(f['id']))
+        if len(matches)!=1:
+            raise RuntimeError(f'form-specific evolution source ambiguous/missing: nat#{parent} tokens={sorted(need)} -> nat#{target_nat}; matches={matches}')
+        return matches[0]
+
     # Evolution edges. Keep v3.58 normal edges untouched; add all new relations here.
     extra_edges=[]
     def add_edge(a,b,lvl=30,reason='extra'):
@@ -686,7 +747,14 @@ def main():
     for (a,b),lvl in sorted(base_edges.items()):
         ai=internal_base_id(a); bi=internal_base_id(b)
         target_ok = (b<=809 and b not in NO_ART_BASE) or (bi in new_entries and new_entries[bi]['enabled'])
-        if target_ok:
+        if not target_ok:
+            continue
+        if b in REGIONAL_DESCENDANT_SOURCES:
+            # PokeAPI says only 'old National-Dex parent -> new species'; route
+            # through the real regional/form source instead of the normal form.
+            src=resolve_regional_descendant_source(b)
+            add_edge(src,bi,lvl,'regional-form descendant evolution')
+        else:
             add_edge(ai,bi,lvl,'National-Dex evolution')
     # Form relations: regional lines follow same-region parents; other form changes branch from base.
     for f in form_entries:
@@ -726,6 +794,32 @@ def main():
     bad_levels=[x for x in extra_edges if not (2 <= x[2] <= EVOLUTION_LEVEL_CAP)]
     if bad_levels:
         raise RuntimeError('evolution level overflow: '+repr(bad_levels[:20]))
+
+    # Regression guard for the National-Dex/form ambiguity class. These target
+    # species must NEVER be reachable from the normal parent. The source must
+    # be the enabled regional/form entry resolved above.
+    regional_route_rows=[]
+    for target_nat,spec in sorted(REGIONAL_DESCENDANT_SOURCES.items()):
+        ti=internal_base_id(target_nat)
+        if ti not in new_entries or not new_entries[ti].get('enabled'):
+            continue
+        src=resolve_regional_descendant_source(target_nat)
+        parent=internal_base_id(int(spec['parent_nat']))
+        good=[x for x in extra_edges if x[0]==src and x[1]==ti]
+        wrong=[x for x in extra_edges if x[0]==parent and x[1]==ti and parent!=src]
+        if not good or wrong:
+            raise RuntimeError(f'regional evolution routing failed nat#{target_nat}: source={src} parent={parent} good={good} wrong={wrong}')
+        regional_route_rows.append((target_nat,src,ti,good[0][2]))
+
+    # Fixed v3.58 Alola lines are intentionally retained in DEX_TBL. Verify
+    # them here so future catalog refactors cannot silently break those forms.
+    fixed_alola_direct=[(810,811),(813,814),(815,816),(817,818),(819,820),(821,822),(822,823),(824,825)]
+    for a,b in fixed_alola_direct:
+        if int(base_rows[a]['evolvesTo']) != b:
+            raise RuntimeError(f'fixed Alola evolution missing: {a}->{b}')
+    if not all(x in base_text for x in ('ALOLA_BRANCH_BASES[ALOLA_BRANCH_COUNT] = { 25, 102, 104 }',
+                                        'ALOLA_BRANCH_EVOS[ALOLA_BRANCH_COUNT] = { DEX_A_RAICHU, DEX_A_EXEGGUTOR, DEX_A_MAROWAK }')):
+        raise RuntimeError('fixed Alola special branch table changed/missing')
 
     max_id=max([827,current_max+18]+[int(x['id']) for x in lock['forms'].values()])
     # Build every positional row; holes are disabled placeholders.
@@ -848,11 +942,12 @@ def main():
     cat={'schema':1,'generated_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'source':TRACKER_URL,
          'national_dex_max':current_max,'dex_count':max_id,'entries':catalog_entries,
          'extra_edges':[{'base':a,'target':b,'level':l,'reason':r} for a,b,l,r in extra_edges],
+         'regional_descendant_routes':[{'natdex':n,'base':a,'target':b,'level':l} for n,a,b,l in regional_route_rows],
          'excluded_gimmicks':excluded}
     CATALOG_PATH.write_text(json.dumps(cat,ensure_ascii=False,indent=2),encoding='utf-8')
     LOCK_PATH.write_text(json.dumps(lock,ensure_ascii=False,indent=2,sort_keys=True),encoding='utf-8')
 
-    # v3.62.2 sprite mapping audit.  The device stores only p<ID>.bin, so a
+    # v3.62.4 sprite mapping audit (retained from v3.62.3). The device stores only p<ID>.bin, so a
     # stale microSD created with a different form-ID lock can show the right
     # Pokemon name with the wrong old sprite.  Publish the exact ID -> NatDex ->
     # PMDCollab path mapping used by this build, and validate that every source
@@ -902,7 +997,7 @@ def main():
     audit={'schema':1,'generated_utc':cat['generated_utc'],'source':TRACKER_URL,'catalog_fingerprint':fingerprint,
            'dex_count':max_id,'national_dex_max':current_max,'entries':audit_entries}
     AUDIT_PATH.write_text(json.dumps(audit,ensure_ascii=False,indent=2),encoding='utf-8')
-    map_lines=['TamaPoke v3.62.2 sprite ID/path audit',f'catalog_fingerprint={fingerprint}',
+    map_lines=['TamaPoke v3.62.4 sprite ID/path audit',f'catalog_fingerprint={fingerprint}',
                'Rule: internal ID -> NatDex owner -> PMDCollab path first component must agree.',
                f'active_entries={sum(1 for e in audit_entries if e.get("enabled"))}',f'paldea_tauros_entries={len(tauros)}','',
                'PALDEA TAUROS:']
@@ -916,7 +1011,7 @@ def main():
     mega_included=sum(1 for x in catalog_entries if x['enabled'] and x.get('mega'))
     missing=[x for x in catalog_entries if not x['enabled']]
     report=[
-      'TamaPoke v3.62.2 current PMDCollab catalog sync - Mega36 + sprite mapping audit',
+      'TamaPoke v3.62.4 current PMDCollab catalog sync - regional evolution audit + Mega36 + sprite mapping audit',
       f'Source: {TRACKER_URL}',f'National Dex detected: 1..{current_max}',f'TamaPoke DEX_COUNT: {max_id}',
       f'Added/managed entries with real current sprite: {included}',f'Form entries with real current sprite: {form_included}',
       f'Approved Mega entries with real current sprite: {mega_included}/{APPROVED_MEGA_COUNT}',
