@@ -42,7 +42,7 @@ TRACKER_URL = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/t
 POKE = 'https://pokeapi.co/api/v2'
 SPECIES_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv'
 EVOLUTION_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_evolution.csv'
-USER_AGENT = 'TamaPoke-v3.62.0-Mega36/1.0 (+noncommercial classroom project)'
+USER_AGENT = 'TamaPoke-v3.62.1-Mega36/1.0 (+noncommercial classroom project)'
 FORM_ID_START = 1200
 EVOLUTION_LEVEL_CAP = 100
 MEGA_EVOLVE_LEVEL = 70
@@ -69,7 +69,7 @@ GIMMICK_WORDS = (
 # non-Pokemon utility/special repository slots that must not become hatchable entries.
 SKIP_WORDS = ('missingno', 'substitute doll', 'manaphy egg')
 
-# v3.62.0: Mega forms with sufficiently complete PMDCollab behaviour sprites
+# v3.62.1: Mega forms with sufficiently complete PMDCollab behaviour sprites
 # verified on 2026-09-06.  This is intentionally a NATDEX whitelist rather than
 # "allow every Mega": future SpriteCollab additions must not silently change a
 # player's evolution graph.  Charizard and Mewtwo are restricted to the one
@@ -850,7 +850,7 @@ def main():
     mega_included=sum(1 for x in catalog_entries if x['enabled'] and x.get('mega'))
     missing=[x for x in catalog_entries if not x['enabled']]
     report=[
-      'TamaPoke v3.62.0 current PMDCollab catalog sync - approved Mega36',
+      'TamaPoke v3.62.1 current PMDCollab catalog sync - approved Mega36',
       f'Source: {TRACKER_URL}',f'National Dex detected: 1..{current_max}',f'TamaPoke DEX_COUNT: {max_id}',
       f'Added/managed entries with real current sprite: {included}',f'Form entries with real current sprite: {form_included}',
       f'Approved Mega entries with real current sprite: {mega_included}/{APPROVED_MEGA_COUNT}',

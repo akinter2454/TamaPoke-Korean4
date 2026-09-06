@@ -150,13 +150,14 @@ esp-web-install-button{display:inline-block}esp-web-install-button[install-unsup
       <button data-region="unova" disabled>⬇ 하나</button>
       <button data-region="kalos" disabled>⬇ 칼로스</button>
       <button data-region="alola" disabled>⬇ 알로라(7세대)</button>
+      <button data-extra="mega36" disabled>⬇ 메가진화 36종만 추가</button>
       <button data-extra="added-all" disabled>⬇ 현재 추가 스프라이트 전체</button>
       <button data-extra="galar" disabled>⬇ 가라르(8세대)</button>
       <button data-extra="hisui" disabled>⬇ 히스이</button>
       <button data-extra="paldea" disabled>⬇ 팔데아(9세대)</button>
     </div>
-    <p class="small"><b>현재 추가 스프라이트 전체</b>는 GitHub Actions 실행 시 PMDCollab의 최신 tracker.json을 읽어, 실제 행동 도트 스프라이트가 있는 810번 이후 포켓몬/공식 폼을 모두 묶습니다. 메가진화·거다이맥스·원시회귀·테라스탈 등 전투 기믹 폼은 제외됩니다.</p>
-    <p class="small">처음 설치할 때는 <b>현재 추가 스프라이트 전체</b>를 한 번 전송하면 810번 이후 신규 세대와 모든 추가 폼이 함께 들어갑니다. 관동~알로라 버튼을 누르면 원본 지역팩 전송 뒤 그 지역에 속한 추가 폼 팩도 자동으로 이어서 전송합니다. 자동 전송이 막히면 <label style="text-decoration:underline;cursor:pointer">생성된 <code>.pak</code> 직접 선택<input id="pakFiles" type="file" accept=".pak" multiple hidden disabled></label>을 사용할 수 있습니다.</p>
+    <p class="small"><b>메가진화 36종만 추가</b>는 v3.62.0부터 승인된 행동 스프라이트 Mega36의 일반/색이 다른 스프라이트만 전송합니다. 기존 추가 폼을 이미 설치한 기기에서는 이 버튼을 사용하세요. <b>현재 추가 스프라이트 전체</b>는 810번 이후 신규 세대·공식 폼과 승인 Mega36을 모두 묶으며, 거다이맥스·다이맥스·원시회귀·테라스탈 등 다른 전투 기믹 폼은 제외됩니다.</p>
+    <p class="small">처음 설치하는 microSD라면 <b>현재 추가 스프라이트 전체</b>를 한 번 전송하면 810번 이후 신규 세대·추가 폼·Mega36이 함께 들어갑니다. 이미 v3.61.x 스프라이트가 들어 있는 기기를 v3.62.x로 올리는 경우에는 <b>메가진화 36종만 추가</b>만 실행하면 됩니다. 관동~알로라 버튼을 누르면 원본 지역팩 전송 뒤 그 지역에 속한 추가 폼 팩도 자동으로 이어서 전송합니다. 자동 전송이 막히면 <label style="text-decoration:underline;cursor:pointer">생성된 <code>.pak</code> 직접 선택<input id="pakFiles" type="file" accept=".pak" multiple hidden disabled></label>을 사용할 수 있습니다.</p>
     <p class="small"><a href="./sprite-manifest.json" download>스프라이트 팩 목록</a> · <a href="./pmd_catalog_report.txt" download>카탈로그 보고서</a> · <a href="./pmd_sprite_report.txt" download>스프라이트 보고서</a></p>
     <div class="bar" id="bar"><div></div></div>
     <pre id="log"></pre>
@@ -189,7 +190,7 @@ const EMBEDDED_FIRMWARE = {
   boot_app0: "",
   app: ""
 };
-const FW_VERSION = "3.62.0-ko-mega36-lv70-evolevelguard-rewardrate-menuredraw";
+const FW_VERSION = "3.62.1-ko-mega36-delta-lv70-evolevelguard-rewardrate-menuredraw";
 const EMBEDDED_SPRITE_PAKS = {};
 
 const OFFSETS = {
@@ -375,11 +376,16 @@ async function sendAll(items) {
   bar.style.display = 'block'; fill.style.width = '0%';
   let done = 0, fail = 0;
   for (const item of items) {
-    if (!await sendOne(item.name, item.data)) { log('실패: ' + item.name); fail++; }
+    log(`전송: ${item.name} · ${(item.data.length/1024).toFixed(0)} KiB`);
+    if (!await sendOne(item.name, item.data)) {
+      log('실패: ' + item.name + ' — USB/SD 연결을 확인한 뒤 같은 버튼을 다시 누르세요.');
+      fail++; break;
+    }
     done++;
     fill.style.width = (done / items.length * 100).toFixed(1) + '%';
   }
-  log(`완료: ${done-fail}/${items.length}. 보드를 재시작하세요.`);
+  if (fail) log(`중단: ${done}/${items.length} 전송 완료. 실패 파일부터 다시 시도할 수 있습니다.`);
+  else log(`완료: ${done}/${items.length}. 보드를 재시작하세요.`);
 }
 
 const connectBtn = document.getElementById('connect');
@@ -430,6 +436,7 @@ async function getExtraManifest() {
 async function extraPakFiles(kind) {
   const m=await getExtraManifest();
   if(kind==='added-all') return m.all||[];
+  if(kind==='mega36') return (m.groups&&m.groups.mega36)||m.mega36||[];
   return (m.regions&&m.regions[kind])||[];
 }
 
@@ -474,7 +481,7 @@ for (const b of document.querySelectorAll('[data-extra]')) {
   b.addEventListener('click', async () => {
     if (!writer) { log('먼저 기기를 연결하세요.'); return; }
     const kind=b.dataset.extra;
-    const labels={'added-all':'현재 PMDCollab 추가 스프라이트 전체','galar':'가라르 추가 스프라이트','hisui':'히스이 추가 스프라이트','paldea':'팔데아 추가 스프라이트'};
+    const labels={'mega36':'메가진화 36종만 추가','added-all':'현재 PMDCollab 추가 스프라이트 전체','galar':'가라르 추가 스프라이트','hisui':'히스이 추가 스프라이트','paldea':'팔데아 추가 스프라이트'};
     const label=labels[kind]||kind; b.disabled=true;
     try {
       const files=await extraPakFiles(kind);

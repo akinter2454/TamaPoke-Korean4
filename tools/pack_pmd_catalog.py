@@ -24,7 +24,7 @@ OUT=HERE/'sdcard'/'mons'
 CACHE=HERE/'pmd_cache_catalog'
 REPORT=HERE/'pmd_sprite_report.txt'
 RAW='https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/sprite'
-UA='TamaPoke-v3.62.0-Mega36/1.0'
+UA='TamaPoke-v3.62.1-Mega36/1.0'
 SLOW,MIN_MS,ALPHA_T=1.4,70,128
 # Firmware PmdMon::load() accepts at most 3 MiB. Keep generated sprites below
 # that hard limit with margin so PUT transfer and PSRAM loading stay reliable.
@@ -237,7 +237,7 @@ def main():
     cat=json.loads(CAT.read_text(encoding='utf-8'))
     OUT.mkdir(parents=True,exist_ok=True)
     managed=[e for e in cat['entries'] if int(e['id'])>=810]
-    lines=['TamaPoke v3.62.0 PMDCollab behavior-sprite pack report',f"Source: {cat.get('source')}",
+    lines=['TamaPoke v3.62.1 PMDCollab behavior-sprite pack report',f"Source: {cat.get('source')}",
            'Policy: real PMDCollab animated pixel assets only; approved Mega36 only; no G-Max/static-art fallback','']
     results=[]
     with cf.ThreadPoolExecutor(max_workers=12) as ex:

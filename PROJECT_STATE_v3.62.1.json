@@ -1,0 +1,115 @@
+{
+  "project": "TamaPoke KO ESP32-S3 Touch AMOLED 1.75",
+  "version": "3.62.1",
+  "baseline": "v3.61.9 Evolution Level Guard + Reward Rate Tune + Menu Redraw Fix",
+  "hardware": {
+    "board": "Waveshare ESP32-S3-Touch-AMOLED-1.75",
+    "display": "466x466 CO5300 QSPI AMOLED",
+    "touch": "CST9217",
+    "pmu": "AXP2101",
+    "audio": "ES8311 + onboard PA/speaker"
+  },
+  "catalog": {
+    "source": "PMDCollab SpriteCollab tracker.json",
+    "no_gimmicks": false,
+    "forms_independent_species": true,
+    "evolution": "level-only + Eevee-style branching",
+    "id_lock": "tools/catalog_lock.json",
+    "policy": "ordinary/region forms + exactly 36 approved PMDCollab Mega behaviour forms; all other battle gimmicks excluded",
+    "mega_count": 36,
+    "mega_evolution_level": 70,
+    "mega_forms_independent_dex_entries": true,
+    "charizard_mega_target": "Mega Charizard X only",
+    "mewtwo_mega_target": "Mega Mewtwo Y only",
+    "other_gimmicks_excluded": [
+      "Gigantamax",
+      "Dynamax",
+      "Primal",
+      "Eternamax",
+      "Ultra Burst",
+      "Ash-Bond",
+      "Crowned",
+      "Totem",
+      "Terastal",
+      "Stellar"
+    ]
+  },
+  "render": {
+    "active_frame_ms": 85,
+    "normal_frame_ms": 100,
+    "no_recovery_delay": true,
+    "tpk3_bounds": true,
+    "partial_present": true,
+    "overlay_exit_clean_full_present": true
+  },
+  "power": {
+    "auto_screen_off_minutes": 5,
+    "touch_wake": false,
+    "wake_source": "AXP2101 physical side button short press",
+    "screen_off_render": false,
+    "screen_off_sfx": false,
+    "screen_off_pa": false,
+    "touch_idle_timestamp_fix": "safeElapsedMs + post-input millis resync"
+  },
+  "gyms": {
+    "gym_regions": 9,
+    "galar": {
+      "gym_index": 7,
+      "dex_region_id": 7,
+      "version_basis": "Sword",
+      "gimmicks": "ignored"
+    },
+    "paldea": {
+      "gym_index": 8,
+      "dex_region_id": 9,
+      "elite_four": true,
+      "gimmicks": "ignored"
+    },
+    "hisui_traditional_gyms": false
+  },
+  "deployment": {
+    "host": "GitHub Pages",
+    "workflow_name": "TamaPoke v3.62.1 PMDCatalog - Mega36 Level Evolutions GitHub Pages"
+  },
+  "save_note": "User plans to wipe old save data; backward save compatibility is not a blocking constraint.",
+  "latest_changes": [
+    "Mega36-only microSD delta transfer group added: 36 normal + 36 shiny/fallback files, without resending old 1200+ forms",
+    "installer now exposes a dedicated 메가진화 36종만 추가 button for v3.61.x -> v3.62.x upgrades",
+    "full added-sprite install still includes 810+ species/forms plus approved Mega36 for fresh microSD installations",
+    "per-file transfer size is logged and transfer stops on first failure instead of cascading through hundreds of files",
+    "approved 36 PMDCollab Mega behaviour sprites added as permanent Lv.70 evolutions and independent Pokedex entries",
+    "Charizard evolves only to Mega Charizard X; Mewtwo only to Mega Mewtwo Y with no Mega branch selector",
+    "Mega whitelist is fixed by National Dex; unapproved/future Mega variants remain excluded",
+    "recursive Mega tracker scan supports nested paths such as Tatsugiri Curly while skipping shiny/gender descendants",
+    "per-target branch level filtering prevents Lv.70 Mega branches from appearing at lower ordinary evolution levels",
+    "overall evolution readiness now derives from real outgoing edge levels, so Mega-only finals do not falsely show Lv.30 readiness",
+    "v3.61.9 evolution overflow guard and all v3.61.8/3.61.7/3.61.6 gameplay fixes retained",
+    "IV items remain random-event/training-only and are not sold in the shop"
+  ],
+  "reward_balance": {
+    "training_iv_drop_good_percent": 22,
+    "training_iv_drop_great_percent": 38,
+    "random_event_iv_kit_percent": 16,
+    "iv_kit_gold_crown_percent": 8,
+    "shop_sales": false
+  },
+  "evolution_balance": {
+    "max_level": 100,
+    "direct_catalog_max_level_audited": 64,
+    "special_method_default_level": 30,
+    "early_retire_penalty_levels": 12,
+    "effective_gate_clamped_to_max_level": true,
+    "legacy_evo_penalty_migration": true,
+    "care_mistake_wrap_guard": true,
+    "mega_level": 70,
+    "per_target_branch_level_guard": true,
+    "real_outgoing_edge_minimum_gate": true
+  },
+  "sprite_transfer": {
+    "manifest_schema": 2,
+    "mega36_delta_group": "groups.mega36",
+    "mega36_expected_files": 72,
+    "upgrade_from_v3_61": "use Mega36-only button; do not resend all added sprites",
+    "fresh_microSD": "use current all-added sprites once"
+  }
+}

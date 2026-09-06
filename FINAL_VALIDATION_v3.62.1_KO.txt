@@ -1,0 +1,18 @@
+TamaPoke KO v3.62.1 FINAL VALIDATION
+
+목적
+- v3.61.x 스프라이트가 이미 있는 microSD에서 Mega36만 추가할 수 있는 delta 경로 제공.
+- p1200.bin 등 기존 1200+ 폼을 불필요하게 재전송하지 않음.
+
+검증
+[PASS] tools/build_sprite_paks.py Python compile
+[PASS] sync_pmd_catalog.py / pack_pmd_catalog.py Python compile
+[PASS] build_sprite_paks synthetic catalog test: Mega36=36 entries -> normal+shiny 72 files
+[PASS] manifest schema=2, groups.mega36 생성
+[PASS] workflow YAML parse
+[PASS] installer JavaScript syntax check (node --check)
+[PASS] installer에 '메가진화 36종만 추가' 버튼 존재
+[PASS] full all-added 경로는 기존 신규 세대/폼 + Mega36 유지
+[PASS] 실패 시 개별 파일명/크기 표시 후 즉시 중단
+
+실제 PMDCollab sprite 및 Arduino compile은 GitHub Actions 실행 결과를 최종 기준으로 한다.
