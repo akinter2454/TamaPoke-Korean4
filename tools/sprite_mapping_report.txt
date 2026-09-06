@@ -1,7 +1,7 @@
-TamaPoke v3.62.2 sprite ID/path audit
-catalog_fingerprint=202ce5f8d983f087
+TamaPoke v3.62.5 canonical-form sprite ID/path audit
+catalog_fingerprint=ebdaeeabe1f6b339
 Rule: internal ID -> NatDex owner -> PMDCollab path first component must agree.
-active_entries=1700
+active_entries=1326
 paldea_tauros_entries=3
 
 PALDEA TAUROS:
@@ -9,7 +9,7 @@ PALDEA TAUROS:
 - id 1319 / nat#128 / 팔데아 켄타로스 / 0128/0002
 - id 1320 / nat#128 / 팔데아 켄타로스 / 0128/0003
 
-MANAGED 810+ / FORMS / MEGA:
+MANAGED 810+ / CANONICAL FORMS / MEGA:
 - id 810 / nat#19 / 알로라 꼬렛 / 0019/0001
 - id 811 / nat#20 / 알로라 레트라 / 0020/0001
 - id 812 / nat#26 / 알로라 라이츄 / 0026/0001
@@ -244,192 +244,38 @@ MANAGED 810+ / FORMS / MEGA:
 - id 1041 / nat#1023 / 무쇠감투 / NO-SPRITE
 - id 1042 / nat#1024 / 테라파고스 / 1024
 - id 1043 / nat#1025 / 복숭악동 / 1025
-- id 1200 / nat#1 / 이상해씨 Altcolor / 0001/0001
-- id 1201 / nat#2 / 이상해풀 Altcolor / 0002/0001
-- id 1202 / nat#3 / 이상해꽃 Alternate / 0003/0003
-- id 1203 / nat#4 / 파이리 Altcolor / 0004/0001
-- id 1204 / nat#5 / 리자드 Altcolor / 0005/0001
 - id 1205 / nat#6 / m.리자몽X / 0006/0001
-- id 1206 / nat#6 / 리자몽 Altcolor / 0006/0004
-- id 1207 / nat#6 / 리자몽 Alternate / 0006/0005
-- id 1208 / nat#8 / 어니부기 Altcolor / 0008/0001
-- id 1209 / nat#9 / 거북왕 Altcolor / 0009/0004
-- id 1210 / nat#12 / 버터플 Altcolor / 0012/0002
-- id 1211 / nat#13 / 뿔충이 Altcolor / 0013/0001
-- id 1212 / nat#19 / 꼬렛 Altcolor / 0019/0002
-- id 1213 / nat#19 / 꼬렛 Alternate / 0019/0003
-- id 1214 / nat#20 / 레트라 Altcolor / 0020/0002
-- id 1215 / nat#24 / 아보크 Cutscene / 0024/0001
-- id 1216 / nat#24 / 아보크 Alternate / 0024/0002
 - id 1217 / nat#25 / 피카츄 Libre / 0025/0006
 - id 1218 / nat#25 / 피카츄 Cosplay / 0025/0007
-- id 1219 / nat#30 / 니드리나 Altcolor / 0030/0001
-- id 1220 / nat#31 / 니드퀸 Alternate / 0031/0001
-- id 1221 / nat#32 / 니드런♂ Altcolor / 0032/0001
-- id 1222 / nat#33 / 니드리노 Altcolor / 0033/0001
-- id 1223 / nat#34 / 니드킹 Altcolor / 0034/0001
-- id 1224 / nat#36 / 픽시 Altcolor / 0036/0002
-- id 1225 / nat#37 / 식스테일 Altcolor / 0037/0002
-- id 1226 / nat#37 / 식스테일 Alternate / 0037/0003
-- id 1227 / nat#38 / 나인테일 Altcolor / 0038/0002
-- id 1228 / nat#38 / 나인테일 Cutscene / 0038/0003
-- id 1229 / nat#38 / 나인테일 Alternate / 0038/0004
-- id 1230 / nat#39 / 푸린 Altcolor / 0039/0002
-- id 1231 / nat#40 / 푸크린 Cutscene / 0040/0002
-- id 1232 / nat#40 / 푸크린 Altcolor / 0040/0004
-- id 1233 / nat#41 / 주뱃 Cutscene / 0041/0001
-- id 1234 / nat#41 / 주뱃 Altcolor / 0041/0002
-- id 1235 / nat#42 / 골뱃 Alternate / 0042/0001
-- id 1236 / nat#42 / 골뱃 Altcolor / 0042/0002
-- id 1237 / nat#44 / 냄새꼬 Altcolor / 0044/0001
-- id 1238 / nat#45 / 라플레시아 Alternate / 0045/0001
-- id 1239 / nat#46 / 파라스 Altcolor / 0046/0001
-- id 1240 / nat#47 / 파라섹트 Altcolor / 0047/0001
-- id 1241 / nat#48 / 콘팡 Altcolor / 0048/0001
-- id 1242 / nat#49 / 도나리 Altcolor / 0049/0001
-- id 1243 / nat#50 / 디그다 Cutscene / 0050/0003
-- id 1244 / nat#51 / 닥트리오 Cutscene / 0051/0002
 - id 1245 / nat#52 / 가라르 나옹 / 0052/0002
-- id 1246 / nat#54 / 고라파덕 Cutscene / 0054/0001
-- id 1247 / nat#55 / 골덕 Altcolor / 0055/0001
-- id 1248 / nat#56 / 망키 Altcolor / 0056/0001
-- id 1249 / nat#57 / 성원숭 Altcolor / 0057/0001
 - id 1250 / nat#58 / 히스이 가디 / 0058/0001
-- id 1251 / nat#58 / 가디 Altcolor / 0058/0002
 - id 1252 / nat#59 / 히스이 윈디 / 0059/0001
-- id 1253 / nat#59 / 윈디 Altcolor / 0059/0002
 - id 1254 / nat#65 / m.후딘 / 0065/0001
-- id 1255 / nat#65 / 후딘 Cutscene / 0065/0002
-- id 1256 / nat#66 / 알통몬 Cutscene / 0066/0001
-- id 1257 / nat#67 / 근육몬 Altcolor / 0067/0001
-- id 1258 / nat#69 / 모다피 Altcolor / 0069/0001
-- id 1259 / nat#70 / 우츠동 Altcolor / 0070/0001
-- id 1260 / nat#71 / 우츠보트 Altcolor / 0071/0002
-- id 1261 / nat#72 / 왕눈해 Altcolor / 0072/0001
-- id 1262 / nat#73 / 독파리 Altcolor / 0073/0001
-- id 1263 / nat#74 / 꼬마돌 Altcolor / 0074/0002
-- id 1264 / nat#75 / 데구리 Altcolor / 0075/0002
-- id 1265 / nat#76 / 딱구리 Altcolor / 0076/0002
-- id 1266 / nat#76 / 딱구리 Cutscene / 0076/0003
-- id 1267 / nat#76 / 딱구리 Cutscene_Altcolor / 0076/0004
 - id 1268 / nat#77 / 가라르 포니타 / 0077/0001
-- id 1269 / nat#77 / 가라르 포니타 / 0077/0002
-- id 1270 / nat#77 / 포니타 Altcolor / 0077/0003
 - id 1271 / nat#78 / 가라르 날쌩마 / 0078/0001
 - id 1272 / nat#79 / 가라르 야돈 / 0079/0001
-- id 1273 / nat#79 / 야돈 Altcolor / 0079/0002
 - id 1274 / nat#80 / 가라르 야도란 / 0080/0001
 - id 1275 / nat#80 / m.야도란 / 0080/0002
-- id 1276 / nat#80 / 야도란 Alternate / 0080/0003
-- id 1277 / nat#81 / 코일 Cutscene / 0081/0001
-- id 1278 / nat#82 / 레어코일 Altcolor / 0082/0001
 - id 1279 / nat#83 / 가라르 파오리 / 0083/0001
-- id 1280 / nat#83 / 파오리 Altcolor / 0083/0002
-- id 1281 / nat#84 / 두두 Alternate / 0084/0001
-- id 1282 / nat#85 / 두트리오 Altcolor / 0085/0001
-- id 1283 / nat#88 / 질퍽이 Cutscene / 0088/0003
-- id 1284 / nat#89 / 질뻐기 Cutscene / 0089/0003
-- id 1285 / nat#90 / 셀러 Altcolor / 0090/0001
-- id 1286 / nat#91 / 파르셀 Altcolor / 0091/0001
-- id 1287 / nat#93 / 고우스트 Cutscene / 0093/0001
 - id 1288 / nat#94 / m.팬텀 / 0094/0001
-- id 1289 / nat#94 / 팬텀 Cutscene / 0094/0003
-- id 1290 / nat#95 / 롱스톤 Altcolor / 0095/0001
-- id 1291 / nat#96 / 슬리프 Cutscene / 0096/0001
-- id 1292 / nat#96 / 슬리프 Altcolor / 0096/0002
-- id 1293 / nat#96 / 슬리프 Cutscene_Altcolor / 0096/0003
-- id 1294 / nat#98 / 크랩 Altcolor / 0098/0001
-- id 1295 / nat#99 / 킹크랩 Altcolor / 0099/0002
 - id 1296 / nat#100 / 히스이 찌리리공 / 0100/0001
 - id 1297 / nat#101 / 히스이 붐볼 / 0101/0001
-- id 1298 / nat#103 / 나시 Altcolor / 0103/0002
-- id 1299 / nat#104 / 탕구리 Cutscene / 0104/0001
-- id 1300 / nat#105 / 텅구리 Altcolor / 0105/0002
-- id 1301 / nat#106 / 시라소몬 Altcolor / 0106/0001
-- id 1302 / nat#108 / 내루미 Altcolor / 0108/0001
-- id 1303 / nat#109 / 또가스 Cutscene / 0109/0001
 - id 1304 / nat#110 / 가라르 또도가스 / 0110/0001
-- id 1305 / nat#110 / 또도가스 Altcolor / 0110/0002
-- id 1306 / nat#112 / 코뿌리 Altcolor / 0112/0001
-- id 1307 / nat#114 / 덩쿠리 Altcolor / 0114/0001
 - id 1308 / nat#115 / m.캥카 / 0115/0001
-- id 1309 / nat#115 / 캥카 Altcolor / 0115/0004
-- id 1310 / nat#116 / 쏘드라 Altcolor / 0116/0001
-- id 1311 / nat#118 / 콘치 Altcolor / 0118/0001
-- id 1312 / nat#119 / 왕콘치 Altcolor / 0119/0001
 - id 1313 / nat#122 / 가라르 마임맨 / 0122/0001
-- id 1314 / nat#122 / 마임맨 Altcolor / 0122/0002
-- id 1315 / nat#123 / 스라크 Altcolor / 0123/0001
-- id 1316 / nat#124 / 루주라 Alternate / 0124/0001
-- id 1317 / nat#127 / 쁘사이저 Altcolor / 0127/0002
 - id 1318 / nat#128 / 팔데아 켄타로스 / 0128/0001
 - id 1319 / nat#128 / 팔데아 켄타로스 / 0128/0002
 - id 1320 / nat#128 / 팔데아 켄타로스 / 0128/0003
-- id 1321 / nat#128 / 켄타로스 Altcolor / 0128/0004
-- id 1322 / nat#130 / 갸라도스 Altcolor / 0130/0002
-- id 1323 / nat#130 / 갸라도스 Cutscene / 0130/0004
-- id 1324 / nat#131 / 라프라스 Alternate / 0131/0002
-- id 1325 / nat#132 / 메타몽 Altcolor / 0132/0001
-- id 1326 / nat#133 / 이브이 Alternate / 0133/0002
-- id 1327 / nat#134 / 샤미드 Altcolor / 0134/0001
-- id 1328 / nat#136 / 부스터 Altcolor / 0136/0001
-- id 1329 / nat#137 / 폴리곤 Altcolor / 0137/0001
-- id 1330 / nat#141 / 투구푸스 Altcolor / 0141/0001
 - id 1331 / nat#142 / m.프테라 / 0142/0001
-- id 1332 / nat#142 / 프테라 Altcolor / 0142/0002
-- id 1333 / nat#143 / 잠만보 Altcolor / 0143/0002
 - id 1334 / nat#144 / 가라르 프리져 / 0144/0001
-- id 1335 / nat#144 / 프리져 Cutscene / 0144/0002
-- id 1336 / nat#144 / 프리져 Alternate / 0144/0003
 - id 1337 / nat#145 / 가라르 썬더 / 0145/0001
-- id 1338 / nat#145 / 썬더 Cutscene / 0145/0002
-- id 1339 / nat#145 / 썬더 Altcolor / 0145/0003
 - id 1340 / nat#146 / 가라르 파이어 / 0146/0001
-- id 1341 / nat#146 / 파이어 Cutscene / 0146/0002
-- id 1342 / nat#146 / 파이어 Alternate / 0146/0003
-- id 1343 / nat#147 / 미뇽 Altcolor / 0147/0001
-- id 1344 / nat#148 / 신뇽 Altcolor / 0148/0001
-- id 1345 / nat#149 / 망나뇽 Altcolor / 0149/0002
 - id 1346 / nat#150 / m.뮤츠Y / 0150/0002
 - id 1347 / nat#150 / 뮤츠 Shadow / 0150/0003
-- id 1348 / nat#151 / 뮤 Alternate / 0151/0001
-- id 1349 / nat#153 / 베이리프 Altcolor / 0153/0001
-- id 1350 / nat#155 / 브케인 Altcolor / 0155/0001
-- id 1351 / nat#156 / 마그케인 Altcolor / 0156/0001
 - id 1352 / nat#157 / 히스이 블레이범 / 0157/0001
-- id 1353 / nat#157 / 블레이범 Altcolor / 0157/0002
-- id 1354 / nat#161 / 꼬리선 Altcolor / 0161/0001
-- id 1355 / nat#162 / 다꼬리 Alternate / 0162/0001
-- id 1356 / nat#165 / 레디바 Altcolor / 0165/0001
-- id 1357 / nat#166 / 레디안 Altcolor / 0166/0001
-- id 1358 / nat#168 / 아리아도스 Altcolor / 0168/0001
-- id 1359 / nat#169 / 크로뱃 Altcolor / 0169/0001
-- id 1360 / nat#170 / 초라기 Alternate / 0170/0001
-- id 1361 / nat#171 / 랜턴 Altcolor / 0171/0001
 - id 1362 / nat#172 / 피츄 Spiky / 0172/0001
-- id 1363 / nat#174 / 푸푸린 Cutscene / 0174/0001
-- id 1364 / nat#174 / 푸푸린 Cutscene_Altcolor / 0174/0003
-- id 1365 / nat#175 / 토게피 Altcolor / 0175/0001
-- id 1366 / nat#178 / 네이티오 Cutscene / 0178/0001
-- id 1367 / nat#179 / 메리프 Altcolor / 0179/0001
-- id 1368 / nat#182 / 아르코 Cutscene / 0182/0001
-- id 1369 / nat#185 / 꼬지모 Alternate / 0185/0001
-- id 1370 / nat#187 / 통통코 Altcolor / 0187/0001
-- id 1371 / nat#187 / 통통코 Beta / 0187/0002
-- id 1372 / nat#188 / 두코 Altcolor / 0188/0001
-- id 1373 / nat#189 / 솜솜코 Altcolor / 0189/0002
-- id 1374 / nat#191 / 해너츠 Beta / 0191/0001
-- id 1375 / nat#192 / 해루미 Cutscene / 0192/0001
-- id 1376 / nat#192 / 해루미 Altcolor / 0192/0002
 - id 1377 / nat#194 / 팔데아 우파 / 0194/0002
-- id 1378 / nat#194 / 우파 Altcolor / 0194/0003
-- id 1379 / nat#195 / 누오 Altcolor / 0195/0001
-- id 1380 / nat#196 / 에브이 Altcolor / 0196/0001
-- id 1381 / nat#197 / 블래키 Altcolor / 0197/0001
-- id 1382 / nat#198 / 니로우 Altcolor / 0198/0001
 - id 1383 / nat#199 / 가라르 야도킹 / 0199/0001
-- id 1384 / nat#199 / 야도킹 Altcolor / 0199/0002
-- id 1385 / nat#200 / 무우마 Altcolor / 0200/0001
 - id 1386 / nat#201 / 안농 B / 0201/0001
 - id 1387 / nat#201 / 안농 C / 0201/0002
 - id 1388 / nat#201 / 안농 D / 0201/0003
@@ -457,265 +303,56 @@ MANAGED 810+ / FORMS / MEGA:
 - id 1410 / nat#201 / 안농 Z / 0201/0025
 - id 1411 / nat#201 / 안농 Exclamation / 0201/0026
 - id 1412 / nat#201 / 안농 Question / 0201/0027
-- id 1413 / nat#203 / 키링키 Alternate / 0203/0001
-- id 1414 / nat#205 / 쏘콘 Altcolor / 0205/0001
-- id 1415 / nat#206 / 노고치 Altcolor / 0206/0002
-- id 1416 / nat#207 / 글라이거 Altcolor / 0207/0001
-- id 1417 / nat#207 / 글라이거 Cutscene / 0207/0002
-- id 1418 / nat#207 / 글라이거 Cutscene_Altcolor / 0207/0003
 - id 1419 / nat#208 / m.강철톤 / 0208/0001
-- id 1420 / nat#209 / 블루 Altcolor / 0209/0001
-- id 1421 / nat#210 / 그랑블루 Altcolor / 0210/0001
 - id 1422 / nat#211 / 히스이 침바루 / 0211/0001
-- id 1423 / nat#211 / 침바루 Altcolor / 0211/0002
-- id 1424 / nat#212 / 핫삼 Cutscene / 0212/0003
-- id 1425 / nat#212 / 핫삼 Cutscene_Altcolor / 0212/0005
-- id 1426 / nat#214 / 헤라크로스 Altcolor / 0214/0002
 - id 1427 / nat#215 / 히스이 포푸니 / 0215/0001
-- id 1428 / nat#215 / 포푸니 Cutscene / 0215/0002
-- id 1429 / nat#215 / 포푸니 Alternate / 0215/0003
-- id 1430 / nat#216 / 깜지곰 Altcolor / 0216/0001
-- id 1431 / nat#217 / 링곰 Altcolor / 0217/0001
-- id 1432 / nat#218 / 마그마그 Altcolor / 0218/0002
-- id 1433 / nat#219 / 마그카르고 Altcolor / 0219/0001
 - id 1434 / nat#222 / 가라르 코산호 / 0222/0001
-- id 1435 / nat#223 / 총어 Altcolor / 0223/0001
-- id 1436 / nat#224 / 대포무노 Cutscene / 0224/0001
-- id 1437 / nat#224 / 대포무노 Cutscene_Altcolor / 0224/0003
-- id 1438 / nat#226 / 만타인 Alternate / 0226/0001
-- id 1439 / nat#226 / 만타인 Altcolor / 0226/0002
-- id 1440 / nat#226 / 만타인 Alternate_Altcolor / 0226/0003
 - id 1441 / nat#227 / m.무장조 / 0227/0001
-- id 1442 / nat#227 / 무장조 Cutscene / 0227/0002
-- id 1443 / nat#228 / 델빌 Altcolor / 0228/0001
 - id 1444 / nat#229 / m.헬가 / 0229/0001
-- id 1445 / nat#229 / 헬가 Altcolor / 0229/0002
-- id 1446 / nat#231 / 코코리 Alternate / 0231/0001
-- id 1447 / nat#234 / 노라키 Altcolor / 0234/0001
-- id 1448 / nat#234 / 노라키 Alternate / 0234/0002
-- id 1449 / nat#235 / 루브도 Altcolor / 0235/0001
-- id 1450 / nat#236 / 배루키 Altcolor / 0236/0001
-- id 1451 / nat#240 / 마그비 Altcolor / 0240/0001
-- id 1452 / nat#243 / 라이코 Cutscene / 0243/0001
-- id 1453 / nat#244 / 앤테이 Cutscene / 0244/0001
-- id 1454 / nat#244 / 앤테이 Altcolor / 0244/0002
-- id 1455 / nat#245 / 스이쿤 Cutscene / 0245/0001
-- id 1456 / nat#245 / 스이쿤 Altcolor / 0245/0002
-- id 1457 / nat#246 / 애버라스 Alternate / 0246/0001
 - id 1458 / nat#248 / m.마기라스 / 0248/0001
-- id 1459 / nat#248 / 마기라스 Cutscene / 0248/0002
-- id 1460 / nat#248 / 마기라스 Alternate / 0248/0003
 - id 1461 / nat#249 / 루기아 Shadow / 0249/0001
-- id 1462 / nat#249 / 루기아 Cutscene / 0249/0002
-- id 1463 / nat#250 / 칠색조 Alternate / 0250/0001
-- id 1464 / nat#251 / 세레비 Cutscene / 0251/0001
-- id 1465 / nat#252 / 나무지기 Alternate / 0252/0001
-- id 1466 / nat#253 / 나무돌이 Cutscene / 0253/0001
-- id 1467 / nat#253 / 나무돌이 Altcolor / 0253/0002
-- id 1468 / nat#257 / 번치코 Alternate / 0257/0002
-- id 1469 / nat#258 / 물짱이 Alternate / 0258/0001
-- id 1470 / nat#259 / 늪짱이 Altcolor / 0259/0001
-- id 1471 / nat#260 / 대짱이 Altcolor / 0260/0002
 - id 1472 / nat#263 / 가라르 지그제구리 / 0263/0001
-- id 1473 / nat#263 / 지그제구리 Alternate / 0263/0002
 - id 1474 / nat#264 / 가라르 직구리 / 0264/0001
-- id 1475 / nat#269 / 독케일 Altcolor / 0269/0001
-- id 1476 / nat#271 / 로토스 Cutscene / 0271/0001
-- id 1477 / nat#271 / 로토스 Altcolor / 0271/0002
-- id 1478 / nat#271 / 로토스 Cutscene_Altcolor / 0271/0003
-- id 1479 / nat#272 / 로파파 Cutscene / 0272/0001
-- id 1480 / nat#272 / 로파파 Altcolor / 0272/0002
-- id 1481 / nat#272 / 로파파 Cutscene_Altcolor / 0272/0003
-- id 1482 / nat#274 / 잎새코 Altcolor / 0274/0001
-- id 1483 / nat#275 / 다탱구 Cutscene / 0275/0001
-- id 1484 / nat#279 / 패리퍼 Cutscene / 0279/0001
 - id 1485 / nat#282 / m.가디안 / 0282/0001
-- id 1486 / nat#282 / 가디안 Cutscene / 0282/0002
-- id 1487 / nat#284 / 비나방 Altcolor / 0284/0001
-- id 1488 / nat#285 / 버섯꼬 Altcolor / 0285/0001
-- id 1489 / nat#290 / 토중몬 Altcolor / 0290/0001
-- id 1490 / nat#293 / 소곤룡 Altcolor / 0293/0001
-- id 1491 / nat#294 / 노공룡 Cutscene / 0294/0001
-- id 1492 / nat#295 / 폭음룡 Alternate / 0295/0001
-- id 1493 / nat#296 / 마크탕 Altcolor / 0296/0001
-- id 1494 / nat#298 / 루리리 Cutscene / 0298/0001
-- id 1495 / nat#299 / 코코파스 Altcolor / 0299/0001
-- id 1496 / nat#300 / 에나비 Alternate / 0300/0001
 - id 1497 / nat#302 / m.깜까미 / 0302/0001
-- id 1498 / nat#302 / 깜까미 Cutscene / 0302/0002
 - id 1499 / nat#303 / m.입치트 / 0303/0001
-- id 1500 / nat#303 / 입치트 Altcolor / 0303/0003
-- id 1501 / nat#305 / 갱도라 Altcolor / 0305/0001
-- id 1502 / nat#306 / 보스로라 Cutscene / 0306/0002
-- id 1503 / nat#306 / 보스로라 Altcolor / 0306/0003
-- id 1504 / nat#306 / 보스로라 Cutscene_Altcolor / 0306/0004
 - id 1505 / nat#308 / m.요가램 / 0308/0001
-- id 1506 / nat#308 / 요가램 Cutscene / 0308/0002
 - id 1507 / nat#310 / m.썬더볼트 / 0310/0001
-- id 1508 / nat#313 / 볼비트 Cutscene / 0313/0001
-- id 1509 / nat#313 / 볼비트 Altcolor / 0313/0002
-- id 1510 / nat#314 / 네오비트 Cutscene / 0314/0001
-- id 1511 / nat#314 / 네오비트 Altcolor / 0314/0002
-- id 1512 / nat#315 / 로젤리아 Altcolor / 0315/0001
-- id 1513 / nat#317 / 꿀꺽몬 Altcolor / 0317/0001
-- id 1514 / nat#319 / 샤크니아 Altcolor / 0319/0002
-- id 1515 / nat#320 / 고래왕자 Alternate / 0320/0001
-- id 1516 / nat#322 / 둔타 Alternate / 0322/0001
 - id 1517 / nat#323 / m.폭타 / 0323/0001
-- id 1518 / nat#323 / 폭타 Altcolor / 0323/0002
-- id 1519 / nat#324 / 코터스 Altcolor / 0324/0002
-- id 1520 / nat#326 / 피그킹 Altcolor / 0326/0001
-- id 1521 / nat#327 / 얼루기 Cutscene / 0327/0001
-- id 1522 / nat#327 / 얼루기 Altcolor / 0327/0002
-- id 1523 / nat#327 / 얼루기 Cutscene_Altcolor / 0327/0003
 - id 1524 / nat#334 / m.파비코리 / 0334/0001
-- id 1525 / nat#336 / 세비퍼 Altcolor / 0336/0001
-- id 1526 / nat#340 / 메깅 Altcolor / 0340/0001
-- id 1527 / nat#341 / 가재군 Cutscene / 0341/0001
-- id 1528 / nat#341 / 가재군 Cutscene_Altcolor / 0341/0003
-- id 1529 / nat#344 / 점토도리 Altcolor / 0344/0001
-- id 1530 / nat#346 / 릴리요 Altcolor / 0346/0001
-- id 1531 / nat#348 / 아말도 Cutscene / 0348/0001
-- id 1532 / nat#348 / 아말도 Altcolor / 0348/0002
-- id 1533 / nat#350 / 밀로틱 Alternate / 0350/0001
 - id 1534 / nat#351 / 캐스퐁 Sunny / 0351/0001
 - id 1535 / nat#351 / 캐스퐁 Rainy / 0351/0002
 - id 1536 / nat#351 / 캐스퐁 Snowy / 0351/0003
 - id 1537 / nat#352 / 켈리몬 Purple / 0352/0001
-- id 1538 / nat#352 / 켈리몬 Cutscene / 0352/0002
-- id 1539 / nat#352 / 켈리몬 Purple_Cutscene / 0352/0003
-- id 1540 / nat#352 / 켈리몬 Altcolor / 0352/0004
-- id 1541 / nat#353 / 어둠대신 Altcolor / 0353/0001
 - id 1542 / nat#354 / m.다크펫 / 0354/0001
-- id 1543 / nat#354 / 다크펫 Cutscene / 0354/0002
-- id 1544 / nat#354 / 다크펫 Altcolor / 0354/0003
-- id 1545 / nat#355 / 해골몽 Altcolor / 0355/0001
-- id 1546 / nat#357 / 트로피우스 Altcolor / 0357/0001
-- id 1547 / nat#358 / 치렁 Altcolor / 0358/0002
-- id 1548 / nat#358 / 치렁 Cutscene / 0358/0004
-- id 1549 / nat#359 / 앱솔 Cutscene / 0359/0003
-- id 1550 / nat#359 / 앱솔 Alternate / 0359/0004
-- id 1551 / nat#360 / 마자 Cutscene / 0360/0001
-- id 1552 / nat#361 / 눈꼬마 Cutscene / 0361/0001
 - id 1553 / nat#362 / m.얼음귀신 / 0362/0001
-- id 1554 / nat#363 / 대굴레오 Altcolor / 0363/0001
-- id 1555 / nat#364 / 씨레오 Altcolor / 0364/0001
-- id 1556 / nat#365 / 씨카이저 Cutscene / 0365/0001
-- id 1557 / nat#365 / 씨카이저 Alternate / 0365/0002
-- id 1558 / nat#371 / 아공이 Altcolor / 0371/0001
-- id 1559 / nat#373 / 보만다 Altcolor / 0373/0002
-- id 1560 / nat#374 / 메탕 Altcolor / 0374/0001
-- id 1561 / nat#375 / 메탕구 Altcolor / 0375/0001
-- id 1562 / nat#376 / 메타그로스 Altcolor / 0376/0002
-- id 1563 / nat#377 / 레지락 Altcolor / 0377/0001
-- id 1564 / nat#378 / 레지아이스 Altcolor / 0378/0001
-- id 1565 / nat#379 / 레지스틸 Altcolor / 0379/0001
 - id 1566 / nat#380 / m.라티아스 / 0380/0001
-- id 1567 / nat#380 / 라티아스 Cutscene / 0380/0002
 - id 1568 / nat#381 / m.라티오스 / 0381/0001
-- id 1569 / nat#381 / 라티오스 Cutscene / 0381/0002
-- id 1570 / nat#382 / 가이오가 Altcolor / 0382/0002
-- id 1571 / nat#383 / 그란돈 Cutscene / 0383/0002
 - id 1572 / nat#384 / m.레쿠쟈 / 0384/0001
-- id 1573 / nat#384 / 레쿠쟈 Altcolor / 0384/0002
-- id 1574 / nat#385 / 지라치 Altcolor / 0385/0001
-- id 1575 / nat#385 / 지라치 Cutscene / 0385/0002
-- id 1576 / nat#385 / 지라치 Cutscene_Altcolor / 0385/0003
 - id 1577 / nat#386 / 테오키스 공격 / 0386/0001
 - id 1578 / nat#386 / 테오키스 방어 / 0386/0002
 - id 1579 / nat#386 / 테오키스 스피드 / 0386/0003
-- id 1580 / nat#386 / 테오키스 Altcolor / 0386/0004
-- id 1581 / nat#386 / 테오키스 Attack_Altcolor / 0386/0005
-- id 1582 / nat#386 / 테오키스 Defense_Altcolor / 0386/0006
-- id 1583 / nat#386 / 테오키스 Speed_Altcolor / 0386/0007
-- id 1584 / nat#387 / 모부기 Altcolor / 0387/0001
-- id 1585 / nat#389 / 토대부기 Altcolor / 0389/0001
-- id 1586 / nat#393 / 팽도리 Altcolor / 0393/0001
-- id 1587 / nat#395 / 엠페르트 Altcolor / 0395/0001
-- id 1588 / nat#399 / 비버니 Cutscene / 0399/0001
-- id 1589 / nat#403 / 꼬링크 Altcolor / 0403/0001
-- id 1590 / nat#404 / 럭시오 Altcolor / 0404/0001
-- id 1591 / nat#405 / 렌트라 Altcolor / 0405/0001
-- id 1592 / nat#411 / 바리톱스 Altcolor / 0411/0001
 - id 1593 / nat#412 / 도롱충이 Sand / 0412/0001
 - id 1594 / nat#412 / 도롱충이 Trash / 0412/0002
 - id 1595 / nat#413 / 도롱마담 Sand / 0413/0001
 - id 1596 / nat#413 / 도롱마담 Trash / 0413/0002
 - id 1597 / nat#421 / 체리꼬 Sunshine / 0421/0001
-- id 1598 / nat#421 / 체리꼬 Altcolor / 0421/0002
 - id 1599 / nat#422 / 깝질무 East / 0422/0001
 - id 1600 / nat#423 / 트리토돈 East / 0423/0001
-- id 1601 / nat#425 / 흔들풍손 Altcolor / 0425/0001
-- id 1602 / nat#426 / 둥실라이드 Altcolor / 0426/0001
 - id 1603 / nat#428 / m.이어롭 / 0428/0001
-- id 1604 / nat#428 / 이어롭 Cutscene / 0428/0002
-- id 1605 / nat#429 / 무우마직 Altcolor / 0429/0001
-- id 1606 / nat#430 / 돈크로우 Altcolor / 0430/0001
-- id 1607 / nat#431 / 나옹마 Alternate / 0431/0001
-- id 1608 / nat#432 / 몬냥이 Altcolor / 0432/0001
-- id 1609 / nat#433 / 랑딸랑 Altcolor / 0433/0001
-- id 1610 / nat#434 / 스컹뿡 Altcolor / 0434/0001
-- id 1611 / nat#435 / 스컹탱크 Cutscene / 0435/0001
-- id 1612 / nat#435 / 스컹탱크 Altcolor / 0435/0002
-- id 1613 / nat#436 / 동미러 Altcolor / 0436/0001
-- id 1614 / nat#437 / 동탁군 Altcolor / 0437/0001
-- id 1615 / nat#438 / 꼬지지 Altcolor / 0438/0001
-- id 1616 / nat#439 / 흉내내 Altcolor / 0439/0001
-- id 1617 / nat#440 / 핑복 Altcolor / 0440/0001
-- id 1618 / nat#441 / 페라페 Cutscene / 0441/0001
-- id 1619 / nat#442 / 화강돌 Cutscene / 0442/0001
-- id 1620 / nat#442 / 화강돌 Cutscene_Altcolor / 0442/0003
-- id 1621 / nat#445 / 한카리아스 Altcolor / 0445/0003
-- id 1622 / nat#446 / 먹고자 Altcolor / 0446/0001
 - id 1623 / nat#448 / m.루카리오 / 0448/0001
-- id 1624 / nat#448 / 루카리오 Alternate / 0448/0003
-- id 1625 / nat#451 / 스콜피 Cutscene / 0451/0001
-- id 1626 / nat#452 / 드래피온 Cutscene / 0452/0001
-- id 1627 / nat#453 / 삐딱구리 Cutscene / 0453/0001
-- id 1628 / nat#453 / 삐딱구리 Altcolor / 0453/0002
-- id 1629 / nat#453 / 삐딱구리 Cutscene_Altcolor / 0453/0003
-- id 1630 / nat#458 / 타만타 Altcolor / 0458/0001
-- id 1631 / nat#459 / 눈쓰개 Cutscene / 0459/0001
-- id 1632 / nat#461 / 포푸니라 Cutscene / 0461/0001
-- id 1633 / nat#462 / 자포코일 Cutscene / 0462/0001
-- id 1634 / nat#465 / 덩쿠림보 Altcolor / 0465/0001
-- id 1635 / nat#471 / 글레이시아 Altcolor / 0471/0001
-- id 1636 / nat#472 / 글라이온 Altcolor / 0472/0001
-- id 1637 / nat#473 / 맘모꾸리 Cutscene / 0473/0001
-- id 1638 / nat#474 / 폴리곤Z Altcolor / 0474/0001
 - id 1639 / nat#475 / m.엘레이드 / 0475/0001
-- id 1640 / nat#475 / 엘레이드 Altcolor / 0475/0002
-- id 1641 / nat#476 / 대코파스 Beta / 0476/0001
-- id 1642 / nat#476 / 대코파스 Altcolor / 0476/0002
-- id 1643 / nat#477 / 야느와르몽 Cutscene / 0477/0001
 - id 1644 / nat#479 / 로토무 히트 / 0479/0001
 - id 1645 / nat#479 / 로토무 워시 / 0479/0002
 - id 1646 / nat#479 / 로토무 프로스트 / 0479/0003
 - id 1647 / nat#479 / 로토무 팬 / 0479/0004
 - id 1648 / nat#479 / 로토무 커트 / 0479/0005
 - id 1649 / nat#479 / 로토무 Drone / 0479/0008
-- id 1650 / nat#481 / 엠라이트 Cutscene / 0481/0001
-- id 1651 / nat#482 / 아그놈 Cutscene / 0482/0001
 - id 1652 / nat#483 / 디아루가 오리진 / 0483/0001
-- id 1653 / nat#483 / 디아루가 Altcolor / 0483/0003
-- id 1654 / nat#483 / 디아루가 Cutscene / 0483/0005
-- id 1655 / nat#483 / 디아루가 Cutscene_Altcolor / 0483/0006
 - id 1656 / nat#484 / 펄기아 오리진 / 0484/0001
-- id 1657 / nat#484 / 펄기아 Cutscene / 0484/0002
-- id 1658 / nat#485 / 히드런 Altcolor / 0485/0002
-- id 1659 / nat#486 / 레지기가스 Cutscene / 0486/0002
 - id 1660 / nat#487 / 기라티나 오리진 / 0487/0001
-- id 1661 / nat#487 / 기라티나 Altcolor / 0487/0002
-- id 1662 / nat#487 / 기라티나 Origin_Alternate / 0487/0003
-- id 1663 / nat#488 / 크레세리아 Cutscene / 0488/0001
-- id 1664 / nat#490 / 마나피 Cutscene / 0490/0001
-- id 1665 / nat#491 / 다크라이 Cutscene / 0491/0001
 - id 1666 / nat#491 / m.다크라이 / 0491/0002
-- id 1667 / nat#491 / 다크라이 Altcolor / 0491/0003
-- id 1668 / nat#491 / 다크라이 Cutscene_Altcolor / 0491/0004
 - id 1669 / nat#492 / 쉐이미 스카이 / 0492/0001
-- id 1670 / nat#492 / 쉐이미 Cutscene / 0492/0002
-- id 1671 / nat#492 / 쉐이미 Altcolor / 0492/0003
 - id 1672 / nat#493 / 아르세우스 Bug / 0493/0001
 - id 1673 / nat#493 / 아르세우스 Dark / 0493/0002
 - id 1674 / nat#493 / 아르세우스 Dragon / 0493/0003
@@ -734,8 +371,6 @@ MANAGED 810+ / FORMS / MEGA:
 - id 1687 / nat#493 / 아르세우스 Water / 0493/0016
 - id 1688 / nat#493 / 아르세우스 Fairy / 0493/0017
 - id 1689 / nat#493 / 아르세우스 Question_Mark / 0493/0018
-- id 1690 / nat#493 / 아르세우스 Beta / 0493/0019
-- id 1691 / nat#498 / 뚜꾸리 Beta / 0498/0001
 - id 1692 / nat#503 / 히스이 대검귀 / 0503/0001
 - id 1693 / nat#530 / m.몰드류 / 0530/0001
 - id 1694 / nat#549 / 히스이 드레디어 / 0549/0001
@@ -745,7 +380,6 @@ MANAGED 810+ / FORMS / MEGA:
 - id 1698 / nat#555 / 불비달마 Zen / 0555/0001
 - id 1699 / nat#555 / 가라르 불비달마 / 0555/0002
 - id 1700 / nat#562 / 가라르 데스마스 / 0562/0001
-- id 1701 / nat#567 / 아케오스 Alternate / 0567/0001
 - id 1702 / nat#570 / 히스이 조로아 / 0570/0001
 - id 1703 / nat#571 / 히스이 조로아크 / 0571/0001
 - id 1704 / nat#585 / 사철록 Summer / 0585/0001
@@ -754,9 +388,6 @@ MANAGED 810+ / FORMS / MEGA:
 - id 1707 / nat#586 / 바라철록 Summer / 0586/0001
 - id 1708 / nat#586 / 바라철록 Autumn / 0586/0002
 - id 1709 / nat#586 / 바라철록 Winter / 0586/0003
-- id 1710 / nat#599 / 기어르 Alternate / 0599/0001
-- id 1711 / nat#600 / 기기어르 Alternate / 0600/0001
-- id 1712 / nat#601 / 기기기어르 Alternate / 0601/0001
 - id 1713 / nat#604 / m.저리더프 / 0604/0001
 - id 1714 / nat#628 / 히스이 워글 / 0628/0001
 - id 1715 / nat#643 / 레시라무 Skytemple / 0643/0001
@@ -806,7 +437,6 @@ MANAGED 810+ / FORMS / MEGA:
 - id 1759 / nat#676 / 트리미앙 Kabuki / 0676/0008
 - id 1760 / nat#681 / 킬가르도 Blade / 0681/0001
 - id 1761 / nat#691 / m.드래캄 / 0691/0001
-- id 1762 / nat#701 / 루차불 Beta / 0701/0002
 - id 1763 / nat#705 / 히스이 미끄네일 / 0705/0001
 - id 1764 / nat#706 / 히스이 미끄래곤 / 0706/0001
 - id 1765 / nat#710 / 호바귀 Small / 0710/0001
@@ -827,7 +457,6 @@ MANAGED 810+ / FORMS / MEGA:
 - id 1780 / nat#745 / 루가루암 한밤중 / 0745/0001
 - id 1781 / nat#745 / 루가루암 황혼 / 0745/0002
 - id 1782 / nat#746 / 약어리 군집 / 0746/0001
-- id 1783 / nat#768 / 갑주무사 Alternate / 0768/0002
 - id 1784 / nat#773 / 실버디 Fighting / 0773/0001
 - id 1785 / nat#773 / 실버디 Flying / 0773/0002
 - id 1786 / nat#773 / 실버디 Poison / 0773/0003
@@ -856,10 +485,7 @@ MANAGED 810+ / FORMS / MEGA:
 - id 1809 / nat#780 / m.할비롱 / 0780/0001
 - id 1810 / nat#800 / 네크로즈마 Ultra / 0800/0003
 - id 1811 / nat#801 / 마기아나 Original / 0801/0001
-- id 1812 / nat#802 / 마샤도 Alternate / 0802/0001
 - id 1813 / nat#807 / m.제라오라 / 0807/0001
-- id 1814 / nat#830 / 백솜모카 Alternate / 0830/0001
-- id 1815 / nat#831 / 우르 Alternate / 0831/0001
 - id 1816 / nat#840 / 과사삭벌레 No_Apple / 0840/0001
 - id 1817 / nat#849 / 스트린더 Lowkey / 0849/0001
 - id 1818 / nat#869 / 마휘핑 Berry_Sweet / 0869/0001
@@ -949,3 +575,379 @@ MANAGED 810+ / FORMS / MEGA:
 - id 1902 / nat#1017 / 오거폰 Wellspring_Mask / 1017/0005
 - id 1903 / nat#1017 / 오거폰 Hearthflame_Mask / 1017/0006
 - id 1904 / nat#1017 / 오거폰 Cornerstone_Mask / 1017/0007
+
+RETIRED PRESENTATION-ONLY IDS (not species/resources):
+- id 1200 / nat#1 / Altcolor / AltColor recolor
+- id 1201 / nat#2 / Altcolor / AltColor recolor
+- id 1202 / nat#3 / Alternate / alternate presentation slot
+- id 1203 / nat#4 / Altcolor / AltColor recolor
+- id 1204 / nat#5 / Altcolor / AltColor recolor
+- id 1206 / nat#6 / Altcolor / AltColor recolor
+- id 1207 / nat#6 / Alternate / alternate presentation slot
+- id 1208 / nat#8 / Altcolor / AltColor recolor
+- id 1209 / nat#9 / Altcolor / AltColor recolor
+- id 1210 / nat#12 / Altcolor / AltColor recolor
+- id 1211 / nat#13 / Altcolor / AltColor recolor
+- id 1212 / nat#19 / Altcolor / AltColor recolor
+- id 1213 / nat#19 / Alternate / alternate presentation slot
+- id 1214 / nat#20 / Altcolor / AltColor recolor
+- id 1215 / nat#24 / Cutscene / cutscene presentation slot
+- id 1216 / nat#24 / Alternate / alternate presentation slot
+- id 1219 / nat#30 / Altcolor / AltColor recolor
+- id 1220 / nat#31 / Alternate / alternate presentation slot
+- id 1221 / nat#32 / Altcolor / AltColor recolor
+- id 1222 / nat#33 / Altcolor / AltColor recolor
+- id 1223 / nat#34 / Altcolor / AltColor recolor
+- id 1224 / nat#36 / Altcolor / AltColor recolor
+- id 1225 / nat#37 / Altcolor / AltColor recolor
+- id 1226 / nat#37 / Alternate / alternate presentation slot
+- id 1227 / nat#38 / Altcolor / AltColor recolor
+- id 1228 / nat#38 / Cutscene / cutscene presentation slot
+- id 1229 / nat#38 / Alternate / alternate presentation slot
+- id 1230 / nat#39 / Altcolor / AltColor recolor
+- id 1231 / nat#40 / Cutscene / cutscene presentation slot
+- id 1232 / nat#40 / Altcolor / AltColor recolor
+- id 1233 / nat#41 / Cutscene / cutscene presentation slot
+- id 1234 / nat#41 / Altcolor / AltColor recolor
+- id 1235 / nat#42 / Alternate / alternate presentation slot
+- id 1236 / nat#42 / Altcolor / AltColor recolor
+- id 1237 / nat#44 / Altcolor / AltColor recolor
+- id 1238 / nat#45 / Alternate / alternate presentation slot
+- id 1239 / nat#46 / Altcolor / AltColor recolor
+- id 1240 / nat#47 / Altcolor / AltColor recolor
+- id 1241 / nat#48 / Altcolor / AltColor recolor
+- id 1242 / nat#49 / Altcolor / AltColor recolor
+- id 1243 / nat#50 / Cutscene / cutscene presentation slot
+- id 1244 / nat#51 / Cutscene / cutscene presentation slot
+- id 1246 / nat#54 / Cutscene / cutscene presentation slot
+- id 1247 / nat#55 / Altcolor / AltColor recolor
+- id 1248 / nat#56 / Altcolor / AltColor recolor
+- id 1249 / nat#57 / Altcolor / AltColor recolor
+- id 1251 / nat#58 / Altcolor / AltColor recolor
+- id 1253 / nat#59 / Altcolor / AltColor recolor
+- id 1255 / nat#65 / Cutscene / cutscene presentation slot
+- id 1256 / nat#66 / Cutscene / cutscene presentation slot
+- id 1257 / nat#67 / Altcolor / AltColor recolor
+- id 1258 / nat#69 / Altcolor / AltColor recolor
+- id 1259 / nat#70 / Altcolor / AltColor recolor
+- id 1260 / nat#71 / Altcolor / AltColor recolor
+- id 1261 / nat#72 / Altcolor / AltColor recolor
+- id 1262 / nat#73 / Altcolor / AltColor recolor
+- id 1263 / nat#74 / Altcolor / AltColor recolor
+- id 1264 / nat#75 / Altcolor / AltColor recolor
+- id 1265 / nat#76 / Altcolor / AltColor recolor
+- id 1266 / nat#76 / Cutscene / cutscene presentation slot
+- id 1267 / nat#76 / Cutscene_Altcolor / AltColor recolor
+- id 1269 / nat#77 / Galar_Alternate / alternate presentation slot
+- id 1270 / nat#77 / Altcolor / AltColor recolor
+- id 1273 / nat#79 / Altcolor / AltColor recolor
+- id 1276 / nat#80 / Alternate / alternate presentation slot
+- id 1277 / nat#81 / Cutscene / cutscene presentation slot
+- id 1278 / nat#82 / Altcolor / AltColor recolor
+- id 1280 / nat#83 / Altcolor / AltColor recolor
+- id 1281 / nat#84 / Alternate / alternate presentation slot
+- id 1282 / nat#85 / Altcolor / AltColor recolor
+- id 1283 / nat#88 / Cutscene / cutscene presentation slot
+- id 1284 / nat#89 / Cutscene / cutscene presentation slot
+- id 1285 / nat#90 / Altcolor / AltColor recolor
+- id 1286 / nat#91 / Altcolor / AltColor recolor
+- id 1287 / nat#93 / Cutscene / cutscene presentation slot
+- id 1289 / nat#94 / Cutscene / cutscene presentation slot
+- id 1290 / nat#95 / Altcolor / AltColor recolor
+- id 1291 / nat#96 / Cutscene / cutscene presentation slot
+- id 1292 / nat#96 / Altcolor / AltColor recolor
+- id 1293 / nat#96 / Cutscene_Altcolor / AltColor recolor
+- id 1294 / nat#98 / Altcolor / AltColor recolor
+- id 1295 / nat#99 / Altcolor / AltColor recolor
+- id 1298 / nat#103 / Altcolor / AltColor recolor
+- id 1299 / nat#104 / Cutscene / cutscene presentation slot
+- id 1300 / nat#105 / Altcolor / AltColor recolor
+- id 1301 / nat#106 / Altcolor / AltColor recolor
+- id 1302 / nat#108 / Altcolor / AltColor recolor
+- id 1303 / nat#109 / Cutscene / cutscene presentation slot
+- id 1305 / nat#110 / Altcolor / AltColor recolor
+- id 1306 / nat#112 / Altcolor / AltColor recolor
+- id 1307 / nat#114 / Altcolor / AltColor recolor
+- id 1309 / nat#115 / Altcolor / AltColor recolor
+- id 1310 / nat#116 / Altcolor / AltColor recolor
+- id 1311 / nat#118 / Altcolor / AltColor recolor
+- id 1312 / nat#119 / Altcolor / AltColor recolor
+- id 1314 / nat#122 / Altcolor / AltColor recolor
+- id 1315 / nat#123 / Altcolor / AltColor recolor
+- id 1316 / nat#124 / Alternate / alternate presentation slot
+- id 1317 / nat#127 / Altcolor / AltColor recolor
+- id 1321 / nat#128 / Altcolor / AltColor recolor
+- id 1322 / nat#130 / Altcolor / AltColor recolor
+- id 1323 / nat#130 / Cutscene / cutscene presentation slot
+- id 1324 / nat#131 / Alternate / alternate presentation slot
+- id 1325 / nat#132 / Altcolor / AltColor recolor
+- id 1326 / nat#133 / Alternate / alternate presentation slot
+- id 1327 / nat#134 / Altcolor / AltColor recolor
+- id 1328 / nat#136 / Altcolor / AltColor recolor
+- id 1329 / nat#137 / Altcolor / AltColor recolor
+- id 1330 / nat#141 / Altcolor / AltColor recolor
+- id 1332 / nat#142 / Altcolor / AltColor recolor
+- id 1333 / nat#143 / Altcolor / AltColor recolor
+- id 1335 / nat#144 / Cutscene / cutscene presentation slot
+- id 1336 / nat#144 / Alternate / alternate presentation slot
+- id 1338 / nat#145 / Cutscene / cutscene presentation slot
+- id 1339 / nat#145 / Altcolor / AltColor recolor
+- id 1341 / nat#146 / Cutscene / cutscene presentation slot
+- id 1342 / nat#146 / Alternate / alternate presentation slot
+- id 1343 / nat#147 / Altcolor / AltColor recolor
+- id 1344 / nat#148 / Altcolor / AltColor recolor
+- id 1345 / nat#149 / Altcolor / AltColor recolor
+- id 1348 / nat#151 / Alternate / alternate presentation slot
+- id 1349 / nat#153 / Altcolor / AltColor recolor
+- id 1350 / nat#155 / Altcolor / AltColor recolor
+- id 1351 / nat#156 / Altcolor / AltColor recolor
+- id 1353 / nat#157 / Altcolor / AltColor recolor
+- id 1354 / nat#161 / Altcolor / AltColor recolor
+- id 1355 / nat#162 / Alternate / alternate presentation slot
+- id 1356 / nat#165 / Altcolor / AltColor recolor
+- id 1357 / nat#166 / Altcolor / AltColor recolor
+- id 1358 / nat#168 / Altcolor / AltColor recolor
+- id 1359 / nat#169 / Altcolor / AltColor recolor
+- id 1360 / nat#170 / Alternate / alternate presentation slot
+- id 1361 / nat#171 / Altcolor / AltColor recolor
+- id 1363 / nat#174 / Cutscene / cutscene presentation slot
+- id 1364 / nat#174 / Cutscene_Altcolor / AltColor recolor
+- id 1365 / nat#175 / Altcolor / AltColor recolor
+- id 1366 / nat#178 / Cutscene / cutscene presentation slot
+- id 1367 / nat#179 / Altcolor / AltColor recolor
+- id 1368 / nat#182 / Cutscene / cutscene presentation slot
+- id 1369 / nat#185 / Alternate / alternate presentation slot
+- id 1370 / nat#187 / Altcolor / AltColor recolor
+- id 1371 / nat#187 / Beta / beta presentation slot
+- id 1372 / nat#188 / Altcolor / AltColor recolor
+- id 1373 / nat#189 / Altcolor / AltColor recolor
+- id 1374 / nat#191 / Beta / beta presentation slot
+- id 1375 / nat#192 / Cutscene / cutscene presentation slot
+- id 1376 / nat#192 / Altcolor / AltColor recolor
+- id 1378 / nat#194 / Altcolor / AltColor recolor
+- id 1379 / nat#195 / Altcolor / AltColor recolor
+- id 1380 / nat#196 / Altcolor / AltColor recolor
+- id 1381 / nat#197 / Altcolor / AltColor recolor
+- id 1382 / nat#198 / Altcolor / AltColor recolor
+- id 1384 / nat#199 / Altcolor / AltColor recolor
+- id 1385 / nat#200 / Altcolor / AltColor recolor
+- id 1413 / nat#203 / Alternate / alternate presentation slot
+- id 1414 / nat#205 / Altcolor / AltColor recolor
+- id 1415 / nat#206 / Altcolor / AltColor recolor
+- id 1416 / nat#207 / Altcolor / AltColor recolor
+- id 1417 / nat#207 / Cutscene / cutscene presentation slot
+- id 1418 / nat#207 / Cutscene_Altcolor / AltColor recolor
+- id 1420 / nat#209 / Altcolor / AltColor recolor
+- id 1421 / nat#210 / Altcolor / AltColor recolor
+- id 1423 / nat#211 / Altcolor / AltColor recolor
+- id 1424 / nat#212 / Cutscene / cutscene presentation slot
+- id 1425 / nat#212 / Cutscene_Altcolor / AltColor recolor
+- id 1426 / nat#214 / Altcolor / AltColor recolor
+- id 1428 / nat#215 / Cutscene / cutscene presentation slot
+- id 1429 / nat#215 / Alternate / alternate presentation slot
+- id 1430 / nat#216 / Altcolor / AltColor recolor
+- id 1431 / nat#217 / Altcolor / AltColor recolor
+- id 1432 / nat#218 / Altcolor / AltColor recolor
+- id 1433 / nat#219 / Altcolor / AltColor recolor
+- id 1435 / nat#223 / Altcolor / AltColor recolor
+- id 1436 / nat#224 / Cutscene / cutscene presentation slot
+- id 1437 / nat#224 / Cutscene_Altcolor / AltColor recolor
+- id 1438 / nat#226 / Alternate / alternate presentation slot
+- id 1439 / nat#226 / Altcolor / AltColor recolor
+- id 1440 / nat#226 / Alternate_Altcolor / AltColor recolor
+- id 1442 / nat#227 / Cutscene / cutscene presentation slot
+- id 1443 / nat#228 / Altcolor / AltColor recolor
+- id 1445 / nat#229 / Altcolor / AltColor recolor
+- id 1446 / nat#231 / Alternate / alternate presentation slot
+- id 1447 / nat#234 / Altcolor / AltColor recolor
+- id 1448 / nat#234 / Alternate / alternate presentation slot
+- id 1449 / nat#235 / Altcolor / AltColor recolor
+- id 1450 / nat#236 / Altcolor / AltColor recolor
+- id 1451 / nat#240 / Altcolor / AltColor recolor
+- id 1452 / nat#243 / Cutscene / cutscene presentation slot
+- id 1453 / nat#244 / Cutscene / cutscene presentation slot
+- id 1454 / nat#244 / Altcolor / AltColor recolor
+- id 1455 / nat#245 / Cutscene / cutscene presentation slot
+- id 1456 / nat#245 / Altcolor / AltColor recolor
+- id 1457 / nat#246 / Alternate / alternate presentation slot
+- id 1459 / nat#248 / Cutscene / cutscene presentation slot
+- id 1460 / nat#248 / Alternate / alternate presentation slot
+- id 1462 / nat#249 / Cutscene / cutscene presentation slot
+- id 1463 / nat#250 / Alternate / alternate presentation slot
+- id 1464 / nat#251 / Cutscene / cutscene presentation slot
+- id 1465 / nat#252 / Alternate / alternate presentation slot
+- id 1466 / nat#253 / Cutscene / cutscene presentation slot
+- id 1467 / nat#253 / Altcolor / AltColor recolor
+- id 1468 / nat#257 / Alternate / alternate presentation slot
+- id 1469 / nat#258 / Alternate / alternate presentation slot
+- id 1470 / nat#259 / Altcolor / AltColor recolor
+- id 1471 / nat#260 / Altcolor / AltColor recolor
+- id 1473 / nat#263 / Alternate / alternate presentation slot
+- id 1475 / nat#269 / Altcolor / AltColor recolor
+- id 1476 / nat#271 / Cutscene / cutscene presentation slot
+- id 1477 / nat#271 / Altcolor / AltColor recolor
+- id 1478 / nat#271 / Cutscene_Altcolor / AltColor recolor
+- id 1479 / nat#272 / Cutscene / cutscene presentation slot
+- id 1480 / nat#272 / Altcolor / AltColor recolor
+- id 1481 / nat#272 / Cutscene_Altcolor / AltColor recolor
+- id 1482 / nat#274 / Altcolor / AltColor recolor
+- id 1483 / nat#275 / Cutscene / cutscene presentation slot
+- id 1484 / nat#279 / Cutscene / cutscene presentation slot
+- id 1486 / nat#282 / Cutscene / cutscene presentation slot
+- id 1487 / nat#284 / Altcolor / AltColor recolor
+- id 1488 / nat#285 / Altcolor / AltColor recolor
+- id 1489 / nat#290 / Altcolor / AltColor recolor
+- id 1490 / nat#293 / Altcolor / AltColor recolor
+- id 1491 / nat#294 / Cutscene / cutscene presentation slot
+- id 1492 / nat#295 / Alternate / alternate presentation slot
+- id 1493 / nat#296 / Altcolor / AltColor recolor
+- id 1494 / nat#298 / Cutscene / cutscene presentation slot
+- id 1495 / nat#299 / Altcolor / AltColor recolor
+- id 1496 / nat#300 / Alternate / alternate presentation slot
+- id 1498 / nat#302 / Cutscene / cutscene presentation slot
+- id 1500 / nat#303 / Altcolor / AltColor recolor
+- id 1501 / nat#305 / Altcolor / AltColor recolor
+- id 1502 / nat#306 / Cutscene / cutscene presentation slot
+- id 1503 / nat#306 / Altcolor / AltColor recolor
+- id 1504 / nat#306 / Cutscene_Altcolor / AltColor recolor
+- id 1506 / nat#308 / Cutscene / cutscene presentation slot
+- id 1508 / nat#313 / Cutscene / cutscene presentation slot
+- id 1509 / nat#313 / Altcolor / AltColor recolor
+- id 1510 / nat#314 / Cutscene / cutscene presentation slot
+- id 1511 / nat#314 / Altcolor / AltColor recolor
+- id 1512 / nat#315 / Altcolor / AltColor recolor
+- id 1513 / nat#317 / Altcolor / AltColor recolor
+- id 1514 / nat#319 / Altcolor / AltColor recolor
+- id 1515 / nat#320 / Alternate / alternate presentation slot
+- id 1516 / nat#322 / Alternate / alternate presentation slot
+- id 1518 / nat#323 / Altcolor / AltColor recolor
+- id 1519 / nat#324 / Altcolor / AltColor recolor
+- id 1520 / nat#326 / Altcolor / AltColor recolor
+- id 1521 / nat#327 / Cutscene / cutscene presentation slot
+- id 1522 / nat#327 / Altcolor / AltColor recolor
+- id 1523 / nat#327 / Cutscene_Altcolor / AltColor recolor
+- id 1525 / nat#336 / Altcolor / AltColor recolor
+- id 1526 / nat#340 / Altcolor / AltColor recolor
+- id 1527 / nat#341 / Cutscene / cutscene presentation slot
+- id 1528 / nat#341 / Cutscene_Altcolor / AltColor recolor
+- id 1529 / nat#344 / Altcolor / AltColor recolor
+- id 1530 / nat#346 / Altcolor / AltColor recolor
+- id 1531 / nat#348 / Cutscene / cutscene presentation slot
+- id 1532 / nat#348 / Altcolor / AltColor recolor
+- id 1533 / nat#350 / Alternate / alternate presentation slot
+- id 1538 / nat#352 / Cutscene / cutscene presentation slot
+- id 1539 / nat#352 / Purple_Cutscene / cutscene presentation slot
+- id 1540 / nat#352 / Altcolor / AltColor recolor
+- id 1541 / nat#353 / Altcolor / AltColor recolor
+- id 1543 / nat#354 / Cutscene / cutscene presentation slot
+- id 1544 / nat#354 / Altcolor / AltColor recolor
+- id 1545 / nat#355 / Altcolor / AltColor recolor
+- id 1546 / nat#357 / Altcolor / AltColor recolor
+- id 1547 / nat#358 / Altcolor / AltColor recolor
+- id 1548 / nat#358 / Cutscene / cutscene presentation slot
+- id 1549 / nat#359 / Cutscene / cutscene presentation slot
+- id 1550 / nat#359 / Alternate / alternate presentation slot
+- id 1551 / nat#360 / Cutscene / cutscene presentation slot
+- id 1552 / nat#361 / Cutscene / cutscene presentation slot
+- id 1554 / nat#363 / Altcolor / AltColor recolor
+- id 1555 / nat#364 / Altcolor / AltColor recolor
+- id 1556 / nat#365 / Cutscene / cutscene presentation slot
+- id 1557 / nat#365 / Alternate / alternate presentation slot
+- id 1558 / nat#371 / Altcolor / AltColor recolor
+- id 1559 / nat#373 / Altcolor / AltColor recolor
+- id 1560 / nat#374 / Altcolor / AltColor recolor
+- id 1561 / nat#375 / Altcolor / AltColor recolor
+- id 1562 / nat#376 / Altcolor / AltColor recolor
+- id 1563 / nat#377 / Altcolor / AltColor recolor
+- id 1564 / nat#378 / Altcolor / AltColor recolor
+- id 1565 / nat#379 / Altcolor / AltColor recolor
+- id 1567 / nat#380 / Cutscene / cutscene presentation slot
+- id 1569 / nat#381 / Cutscene / cutscene presentation slot
+- id 1570 / nat#382 / Altcolor / AltColor recolor
+- id 1571 / nat#383 / Cutscene / cutscene presentation slot
+- id 1573 / nat#384 / Altcolor / AltColor recolor
+- id 1574 / nat#385 / Altcolor / AltColor recolor
+- id 1575 / nat#385 / Cutscene / cutscene presentation slot
+- id 1576 / nat#385 / Cutscene_Altcolor / AltColor recolor
+- id 1580 / nat#386 / Altcolor / AltColor recolor
+- id 1581 / nat#386 / Attack_Altcolor / AltColor recolor
+- id 1582 / nat#386 / Defense_Altcolor / AltColor recolor
+- id 1583 / nat#386 / Speed_Altcolor / AltColor recolor
+- id 1584 / nat#387 / Altcolor / AltColor recolor
+- id 1585 / nat#389 / Altcolor / AltColor recolor
+- id 1586 / nat#393 / Altcolor / AltColor recolor
+- id 1587 / nat#395 / Altcolor / AltColor recolor
+- id 1588 / nat#399 / Cutscene / cutscene presentation slot
+- id 1589 / nat#403 / Altcolor / AltColor recolor
+- id 1590 / nat#404 / Altcolor / AltColor recolor
+- id 1591 / nat#405 / Altcolor / AltColor recolor
+- id 1592 / nat#411 / Altcolor / AltColor recolor
+- id 1598 / nat#421 / Altcolor / AltColor recolor
+- id 1601 / nat#425 / Altcolor / AltColor recolor
+- id 1602 / nat#426 / Altcolor / AltColor recolor
+- id 1604 / nat#428 / Cutscene / cutscene presentation slot
+- id 1605 / nat#429 / Altcolor / AltColor recolor
+- id 1606 / nat#430 / Altcolor / AltColor recolor
+- id 1607 / nat#431 / Alternate / alternate presentation slot
+- id 1608 / nat#432 / Altcolor / AltColor recolor
+- id 1609 / nat#433 / Altcolor / AltColor recolor
+- id 1610 / nat#434 / Altcolor / AltColor recolor
+- id 1611 / nat#435 / Cutscene / cutscene presentation slot
+- id 1612 / nat#435 / Altcolor / AltColor recolor
+- id 1613 / nat#436 / Altcolor / AltColor recolor
+- id 1614 / nat#437 / Altcolor / AltColor recolor
+- id 1615 / nat#438 / Altcolor / AltColor recolor
+- id 1616 / nat#439 / Altcolor / AltColor recolor
+- id 1617 / nat#440 / Altcolor / AltColor recolor
+- id 1618 / nat#441 / Cutscene / cutscene presentation slot
+- id 1619 / nat#442 / Cutscene / cutscene presentation slot
+- id 1620 / nat#442 / Cutscene_Altcolor / AltColor recolor
+- id 1621 / nat#445 / Altcolor / AltColor recolor
+- id 1622 / nat#446 / Altcolor / AltColor recolor
+- id 1624 / nat#448 / Alternate / alternate presentation slot
+- id 1625 / nat#451 / Cutscene / cutscene presentation slot
+- id 1626 / nat#452 / Cutscene / cutscene presentation slot
+- id 1627 / nat#453 / Cutscene / cutscene presentation slot
+- id 1628 / nat#453 / Altcolor / AltColor recolor
+- id 1629 / nat#453 / Cutscene_Altcolor / AltColor recolor
+- id 1630 / nat#458 / Altcolor / AltColor recolor
+- id 1631 / nat#459 / Cutscene / cutscene presentation slot
+- id 1632 / nat#461 / Cutscene / cutscene presentation slot
+- id 1633 / nat#462 / Cutscene / cutscene presentation slot
+- id 1634 / nat#465 / Altcolor / AltColor recolor
+- id 1635 / nat#471 / Altcolor / AltColor recolor
+- id 1636 / nat#472 / Altcolor / AltColor recolor
+- id 1637 / nat#473 / Cutscene / cutscene presentation slot
+- id 1638 / nat#474 / Altcolor / AltColor recolor
+- id 1640 / nat#475 / Altcolor / AltColor recolor
+- id 1641 / nat#476 / Beta / beta presentation slot
+- id 1642 / nat#476 / Altcolor / AltColor recolor
+- id 1643 / nat#477 / Cutscene / cutscene presentation slot
+- id 1650 / nat#481 / Cutscene / cutscene presentation slot
+- id 1651 / nat#482 / Cutscene / cutscene presentation slot
+- id 1653 / nat#483 / Altcolor / AltColor recolor
+- id 1654 / nat#483 / Cutscene / cutscene presentation slot
+- id 1655 / nat#483 / Cutscene_Altcolor / AltColor recolor
+- id 1657 / nat#484 / Cutscene / cutscene presentation slot
+- id 1658 / nat#485 / Altcolor / AltColor recolor
+- id 1659 / nat#486 / Cutscene / cutscene presentation slot
+- id 1661 / nat#487 / Altcolor / AltColor recolor
+- id 1662 / nat#487 / Origin_Alternate / alternate presentation slot
+- id 1663 / nat#488 / Cutscene / cutscene presentation slot
+- id 1664 / nat#490 / Cutscene / cutscene presentation slot
+- id 1665 / nat#491 / Cutscene / cutscene presentation slot
+- id 1667 / nat#491 / Altcolor / AltColor recolor
+- id 1668 / nat#491 / Cutscene_Altcolor / AltColor recolor
+- id 1670 / nat#492 / Cutscene / cutscene presentation slot
+- id 1671 / nat#492 / Altcolor / AltColor recolor
+- id 1690 / nat#493 / Beta / beta presentation slot
+- id 1691 / nat#498 / Beta / beta presentation slot
+- id 1701 / nat#567 / Alternate / alternate presentation slot
+- id 1710 / nat#599 / Alternate / alternate presentation slot
+- id 1711 / nat#600 / Alternate / alternate presentation slot
+- id 1712 / nat#601 / Alternate / alternate presentation slot
+- id 1762 / nat#701 / Beta / beta presentation slot
+- id 1783 / nat#768 / Alternate / alternate presentation slot
+- id 1812 / nat#802 / Alternate / alternate presentation slot
+- id 1814 / nat#830 / Alternate / alternate presentation slot
+- id 1815 / nat#831 / Alternate / alternate presentation slot
