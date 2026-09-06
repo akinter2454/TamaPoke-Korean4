@@ -1,0 +1,97 @@
+TamaPoke v3.62.0 current PMDCollab catalog sync - approved Mega36
+Source: https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/tracker.json
+National Dex detected: 1..1025
+TamaPoke DEX_COUNT: 1904
+Added/managed entries with real current sprite: 910
+Form entries with real current sprite: 723
+Approved Mega entries with real current sprite: 36/36
+Excluded non-approved battle-gimmick forms: 17
+Current new/base locked entries without sprite: 29
+
+APPROVED MEGA EVOLUTIONS:
+- id 1205 nat#6 m.리자몽X Lv.70 (0006/0001)
+- id 1254 nat#65 m.후딘 Lv.70 (0065/0001)
+- id 1275 nat#80 m.야도란 Lv.70 (0080/0002)
+- id 1288 nat#94 m.팬텀 Lv.70 (0094/0001)
+- id 1308 nat#115 m.캥카 Lv.70 (0115/0001)
+- id 1331 nat#142 m.프테라 Lv.70 (0142/0001)
+- id 1346 nat#150 m.뮤츠Y Lv.70 (0150/0002)
+- id 1419 nat#208 m.강철톤 Lv.70 (0208/0001)
+- id 1441 nat#227 m.무장조 Lv.70 (0227/0001)
+- id 1444 nat#229 m.헬가 Lv.70 (0229/0001)
+- id 1458 nat#248 m.마기라스 Lv.70 (0248/0001)
+- id 1485 nat#282 m.가디안 Lv.70 (0282/0001)
+- id 1497 nat#302 m.깜까미 Lv.70 (0302/0001)
+- id 1499 nat#303 m.입치트 Lv.70 (0303/0001)
+- id 1505 nat#308 m.요가램 Lv.70 (0308/0001)
+- id 1507 nat#310 m.썬더볼트 Lv.70 (0310/0001)
+- id 1517 nat#323 m.폭타 Lv.70 (0323/0001)
+- id 1524 nat#334 m.파비코리 Lv.70 (0334/0001)
+- id 1542 nat#354 m.다크펫 Lv.70 (0354/0001)
+- id 1553 nat#362 m.얼음귀신 Lv.70 (0362/0001)
+- id 1566 nat#380 m.라티아스 Lv.70 (0380/0001)
+- id 1568 nat#381 m.라티오스 Lv.70 (0381/0001)
+- id 1572 nat#384 m.레쿠쟈 Lv.70 (0384/0001)
+- id 1603 nat#428 m.이어롭 Lv.70 (0428/0001)
+- id 1623 nat#448 m.루카리오 Lv.70 (0448/0001)
+- id 1639 nat#475 m.엘레이드 Lv.70 (0475/0001)
+- id 1666 nat#491 m.다크라이 Lv.70 (0491/0002)
+- id 1693 nat#530 m.몰드류 Lv.70 (0530/0001)
+- id 1713 nat#604 m.저리더프 Lv.70 (0604/0001)
+- id 1754 nat#670 m.플라엣테 Lv.70 (0670/0006)
+- id 1761 nat#691 m.드래캄 Lv.70 (0691/0001)
+- id 1773 nat#718 m.지가르데 Lv.70 (0718/0005)
+- id 1775 nat#719 m.디안시 Lv.70 (0719/0001)
+- id 1809 nat#780 m.할비롱 Lv.70 (0780/0001)
+- id 1813 nat#807 m.제라오라 Lv.70 (0807/0001)
+- id 1894 nat#978 m.싸리용 Lv.70 (0978/0003)
+
+EXCLUDED GIMMICKS:
+- #6 Charizard Gigantamax (0006/0003)
+- #154 Meganium Alternate2 (0154/0003)
+- #254 Sceptile Mega (0254/0001)
+- #319 Sharpedo Mega (0319/0001)
+- #358 Chimecho Mega (0358/0001)
+- #358 Chimecho Mega_Altcolor (0358/0003)
+- #359 Absol Mega (0359/0001)
+- #382 Kyogre Primal (0382/0001)
+- #383 Groudon Primal (0383/0001)
+- #483 Dialga Primal (0483/0002)
+- #560 Scrafty Mega (0560/0001)
+- #701 Hawlucha Mega (0701/0001)
+- #869 Alcremie Gigantamax (0869/0063)
+- #888 Zacian Crowned_Sword (0888/0001)
+- #889 Zamazenta Crowned_Shield (0889/0001)
+- #890 Eternatus Eternamax (0890/0001)
+- #1024 Terapagos Terastal (1024/0001)
+
+NO CURRENT SPRITE / DISABLED:
+- id 855 nat#837 탄동
+- id 856 nat#838 탄차곤
+- id 857 nat#839 석탄산
+- id 865 nat#847 꼬치조
+- id 884 nat#866 마임꽁꽁
+- id 888 nat#870 대여르
+- id 896 nat#878 끼리동
+- id 911 nat#893 자루도
+- id 914 nat#896 블리자포스
+- id 949 nat#931 시비꼬
+- id 960 nat#942 오라티프
+- id 961 nat#943 마피티프
+- id 962 nat#944 땃쭈르
+- id 965 nat#947 공푸리
+- id 967 nat#949 육파리
+- id 968 nat#950 절벼게
+- id 972 nat#954 베라카스
+- id 974 nat#956 클레스퍼트라
+- id 980 nat#962 떨구새
+- id 991 nat#973 꼬이밍고
+- id 1004 nat#986 사나운버섯
+- id 1011 nat#993 무쇠머리
+- id 1017 nat#999 모으령
+- id 1019 nat#1001 총지엔
+- id 1020 nat#1002 파오젠
+- id 1026 nat#1008 미라이돈
+- id 1032 nat#1014 조타구
+- id 1040 nat#1022 무쇠암석
+- id 1041 nat#1023 무쇠감투
