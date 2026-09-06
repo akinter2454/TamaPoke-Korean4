@@ -1,4 +1,4 @@
-name: TamaPoke v3.62.0 PMDCatalog - Mega36 Level Evolutions GitHub Pages
+name: TamaPoke v3.62.1 PMDCatalog - Mega36 Level Evolutions GitHub Pages
 
 on:
   workflow_dispatch:
@@ -35,7 +35,10 @@ jobs:
           cat "$GITHUB_WORKSPACE/tools/pmd_catalog_report.txt"
           grep -n '#define DEX_COUNT' "$GITHUB_WORKSPACE/dex.h" | head -1
           grep -n '#define REGION_COUNT 11' "$GITHUB_WORKSPACE/dex.h"
-          grep -n '#define FW_VERSION "3.62.0"' "$GITHUB_WORKSPACE/TamaPoke.ino"
+          FW_SOURCE_VERSION="$(sed -n 's/^#define FW_VERSION "\([^"]*\)"/\1/p' "$GITHUB_WORKSPACE/TamaPoke.ino" | head -1)"
+          test -n "$FW_SOURCE_VERSION"
+          [[ "$FW_SOURCE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          echo "Firmware source version: $FW_SOURCE_VERSION"
           python3 "$GITHUB_WORKSPACE/tools/verify_evolution_levels.py"
           grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'MEGA_EVOLVE_LEVEL = 70' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
@@ -102,7 +105,7 @@ jobs:
               print('WARNING: upstream PokeAPI National Dex currently reports below 1025')
           PY
 
-      - name: Verify v3.62.0 Mega36 plus existing reward/menu/IV/power/gym guards
+      - name: Verify v3.62.1 Mega36 plus existing reward/menu/IV/power/gym guards
         run: |
           set -euxo pipefail
           grep -q 'targetFrameMs = activeAnimated ? 85UL : 100UL' "$GITHUB_WORKSPACE/TamaPoke.ino"
@@ -157,6 +160,17 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/build_sprite_paks.py"
           test -s "$GITHUB_WORKSPACE/tools/web_extra/sprite-manifest.json"
           cat "$GITHUB_WORKSPACE/tools/web_extra/sprite-manifest.json"
+          python3 - <<'PYMEGADELTA'
+          import json
+          from pathlib import Path
+          m=json.loads(Path('tools/web_extra/sprite-manifest.json').read_text(encoding='utf-8'))
+          parts=m.get('groups',{}).get('mega36',[])
+          assert parts, 'Mega36 delta pack list missing'
+          assert m.get('counts',{}).get('mega36_files') == 72, m.get('counts')
+          for fn in parts:
+              assert (Path('tools/web_extra')/fn).is_file(), fn
+          print('Mega36 delta manifest OK:', len(parts), 'pak(s), 72 files')
+          PYMEGADELTA
           if find "$GITHUB_WORKSPACE/tools/web_extra" -maxdepth 1 -type f -name 'sprites-extra-*.pak' -size +19M -print -quit | grep -q .; then
             echo 'A sprite chunk exceeded the safe 19 MiB limit'
             exit 1
@@ -187,7 +201,7 @@ jobs:
           cp "$GITHUB_WORKSPACE"/*.cpp "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
           cp "$GITHUB_WORKSPACE"/*.h "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
 
-      - name: Compile TamaPoke v3.62.0 Mega36 catalog firmware
+      - name: Compile TamaPoke v3.62.1 Mega36 catalog firmware
         run: |
           set -euxo pipefail
           mkdir -p "$GITHUB_WORKSPACE/build"
@@ -212,7 +226,7 @@ jobs:
             "$GITHUB_WORKSPACE/oneclick-firmware" \
             "$GITHUB_WORKSPACE/index.html"
           test -s "$GITHUB_WORKSPACE/index.html"
-          grep -q '3.62.0-ko-mega36-lv70-evolevelguard-rewardrate-menuredraw' "$GITHUB_WORKSPACE/index.html"
+          grep -q '3.62.1-ko-mega36-delta-lv70-evolevelguard-rewardrate-menuredraw' "$GITHUB_WORKSPACE/index.html"
 
       - name: Prepare complete GitHub Pages site
         run: |
@@ -227,14 +241,19 @@ jobs:
           cp "$GITHUB_WORKSPACE/tools/pmd_catalog.json" "$GITHUB_WORKSPACE/site/"
           cp "$GITHUB_WORKSPACE/PMDCOLLAB_CREDITS.txt" "$GITHUB_WORKSPACE/site/"
           python3 - <<'PY'
-          import json
+          import json, re
           from pathlib import Path
           c=json.loads(Path('tools/pmd_catalog.json').read_text(encoding='utf-8'))
+          ino=Path('TamaPoke.ino').read_text(encoding='utf-8')
+          m=re.search(r'^#define\s+FW_VERSION\s+"([^"]+)"', ino, re.M)
+          if not m:
+              raise SystemExit('FW_VERSION missing from TamaPoke.ino')
+          fw=m.group(1)
           e=[x for x in c['entries'] if x.get('enabled')]
           f=[x for x in e if x.get('kind')=='form']
           out=[
-            'TamaPoke KO v3.62.0 PMDCatalog - Mega36 Level Evolutions',
-            'firmware=3.62.0',
+            'TamaPoke KO v3.62.1 PMDCatalog - Mega36 Level Evolutions',
+            f'firmware={fw}',
             f"national_dex_max={c['national_dex_max']}",
             f"dex_count={c['dex_count']}",
             f"managed_enabled={len(e)}",
@@ -264,7 +283,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No generated changes to commit"
           else
-            git commit -m "Build v3.62.0 Mega36 PMDCollab catalog [skip ci]"
+            git commit -m "Build v3.62.1 Mega36 PMDCollab catalog [skip ci]"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
@@ -309,5 +328,5 @@ jobs:
 
       - name: Show TamaPoke installer URL
         run: |
-          echo "### TamaPoke v3.62.0 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
+          echo "### TamaPoke v3.62.1 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
           echo "${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
