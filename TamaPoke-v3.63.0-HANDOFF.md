@@ -56,3 +56,8 @@ v3.62.9 does not change the catalog or sprite IDs/assets. A successful v3.62.8 s
 
 ### Sprite/download note
 v3.63.0 changes no sprite IDs or sprite assets. A complete v3.62.8/v3.62.9 SD sprite set does not need to be transferred again.
+
+### GitHub Actions installer marker fix
+- The v3.63.0 installer template already used the new `3.63.0-ko-learnset-expansion-stability-...` marker, but the embed step still grepped the old v3.62.9 marker after successfully writing `index.html`. That stale grep returned exit code 1 and aborted the workflow.
+- The workflow now reads `FW_VERSION` directly from `TamaPoke-KO-OneClick-Installer.html` and verifies that exact marker in the generated `index.html`; the check is no longer hard-coded to a release string.
+- Remaining operational v3.62.9 labels in the compile/build-info/commit/Pages summary paths were updated or made version-neutral/dynamic.

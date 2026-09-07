@@ -23,3 +23,8 @@ TamaPoke KO v3.63.0 Learnset Expansion + Stability Guard
 - 기존 MoveId 순서와 MOVE_COUNT(90)는 재배치하지 않습니다.
 - 스프라이트 ID/도감 리소스 변화 없음. 기존 SD 스프라이트 재전송 불필요.
 - PUT4 proto=4, Canonical Forms, 지역폼 진화, Mega36, BasePackGuard, sprites-current 정책 유지.
+
+5. GitHub Actions 설치기 빌드 수정
+- v3.63.0 설치기를 만든 뒤 워크플로가 예전 v3.62.9 문자열을 grep하던 잔여 검사를 제거했습니다.
+- 설치기 템플릿의 FW_VERSION을 실행 시 읽어 생성된 index.html과 비교하므로 다음 버전에서도 같은 하드코딩 오류가 재발하지 않도록 했습니다.
+- 빌드 단계명, build-info, 자동 커밋 메시지, Pages 요약에서 남아 있던 v3.62.9 고정 표기도 정리했습니다.

@@ -19,3 +19,9 @@ TamaPoke KO v3.63.0 validation checklist
 [PASS] workflow YAML parse / Python verifier syntax (local release check)
 
 GitHub Actions remains authoritative for live PMDCollab/PokeAPI catalog generation and Arduino ESP32-S3 compile.
+[PASS] GitHub Actions installer embed marker regression
+- embed script output is non-empty
+- installer FW_VERSION is read dynamically
+- generated index.html contains the same marker
+- stale v3.62.9 hard-coded grep removed
+- workflow YAML parse + GITHUB_WORKFLOW_COPY sync
