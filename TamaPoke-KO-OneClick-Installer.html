@@ -170,7 +170,7 @@ esp-web-install-button{display:inline-block}esp-web-install-button[install-unsup
     <div id="spritePanelAll" class="sprite-tab-panel">
       <div class="full-install">
         <b>💾 권장: PC에 전체 스프라이트 ZIP을 한 번 저장</b>
-        <p class="small">현재 빌드의 관동~팔데아·공식폼·Mega36을 모두 합친 <code>mons/</code> 폴더를 ZIP 하나로 받습니다. 기기의 전원을 끄고 microSD를 PC에 연결한 뒤, 기존 <code>/mons</code>를 백업/삭제하고 ZIP의 <code>mons</code> 폴더를 SD 루트에 복사하면 됩니다. Web Serial로 수천 파일을 다시 전송할 필요가 없습니다. <b>v3.62.7부터 대용량 ZIP은 <code>sprites-current</code> GitHub Release 하나에만 저장되고, 새 빌드가 같은 파일을 교체합니다. Actions Artifact에는 전체 ZIP을 올리지 않습니다.</b></p>
+        <p class="small">현재 빌드의 관동~팔데아·공식폼·Mega36을 모두 합친 <code>mons/</code> 폴더를 ZIP 하나로 받습니다. 기기의 전원을 끄고 microSD를 PC에 연결한 뒤, 기존 <code>/mons</code>를 백업/삭제하고 ZIP의 <code>mons</code> 폴더를 SD 루트에 복사하면 됩니다. Web Serial로 수천 파일을 다시 전송할 필요가 없습니다. <b>v3.62.8부터 대용량 ZIP은 <code>sprites-current</code> GitHub Release 하나에만 저장되고, 새 빌드가 같은 파일을 교체합니다. Actions Artifact에는 전체 ZIP을 올리지 않습니다.</b></p>
         <button id="downloadFullSpriteZip" class="green" style="width:100%">💾 PC용 전체 스프라이트 ZIP 다운로드</button>
         <div id="spriteBundleInfo" class="small" style="margin-top:8px">빌드 정보 확인 전</div>
       </div>
@@ -224,7 +224,7 @@ const EMBEDDED_FIRMWARE = {
   boot_app0: "",
   app: ""
 };
-const FW_VERSION = "3.62.7-ko-single-release-fullsd-canonical-forms-regional-evolution-reliable-fullsync-mega36";
+const FW_VERSION = "3.63.0-ko-learnset-expansion-stability-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36";
 const EMBEDDED_SPRITE_PAKS = {};
 
 const OFFSETS = {
@@ -332,7 +332,7 @@ document.getElementById('fwFiles').addEventListener('change', async (ev) => {
 });
 
 // ------------------------------------------------------------------
-// microSD sprite transfer (same PUT protocol as TamaPoke web installer)
+// microSD sprite transfer (v3.62.8 framed PUT4; same Web Serial UI/workflow)
 // ------------------------------------------------------------------
 let port, reader, writer, lineBuf = '', pendingRead = null, transferError = '';
 const enc = new TextEncoder();
@@ -375,7 +375,7 @@ async function waitFor(token, timeoutMs = 15000) {
     const line = await readLine(deadline - Date.now());
     if (line === null) return false;
     if (line === token) return true;
-    if (line === 'ERR' || line.startsWith('SDINFO ERR')) return false;
+    if (line === 'ERR' || line.startsWith('ERR4') || line.startsWith('SDINFO ERR')) return false;
   }
   return false;
 }
@@ -386,7 +386,7 @@ async function waitForPrefix(prefix, timeoutMs = 15000) {
     const line = await readLine(deadline - Date.now());
     if (line === null) return null;
     if (line.startsWith(prefix)) return line;
-    if (line === 'ERR' || line.startsWith('SDINFO ERR')) return line;
+    if (line === 'ERR' || line.startsWith('ERR4') || line.startsWith('SDINFO ERR')) return line;
   }
   return null;
 }
@@ -396,7 +396,7 @@ async function preflightSd() {
   await writer.write(enc.encode('SDINFO\n'));
   const line = await waitForPrefix('SDINFO ', 12000);
   if (!line) {
-    transferError = '기기가 SDINFO에 응답하지 않습니다. v3.62.6 이상 펌웨어인지 확인하고 기기를 재부팅한 뒤 다시 연결하세요.';
+    transferError = '기기가 SDINFO에 응답하지 않습니다. v3.62.8 이상 펌웨어인지 확인하고 기기를 재부팅한 뒤 다시 연결하세요.';
     return false;
   }
   if (!line.startsWith('SDINFO OK')) {
@@ -404,8 +404,8 @@ async function preflightSd() {
     return false;
   }
   const pm=line.match(/proto=(\d+)/);
-  if(!pm || Number(pm[1]) < 3) {
-    transferError = '현재 펌웨어의 SD 전송 프로토콜이 오래되었습니다. v3.62.6 펌웨어를 먼저 설치하고 재부팅하세요.';
+  if(!pm || Number(pm[1]) < 4) {
+    transferError = '현재 펌웨어의 SD 전송 프로토콜이 오래되었습니다. v3.62.8 펌웨어를 먼저 설치하고 재부팅하세요.';
     return false;
   }
   log('SD 사전 점검: ' + line);
@@ -439,6 +439,144 @@ async function cleanupRetiredSprites(manifest) {
   return true;
 }
 
+function crc32(data) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < data.length; i++) {
+    crc ^= data[i];
+    for (let bit = 0; bit < 8; bit++)
+      crc = (crc >>> 1) ^ ((crc & 1) ? 0xEDB88320 : 0);
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function hex32(v) { return (v >>> 0).toString(16).toUpperCase().padStart(8, '0'); }
+
+// PUT4 frame: 4-byte ASCII magic + u16 seq + u16 len + u32 CRC32 LE + payload.
+// Framing makes USB packet boundaries irrelevant: the ESP32 accumulates exactly
+// len bytes even if one browser write arrives as several CDC reads.
+function makePut4Frame(magic, seq, payload, crcOverride = null) {
+  payload = payload || new Uint8Array(0);
+  const out = new Uint8Array(12 + payload.length);
+  out.set(enc.encode(magic), 0);
+  const dv = new DataView(out.buffer);
+  dv.setUint16(4, seq & 0xFFFF, true);
+  dv.setUint16(6, payload.length & 0xFFFF, true);
+  dv.setUint32(8, crcOverride === null ? crc32(payload) : (crcOverride >>> 0), true);
+  out.set(payload, 12);
+  return out;
+}
+
+async function waitBlockReply(seq, timeoutMs = 30000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const line = await readLine(deadline - Date.now());
+    if (line === null) return {kind:'timeout', line:null};
+    if (line === `ACK ${seq}`) return {kind:'ack', line};
+    if (line === `NAK ${seq}` || line.startsWith(`NAK ${seq} `)) return {kind:'nak', line};
+    if (line.startsWith('ERR4')) return {kind:'fatal', line};
+    // Old/duplicated ACKs can remain in the CDC receive buffer after an ACK
+    // retransmission. Ignore them rather than mistaking them for this block.
+  }
+  return {kind:'timeout', line:null};
+}
+
+async function abortPut4Session() {
+  try {
+    await writer.write(makePut4Frame('ABT4', 0, null, 0));
+    const line = await waitForPrefix('ABORT4', 8000);
+    return !!line && line.startsWith('ABORT4');
+  } catch (_) { return false; }
+}
+
+async function verifyLastPut4(name, size, fileCrc) {
+  try {
+    await writer.write(enc.encode(`PUTSTAT ${name}\n`));
+    const line = await waitForPrefix('PUTSTAT ', 12000);
+    if (!line || !line.startsWith('PUTSTAT OK ')) return false;
+    const m = line.match(/^PUTSTAT OK\s+(\d+)\s+([0-9A-Fa-f]+)$/);
+    return !!m && Number(m[1]) === size && (parseInt(m[2],16) >>> 0) === (fileCrc >>> 0);
+  } catch (_) { return false; }
+}
+
+async function sendOneAttempt(name, data, fileAttempt) {
+  const BLOCK = 2048;
+  const blocks = Math.ceil(data.length / BLOCK);
+  const fileCrc = crc32(data);
+  let sessionActive = false;
+
+  await writer.write(enc.encode(`PUT4 ${name} ${data.length} ${BLOCK} ${hex32(fileCrc)}\n`));
+  const hello = await waitForPrefix('OK4 ', 20000);
+  if (!hello || !hello.startsWith('OK4 ')) {
+    if (!hello) {
+      // The command may have reached the ESP32 while only its OK4 response was
+      // lost.  ABT4 safely releases that waiting session so the file can be
+      // started again without requiring a physical reboot.
+      const aborted = await abortPut4Session();
+      transferError = `${name}: PUT4 시작 응답이 누락되었습니다${aborted?' · 세션 자동 복구 완료':''}.`;
+      return {ok:false, retryable:aborted};
+    }
+    transferError = `${name}: PUT4 시작 거부 (${hello}).`;
+    return {ok:false, retryable:false};
+  }
+  sessionActive = true;
+  const hm = hello.match(/^OK4\s+(\d+)/);
+  if (!hm || Number(hm[1]) !== blocks) {
+    await abortPut4Session();
+    transferError = `${name}: 기기와 블록 수가 일치하지 않습니다 (PC ${blocks}, 기기 ${hm?hm[1]:'?'}).`;
+    return {ok:false, retryable:false};
+  }
+
+  for (let offset = 0, seq = 0; offset < data.length; offset += BLOCK, seq++) {
+    const chunk = data.slice(offset, offset + BLOCK);
+    const frame = makePut4Frame('BLK4', seq, chunk);
+    let acked = false;
+    let lastReply = null;
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      await writer.write(frame);
+      const reply = await waitBlockReply(seq, 30000);
+      lastReply = reply;
+      if (reply.kind === 'ack') { acked = true; break; }
+      if (reply.kind === 'fatal') {
+        sessionActive = false; // firmware aborts PUT4 after ERR4
+        const transient = /^ERR4 (TIMEOUT|DATA_TIMEOUT|HEADER)\b/.test(reply.line || '');
+        transferError = `${name}: 기기 전송 오류 (${reply.line})${transient?' · 파일 자동 복구 대상':''}`;
+        return {ok:false, retryable:transient};
+      }
+      // Explicit CRC/order NAK or a lost ACK is safe to retry: firmware consumes
+      // duplicate seq values but never writes an already-committed block twice.
+      if (attempt < 4) {
+        log(`${name}: 블록 ${seq+1}/${blocks} ACK/CRC 재시도 ${attempt}/3${reply.line?` · ${reply.line}`:''}`);
+        await new Promise(r=>setTimeout(r,120));
+      }
+    }
+    if (!acked) {
+      if (sessionActive) await abortPut4Session();
+      transferError = `${name}: 블록 ${seq+1}/${blocks} 전송을 4회 시도했지만 확인되지 않았습니다${lastReply&&lastReply.line?` (${lastReply.line})`:''}.`;
+      return {ok:false, retryable:true};
+    }
+  }
+
+  // The device intentionally waits for END4 after the final data ACK. This is
+  // what makes even the last block safely retransmittable if its ACK was lost.
+  await writer.write(makePut4Frame('END4', blocks, null, fileCrc));
+  const done = await waitForPrefix('DONE4 ', 30000);
+  sessionActive = false;
+  if (done && done.startsWith('DONE4 ')) {
+    const got = parseInt(done.slice(6).trim(), 16) >>> 0;
+    if (got === fileCrc) return {ok:true, retryable:false};
+    transferError = `${name}: 최종 CRC 불일치 (PC ${hex32(fileCrc)}, 기기 ${hex32(got)}).`;
+    return {ok:false, retryable:true};
+  }
+
+  // If only DONE4 was lost after the atomic rename, PUTSTAT confirms that the
+  // correct file is already on SD and avoids retransmitting it unnecessarily.
+  if (await verifyLastPut4(name, data.length, fileCrc)) {
+    log(`${name}: DONE4 응답은 누락됐지만 SD 최종 CRC 확인 성공 · 정상 완료로 처리`);
+    return {ok:true, retryable:false};
+  }
+  transferError = `${name}: 파일 종료 확인(DONE4/CRC)을 받지 못했습니다.`;
+  return {ok:false, retryable:true};
+}
+
 async function sendOne(name, data) {
   transferError = '';
   // PmdMon rejects a single sprite above 3 MiB. Keep a browser-side guard so
@@ -448,24 +586,17 @@ async function sendOne(name, data) {
     log(transferError);
     return false;
   }
-  await writer.write(enc.encode(`PUT ${name} ${data.length}\n`));
-  if (!await waitFor('OK', 15000)) {
-    transferError = `${name}: PUT 시작 응답(OK)을 받지 못했습니다.`;
-    return false;
+  for (let fileAttempt = 1; fileAttempt <= 2; fileAttempt++) {
+    const r = await sendOneAttempt(name, data, fileAttempt);
+    if (r.ok) return true;
+    if (!r.retryable || fileAttempt >= 2) return false;
+    log(`${name}: 파일 단위 자동 복구 재시도 (${fileAttempt}/1) · 기존 정상 파일은 .part 완료 전까지 보존됩니다.`);
+    // Confirm that the firmware has returned to command mode before restarting
+    // the whole file. If not, the outer sendAll safety path will close the port.
+    await new Promise(res=>setTimeout(res,180));
+    if (!await preflightSd()) return false;
   }
-  const blocks = Math.ceil(data.length / 2048);
-  for (let i = 0, block = 0; i < data.length; i += 2048, block++) {
-    await writer.write(data.slice(i, i + 2048));
-    if (!await waitFor('#', 15000)) {
-      transferError = `${name}: 데이터 ACK 누락 (${block+1}/${blocks} 블록). USB 케이블/포트 또는 SD 쓰기 상태를 확인하세요.`;
-      return false;
-    }
-  }
-  if (!await waitFor('DONE', 30000)) {
-    transferError = `${name}: 파일 종료 응답(DONE)을 받지 못했습니다.`;
-    return false;
-  }
-  return true;
+  return false;
 }
 
 function parsePak(buf) {
@@ -681,7 +812,7 @@ for (const b of document.querySelectorAll('[data-extra]')) {
   });
 }
 
-// v3.62.7: sprite installer tabs + canonical cleanup + pinned base-pack guard + single Release asset
+// v3.62.8: sprite installer tabs + canonical cleanup + pinned base-pack guard + single Release asset
 for (const t of document.querySelectorAll('[data-sprite-tab]')) {
   t.addEventListener('click',()=>{
     document.querySelectorAll('.sprite-tab').forEach(x=>x.classList.toggle('active',x===t));

@@ -296,6 +296,12 @@ static void audioTask(void *) {
     }
 
     if (m == MUS_NONE) {
+      // v3.62.9: when a battle/result screen hands control back to a hub, stop
+      // any note envelope from the previous music immediately. Previously
+      // gMusic changed to NONE but the synth voice could keep sounding until
+      // its current note/envelope naturally expired, which made boss BGM appear
+      // to leak into the boss menu.
+      if (playing != MUS_NONE) gSyn.allOff();
       // Do not shut the PA down immediately after a UI click. Keeping it warm
       // briefly is what makes rapid consecutive presses audible on this board.
       if (gAmpOn && !gSyn.busy() && (int32_t)(millis() - gAmpHoldUntil) >= 0 && audioLock(20)) {

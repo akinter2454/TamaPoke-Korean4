@@ -1,4 +1,4 @@
-name: TamaPoke v3.62.7 PMDCatalog - SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolutions + Reliable SD Sync + Mega36 GitHub Pages
+name: TamaPoke v3.63.0 PMDCatalog - Learnset Expansion + Runtime Stability + SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolutions + Framed PUT4 + Mega36 GitHub Pages
 
 on:
   workflow_dispatch:
@@ -50,6 +50,8 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/verify_release_storage_policy.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_full_sd_bundle.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_sd_serial_protocol.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_runtime_stability.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_learnset_expansion.py"
           grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'MEGA_EVOLVE_LEVEL = 70' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'effectiveEvolutionTargetLevel' "$GITHUB_WORKSPACE/pet.cpp"
@@ -143,7 +145,7 @@ jobs:
               print('WARNING: upstream PokeAPI National Dex currently reports below 1025')
           PY
 
-      - name: Verify v3.62.7 single-release storage + base-pack guard + canonical forms + regional evolutions + reliable SD sync
+      - name: Verify v3.63.0 learnset expansion + runtime stability + single-release storage + base-pack guard + canonical forms + regional evolutions + framed PUT4
         run: |
           set -euxo pipefail
           grep -q 'targetFrameMs = activeAnimated ? 85UL : 100UL' "$GITHUB_WORKSPACE/TamaPoke.ino"
@@ -173,6 +175,8 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/verify_evolution_levels.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_regional_evolutions.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_canonical_forms.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_runtime_stability.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_learnset_expansion.py"
           grep -q 'regional-form descendant evolution' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -q 'PRESENTATION_VARIANT_WORDS' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -q 'canonicalizeRetiredVariant' "$GITHUB_WORKSPACE/pet.cpp"
@@ -270,7 +274,7 @@ jobs:
           cp "$GITHUB_WORKSPACE"/*.cpp "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
           cp "$GITHUB_WORKSPACE"/*.h "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
 
-      - name: Compile TamaPoke v3.62.7 SingleRelease catalog firmware
+      - name: Compile TamaPoke v3.62.9 runtime-stable catalog firmware
         run: |
           set -euxo pipefail
           mkdir -p "$GITHUB_WORKSPACE/build"
@@ -295,7 +299,7 @@ jobs:
             "$GITHUB_WORKSPACE/oneclick-firmware" \
             "$GITHUB_WORKSPACE/index.html"
           test -s "$GITHUB_WORKSPACE/index.html"
-          grep -q '3.62.7-ko-single-release-fullsd-canonical-forms-regional-evolution-reliable-fullsync-mega36' "$GITHUB_WORKSPACE/index.html"
+          grep -q '3.62.9-ko-runtime-stability-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36' "$GITHUB_WORKSPACE/index.html"
 
       - name: Publish full sprite ZIP to one rolling GitHub Release
         env:
@@ -412,7 +416,7 @@ jobs:
           e=[x for x in c['entries'] if x.get('enabled')]
           f=[x for x in e if x.get('kind')=='form']
           out=[
-            'TamaPoke KO v3.62.7 PMDCatalog - SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolution + Reliable SD Sync + Mega36',
+            'TamaPoke KO v3.62.9 PMDCatalog - Runtime Stability + SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolution + Framed PUT4 + Mega36',
             f'firmware={fw}',
             f"national_dex_max={c['national_dex_max']}",
             f"dex_count={c['dex_count']}",
@@ -449,7 +453,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No generated changes to commit"
           else
-            git commit -m "Build v3.62.7 SingleRelease canonical PMDCollab catalog [skip ci]"
+            git commit -m "Build v3.62.9 runtime-stable canonical PMDCollab catalog [skip ci]"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
@@ -494,5 +498,5 @@ jobs:
 
       - name: Show TamaPoke installer URL
         run: |
-          echo "### TamaPoke v3.62.7 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
+          echo "### TamaPoke v3.62.9 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
           echo "${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"

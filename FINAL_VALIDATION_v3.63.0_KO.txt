@@ -1,0 +1,21 @@
+TamaPoke KO v3.63.0 validation checklist
+
+[PASS] tools/verify_learnset_expansion.py
+- 1..809 <=4 natural moves: 295 -> 28
+- >=7 natural moves after supplement: 754
+- tiny intentional pools preserved
+- post-809 staged learning markers present
+- learnQueue 12
+- UI/battle/TM move ID guards present
+
+[PASS] tools/verify_runtime_stability.py
+- Battle Tower launch state
+- special battle BGM cleanup
+- training input priority
+- deferred/batched/staggered NVS persistence
+- frame cadence 85/100ms
+
+[PASS] moves.h standalone C++17 syntax check
+[PASS] workflow YAML parse / Python verifier syntax (local release check)
+
+GitHub Actions remains authoritative for live PMDCollab/PokeAPI catalog generation and Arduino ESP32-S3 compile.

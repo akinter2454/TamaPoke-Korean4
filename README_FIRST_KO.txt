@@ -1,21 +1,21 @@
-TamaPoke 한국어판 v3.62.7 SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolution + Reliable SD Sync + Mega36
+TamaPoke 한국어판 v3.63.0 Learnset Expansion + Stability Guard
 
 설치/업데이트
 1. 이 ZIP의 파일을 기존 GitHub 저장소 루트에 덮어씁니다. 저장소를 비우지 마세요.
 2. 기존 tools/catalog_lock.json이 있다면 반드시 보존합니다.
-3. Actions -> v3.62.7 workflow -> Run workflow.
-4. build/deploy 성공 후 Pages 설치기를 사용합니다.
+3. Actions -> v3.63.0 workflow -> Run workflow.
+4. build/deploy 성공 후 Pages 설치기로 v3.63.0 펌웨어를 설치하고 기기를 재부팅합니다.
+5. 기존 Web Serial 스프라이트 설치 방식/PUT4 proto=4는 그대로 사용할 수 있습니다.
 
-v3.62.7 핵심
-- PC용 전체 sprite ZIP은 `sprites-current` GitHub Release 한 곳에만 유지됩니다.
-- asset 이름은 `TamaPoke-SD-Sprites-Current-Full.zip`으로 고정되고 새 build가 같은 파일을 교체합니다.
-- 전체 sprite ZIP은 Actions Artifact에 업로드하지 않습니다.
-- 과거 자동 생성 `sprites-vX.Y.Z` sprite Release는 workflow가 정리합니다.
-- GitHub Pages에는 대용량 ZIP 자체를 넣지 않습니다.
-- BasePackGuard / Canonical Forms / 지역폼 진화 / Mega36 / SD proto=3 정책은 그대로 유지됩니다.
+v3.63.0 핵심 변경
+- 레벨업 자연 습득 기술이 지나치게 적던 일반 포켓몬을 보완합니다. 기존 1~809번은 이미 허용된 TM/기술 풀 안에서만 일부 기술을 레벨업 습득으로 승격합니다.
+- 기존 자연 습득 기술 7개 이상인 포켓몬은 그대로 유지합니다. Ditto/Metapod/Magikarp처럼 원래 기술풀이 의도적으로 극단적으로 작은 종도 억지로 일반화하지 않습니다.
+- National Dex 810+는 더 이상 현재 레벨에 따른 3~4개 대체세트만 쓰지 않고, 레벨 1~후반까지 최대 9단계의 타입 기반 자연 습득 기술을 갖습니다. 따라서 실제 레벨업 시 기술 배우기 제안이 발생합니다.
+- 기술 배우기 대기 큐를 8 -> 12칸으로 넓혀 여러 레벨을 한꺼번에 통과했을 때 제안이 잘리는 가능성을 줄였습니다.
+- 기술 선택/배틀/TM 화면에서 잘못된 move ID가 들어오더라도 MOVE_TBL 범위를 벗어나 접근하지 않도록 방어 검사를 추가했습니다.
+- v3.62.9의 배틀타워/BGM/훈련 NVS 안정화와 85/100ms 프레임 cadence는 그대로 유지합니다.
 
 중요
-- 이 업데이트만으로 microSD sprite를 다시 복사할 필요는 없습니다.
-- 기존 tools/catalog_lock.json을 삭제하지 마세요.
-
-- 과거 Actions Artifact 중 `TamaPoke-vX.Y.Z-full-sd-sprites` 이름의 대용량 백업도 다음 성공 build에서 자동 정리됩니다.
+- 이번 버전은 move ID 자체를 재배치하지 않으므로 기존 저장/LAN 기술 ID 호환 구조를 유지합니다.
+- 스프라이트 ID/도감 리소스는 변경하지 않습니다. 기존 스프라이트 동기화가 완료되어 있다면 다시 받을 필요가 없습니다.
+- tools/catalog_lock.json을 삭제하지 마세요.

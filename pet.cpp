@@ -1234,7 +1234,7 @@ void Pet::relearnFromLevel() {
   // that reads as a Machamp. If the set came out with no STAB, the weakest slot
   // gives way to the best same-type attack the species can actually learn.
   for (int i = 0; i < MOVE_SLOTS; i++) {
-    if (!moves[i]) continue;
+    if (!moves[i] || moves[i] >= MOVE_COUNT) continue;
     const MoveEntry &m = MOVE_TBL[moves[i]];
     if (m.cat != MC_STATUS && (m.type == d.type1 || m.type == d.type2)) return;
   }
@@ -1309,7 +1309,8 @@ uint8_t Pet::pendingLearnables(uint8_t *out, uint8_t max) const {
   if (isEgg() || !out || !max) return 0;
   uint8_t lvl = level(), n = learnCount(speciesId), w = 0;
   for (uint8_t i = 0; i < n && w < max; i++) {
-    if (learnLevel(speciesId, i) > lvl) break;
+    uint8_t at = learnLevel(speciesId, i);
+    if (at == 0 || at > lvl) continue;   // TM entries and future gates are not pending level-up moves
     uint8_t mv = learnMove(speciesId, i);
     if (knowsMove(mv)) continue;
     bool dup = false;                     // do not offer the same move twice
@@ -1608,7 +1609,8 @@ uint8_t Pet::playResult(uint16_t score) {
     extras.missionAction(MIS_PLAY, 1, *this);
     extras.missionAction(MIS_TRAIN, 1, *this);
   }
-  save();
+  // v3.62.9: minigame saves are deferred until after the result screen.
+  pendingSave = true;
   return gain;
 }
 
@@ -1659,7 +1661,8 @@ uint8_t Pet::trainSpeed(uint16_t hits) {
     extras.missionAction(MIS_PLAY, 1, *this);
     extras.missionAction(MIS_TRAIN, 1, *this);
   }
-  save();
+  // v3.62.9: avoid a full NVS commit inside the active minigame frame.
+  pendingSave = true;
   return gain;
 }
 
@@ -1688,7 +1691,8 @@ uint8_t Pet::trainStrength(uint16_t hits) {
     extras.missionAction(MIS_PLAY, 1, *this);
     extras.missionAction(MIS_TRAIN, 1, *this);
   }
-  save();
+  // v3.62.9: avoid a full NVS commit inside the active minigame frame.
+  pendingSave = true;
   return gain;
 }
 

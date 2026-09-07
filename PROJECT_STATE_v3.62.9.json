@@ -1,0 +1,209 @@
+{
+  "project": "TamaPoke KO ESP32-S3 Touch AMOLED 1.75",
+  "version": "3.62.9",
+  "baseline": "v3.62.8 Framed PUT4 Stable WebSerial + v3.62.7 SingleRelease FullSD + v3.62.5 Canonical Forms + v3.62.4 Regional Form Evolution Routing",
+  "hardware": {
+    "board": "Waveshare ESP32-S3-Touch-AMOLED-1.75",
+    "display": "466x466 CO5300 QSPI AMOLED",
+    "touch": "CST9217",
+    "pmu": "AXP2101",
+    "audio": "ES8311 + onboard PA/speaker"
+  },
+  "catalog": {
+    "source": "PMDCollab SpriteCollab tracker.json",
+    "no_gimmicks": false,
+    "forms_independent_species": true,
+    "evolution": "level-only + Eevee-style branching + form-aware regional descendant routing",
+    "id_lock": "tools/catalog_lock.json",
+    "policy": "canonical official forms + exactly 36 approved PMDCollab Mega behaviour forms; presentation-only resource slots are never species",
+    "mega_count": 36,
+    "mega_evolution_level": 70,
+    "mega_forms_independent_dex_entries": true,
+    "charizard_mega_target": "Mega Charizard X only",
+    "mewtwo_mega_target": "Mega Mewtwo Y only",
+    "other_gimmicks_excluded": [
+      "Gigantamax",
+      "Dynamax",
+      "Primal",
+      "Eternamax",
+      "Ultra Burst",
+      "Ash-Bond",
+      "Crowned",
+      "Totem",
+      "Terastal",
+      "Stellar"
+    ],
+    "presentation_variants_excluded": [
+      "AltColor / Alt Colour recolors",
+      "Alternate",
+      "Cutscene",
+      "Beta"
+    ],
+    "retired_id_policy": "remove presentation-only entries from active catalog/lock but never reuse their old internal IDs; keep tombstone migration map",
+    "save_migration": "retired presentation-only species IDs automatically canonicalize to the base or canonical regional form while preserving pet stats/level/IV/nickname"
+  },
+  "render": {
+    "active_frame_ms": 85,
+    "normal_frame_ms": 100,
+    "no_recovery_delay": true,
+    "tpk3_bounds": true,
+    "partial_present": true,
+    "overlay_exit_clean_full_present": true
+  },
+  "power": {
+    "auto_screen_off_minutes": 5,
+    "touch_wake": false,
+    "wake_source": "AXP2101 physical side button short press",
+    "screen_off_render": false,
+    "screen_off_sfx": false,
+    "screen_off_pa": false,
+    "touch_idle_timestamp_fix": "safeElapsedMs + post-input millis resync"
+  },
+  "gyms": {
+    "gym_regions": 9,
+    "galar": {
+      "gym_index": 7,
+      "dex_region_id": 7,
+      "version_basis": "Sword",
+      "gimmicks": "ignored"
+    },
+    "paldea": {
+      "gym_index": 8,
+      "dex_region_id": 9,
+      "elite_four": true,
+      "gimmicks": "ignored"
+    },
+    "hisui_traditional_gyms": false
+  },
+  "deployment": {
+    "host": "GitHub Pages",
+    "workflow_name": "TamaPoke v3.62.9 PMDCatalog - Runtime Stability + SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolutions + Framed PUT4 + Mega36 GitHub Pages",
+    "version_check": "dynamic FW_VERSION parse from TamaPoke.ino"
+  },
+  "save_note": "User plans to wipe old save data; backward save compatibility is not a blocking constraint.",
+  "latest_changes": [
+    "Battle Tower launch fixed: towerOpen now closes only after startBattle successfully sets battleOpen, preventing the tower hub from rendering over an active battle.",
+    "Special boss/tower/rival result dismissal explicitly stops music and clears battle menu/phase2 state before returning to the hub.",
+    "audioTask MUS_NONE transition now immediately silences the previous synth envelope with allOff so boss/victory BGM cannot leak into the hub.",
+    "Training render/current-screen/touch priority is aligned so a move-learning offer queued during a level-up cannot steal taps from an active training UI.",
+    "Pet minigame training saves are deferred via pendingSave instead of committing NVS inside the active training frame.",
+    "GameExtras supports batched/dirty persistence so MIS_PLAY, MIS_TRAIN and IV-item rewards consolidate rather than causing back-to-back Preferences commits.",
+    "Post-training persistence staggers Pet and Extras NVS flushes across separate loop passes after the minigame closes.",
+    "Runtime stabilization preserves active 85 ms / normal 100 ms frame cadence and keeps PUT4 proto=4 user workflow unchanged.",
+    "v3.62.9 is runtime-only: no catalog, sprite ID or sprite asset changes; no re-download required after a previously complete v3.62.8 sprite sync.",
+    "Web Serial installation UI and regional/all-sprite workflow are unchanged; only the transport protocol is upgraded.",
+    "SDINFO reports proto=4 and the current installer requires proto>=4.",
+    "PUT4 frames every 2 KiB block with sequence number, length and IEEE CRC32.",
+    "Firmware exact-read loop accumulates fragmented USB CDC reads until the full framed payload has arrived.",
+    "Numbered ACK/NAK enables safe per-block retry; duplicate already-written blocks are ACKed without a second SD write.",
+    "END4 keeps the session open through final-block ACK recovery and validates whole-file CRC before commit.",
+    "Transfers write to .part and use .bak4 guarded replacement so a failed transfer does not overwrite the previous valid sprite.",
+    "PUTSTAT recovers the rare case where the file was committed but DONE4 alone was lost.",
+    "Legacy raw PUT remains in firmware for backward compatibility, but the current v3.62.9 installer uses PUT4 only.",
+    "Large PC full-sprite ZIP is no longer uploaded through actions/upload-artifact, avoiding the full bundle consuming Actions artifact storage.",
+    "Full sprite ZIP now uses one rolling GitHub Release tag sprites-current with stable asset TamaPoke-SD-Sprites-Current-Full.zip.",
+    "Legacy large Actions artifacts named TamaPoke-vX.Y.Z-full-sd-sprites are enumerated through the Actions REST API and deleted on the next successful build.",
+    "Each successful build replaces the same sprites-current asset instead of accumulating one large Release asset per firmware version.",
+    "Workflow removes only legacy auto-generated sprite Releases matching sprites-vX.Y.Z and their tags after the rolling asset is published.",
+    "Pages sprite-bundle.json is rewritten to the stable sprites-current download URL and records generated_filename, release_tag, and storage_policy.",
+    "Installer exposes a device-independent PC full-sprite ZIP download button driven by sprite-bundle.json",
+    "GitHub Actions builds one versioned PC full microSD ZIP containing root mons/ from audited Gen1-7 base packs plus the exact current 810+/official-form/Mega36 catalog",
+    "Installer validates base TPAK filenames, exact regional ID ranges, TPK2/TPK3 magic and duplicates before transfer",
+    "Gen1-7 base sprite packs are pinned to immutable audited commit 7d5a2b3f4a4bee4f107cdae77ad13949dddfc615; mutable main/latest fallbacks removed"
+  ],
+  "reward_balance": {
+    "training_iv_drop_good_percent": 22,
+    "training_iv_drop_great_percent": 38,
+    "random_event_iv_kit_percent": 16,
+    "iv_kit_gold_crown_percent": 8,
+    "shop_sales": false
+  },
+  "evolution_balance": {
+    "max_level": 100,
+    "direct_catalog_max_level_audited": 64,
+    "special_method_default_level": 30,
+    "early_retire_penalty_levels": 12,
+    "effective_gate_clamped_to_max_level": true,
+    "legacy_evo_penalty_migration": true,
+    "care_mistake_wrap_guard": true,
+    "mega_level": 70,
+    "per_target_branch_level_guard": true,
+    "real_outgoing_edge_minimum_gate": true,
+    "regional_form_parent_guard": true
+  },
+  "sprite_transfer": {
+    "manifest_schema": 4,
+    "mega36_delta_group": "groups.mega36",
+    "all_added_group": "groups.added-all",
+    "mega36_expected_files": 72,
+    "one_click_all_sprites": true,
+    "one_click_all_sequence": [
+      "kanto",
+      "johto",
+      "hoenn",
+      "sinnoh",
+      "unova",
+      "kalos",
+      "alola",
+      "current added 810+/forms/Mega36"
+    ],
+    "catalog_fingerprint": "generated by Actions in sprite_audit.json / sprite-manifest.json",
+    "visual_audit": "GitHub Pages resource audit tab with ID/NatDex/PMDCollab path + preview",
+    "serial_protocol_version": 4,
+    "preflight_command": "SDINFO proto=4",
+    "put_block_bytes": 2048,
+    "put_tx_timeout_ms": 1000,
+    "put_rx_timeout_ms": 8000,
+    "browser_ack_timeout_ms": 15000,
+    "failure_policy": "automatic block retry + one file retry; only close WebSerial/reboot after recovery is exhausted",
+    "delete_command": "DEL mons/pNNN.bin / mons/psNNN.bin (restricted to retired sprite binaries under /mons)",
+    "retired_cleanup": "all-added and all-sprite sync remove manifest.retired_files before writing current canonical assets",
+    "put_command": "PUT4 <path> <size> 2048 <file_crc32>",
+    "framing": "BLK4 + seq(u16) + len(u16) + crc32(u32 LE) + payload",
+    "exact_read": true,
+    "block_crc32": true,
+    "numbered_ack": "ACK <seq> / NAK <seq>",
+    "block_attempts": 4,
+    "file_attempts": 2,
+    "commit": "END4 + whole-file CRC32",
+    "abort": "ABT4 framed control",
+    "completion_recovery": "PUTSTAT <path> verifies last committed size/CRC if DONE4 is lost",
+    "atomic_replace": ".part -> .bak4 guarded rename -> target"
+  },
+  "sprite_audit": true,
+  "full_sprite_sync_tab": true,
+  "catalog_fingerprint": true,
+  "canonical_forms_audit": true,
+  "retired_presentation_save_migration": true,
+  "features": [
+    "SingleRelease FullSD storage guard: one rolling sprites-current Release asset; no full-ZIP Actions artifact; legacy generated sprite Releases cleaned",
+    "BasePackGuard: immutable audited Gen1-7 base-pack commit + browser range/magic validation + safe base PMD fallback",
+    "PC full microSD sprite ZIP: root mons/ bundle, stable Release download button, SHA-256 manifest"
+  ],
+  "full_sd_sprite_zip": {
+    "enabled": true,
+    "filename": "TamaPoke-SD-Sprites-Current-Full.zip",
+    "layout": "root mons/ directory + README-SD-KO.txt + BUNDLE-INFO.json + SHA256SUMS.txt + credits/audit",
+    "base_source": "immutable audited commit 7d5a2b3f4a4bee4f107cdae77ad13949dddfc615",
+    "managed_source": "same live PMDCollab catalog build used for 810+/official forms/Mega36 TPK3",
+    "publication": "single rolling GitHub Release tag sprites-current; stable asset overwritten on each successful build; no full-ZIP Actions artifact backup",
+    "sd_install": "power off; back up/delete old /mons; copy ZIP mons/ to microSD root; no save/NVS wipe",
+    "canonical_guard": "presentation-only variants and retired IDs forbidden",
+    "generated_build_filename": "TamaPoke-SD-Sprites-v3.62.9-Full.zip",
+    "legacy_cleanup": "delete only auto-generated sprite Releases matching sprites-vX.Y.Z after sprites-current is safely uploaded",
+    "actions_artifact_backup": false,
+    "legacy_actions_artifact_cleanup": "delete prior TamaPoke-vX.Y.Z-full-sd-sprites artifacts via GitHub Actions REST API; build job has actions: write",
+    "rolling_release_asset": "TamaPoke-SD-Sprites-Current-Full.zip",
+    "release_tag": "sprites-current"
+  },
+  "runtime_stability": {
+    "battle_tower": "close tower hub only after successful battle start",
+    "special_battle_audio": "MUS_NONE on result dismissal + synth allOff on NONE transition",
+    "training_input": "training UI priority before learn-offer while minigame/menu active",
+    "training_persistence": "Pet pendingSave + GameExtras batch dirty save + staggered post-minigame flush",
+    "frame_cadence_unchanged": {
+      "active_ms": 85,
+      "normal_ms": 100
+    }
+  }
+}

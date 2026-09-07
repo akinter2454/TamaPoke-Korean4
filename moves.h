@@ -2199,25 +2199,48 @@ static inline int16_t canonicalLearnDex(int16_t dex) {
   }
 }
 
-// Cuantos movimientos puede usar la especie, y cual es el i-esimo.
-// DITTO y las dos crisalidas no aprenden ninguno de la lista: para
-// ellos moveOf() devuelve MV_STRUGGLE en vez de nada.
-static inline uint8_t learnCount(int16_t dex) {
+// Legacy 1..809 learnset access. v3.63.0 layers a small deterministic
+// level-up supplement on top instead of replacing this generated table.
+// Keeping the old table and move IDs intact preserves existing saves/LAN data.
+static inline uint8_t legacyLearnCount(int16_t dex) {
   dex = canonicalLearnDex(dex);
   if (dex < 1 || dex > 809) return 0;
   return (uint8_t)(LEARN_OFS[dex + 1] - LEARN_OFS[dex]);
 }
 
-static inline uint8_t learnMove(int16_t dex, uint8_t i) {
+static inline uint8_t legacyLearnMove(int16_t dex, uint8_t i) {
   dex = canonicalLearnDex(dex);
-  if (i >= learnCount(dex)) return MV_STRUGGLE;
+  uint8_t n = legacyLearnCount(dex);
+  if (i >= n) return MV_STRUGGLE;
   return LEARN_TBL[LEARN_OFS[dex] + i].move;
 }
 
-static inline uint8_t learnLevel(int16_t dex, uint8_t i) {
+static inline uint8_t legacyLearnLevel(int16_t dex, uint8_t i) {
   dex = canonicalLearnDex(dex);
-  if (i >= learnCount(dex)) return 0;
+  uint8_t n = legacyLearnCount(dex);
+  if (i >= n) return 0;
   return LEARN_TBL[LEARN_OFS[dex] + i].level;
+}
+
+static inline uint8_t legacyNaturalLearnCount(int16_t dex) {
+  uint8_t n = legacyLearnCount(dex), w = 0;
+  for (uint8_t i = 0; i < n; ++i) if (legacyLearnLevel(dex, i) > 0) ++w;
+  return w;
+}
+
+static inline bool legacyHasMove(int16_t dex, uint8_t mv) {
+  if (!mv || mv >= MOVE_COUNT) return false;
+  uint8_t n = legacyLearnCount(dex);
+  for (uint8_t i = 0; i < n; ++i) if (legacyLearnMove(dex, i) == mv) return true;
+  return false;
+}
+
+static inline bool legacyHasNaturalMove(int16_t dex, uint8_t mv) {
+  if (!mv || mv >= MOVE_COUNT) return false;
+  uint8_t n = legacyLearnCount(dex);
+  for (uint8_t i = 0; i < n; ++i)
+    if (legacyLearnLevel(dex, i) > 0 && legacyLearnMove(dex, i) == mv) return true;
+  return false;
 }
 
 // Post-809 species are playable even though the legacy generated learnset ends
@@ -2262,6 +2285,158 @@ static inline uint8_t fallbackStrongMoveForType(uint8_t t) {
     case T_DARK: return MV_DARK_PULSE; case T_STEEL: return MV_FLASH_CANNON;
     case T_FAIRY: return MV_MOONBLAST; default: return MV_BODY_SLAM;
   }
+}
+
+// v3.63.0 learnset expansion -------------------------------------------------
+// The old generated learnset has excellent TM coverage but 296 of the first
+// 809 species have four or fewer *natural* level-up entries. National Dex
+// 810+ had no natural table at all and therefore never produced a learn prompt.
+//
+// We keep every existing entry untouched and add only a small supplemental
+// layer. Legacy species draw the extra moves from moves they were already
+// allowed to use (their level-0/TM pool), so this does not invent a completely
+// unrelated attack. Truly special sparse species (Ditto/cocoons/Magikarp-like
+// tiny pools) stay sparse. 810+ receive a conservative type progression until
+// a generated per-species table is available in a future data refresh.
+struct SupplementalLearnEntry { uint8_t move; uint8_t level; };
+
+static inline uint8_t supplementGateForMove(uint8_t mv, uint8_t ordinal) {
+  if (!mv || mv >= MOVE_COUNT) return 255;
+  const MoveEntry &m = MOVE_TBL[mv];
+  uint8_t byPower;
+  if (m.cat == MC_STATUS) byPower = 28;
+  else if (m.power <= 40) byPower = 8;
+  else if (m.power <= 60) byPower = 16;
+  else if (m.power <= 75) byPower = 24;
+  else if (m.power <= 90) byPower = 34;
+  else if (m.power <= 100) byPower = 44;
+  else byPower = 54;
+  static const uint8_t MILESTONE[7] = { 7, 13, 20, 28, 36, 46, 58 };
+  uint8_t floor = MILESTONE[ordinal < 7 ? ordinal : 6];
+  uint8_t gate = byPower > floor ? byPower : floor;
+  uint16_t spaced = (uint16_t)gate + (uint16_t)ordinal * 3U;
+  return (uint8_t)(spaced > 72 ? 72 : spaced);
+}
+
+static inline uint8_t post809SupplementEntry(int16_t dex, uint8_t idx,
+                                              SupplementalLearnEntry &e) {
+  if (dex < 1 || dex > DEX_COUNT || DEX_NATDEX[dex] <= 809 || idx >= 9) return 0;
+  const DexEntry &d = DEX_TBL[dex];
+  const bool dual = d.type2 != T_NONE && d.type2 != d.type1;
+  const SupplementalLearnEntry cand[] = {
+    { MV_TACKLE, 1 },
+    { fallbackWeakMoveForType(d.type1), 7 },
+    { (uint8_t)(dual ? fallbackWeakMoveForType(d.type2) : MV_SCRATCH), 13 },
+    { MV_QUICK_ATTACK, 18 },
+    { fallbackMidMoveForType(d.type1), 24 },
+    { (uint8_t)(dual ? fallbackMidMoveForType(d.type2) : MV_SWIFT), 31 },
+    { MV_LEER, 34 },
+    { MV_SWIFT, 38 },
+    { fallbackStrongMoveForType(d.type1), 46 },
+    { (uint8_t)(dual ? fallbackStrongMoveForType(d.type2) : MV_BODY_SLAM), 56 },
+    { MV_BODY_SLAM, 60 },
+    { MV_DOUBLE_EDGE, 68 },
+  };
+  uint8_t produced = 0;
+  for (uint8_t i = 0; i < sizeof(cand) / sizeof(cand[0]); ++i) {
+    uint8_t mv = cand[i].move;
+    if (!mv || mv >= MOVE_COUNT) continue;
+    bool dup = false;
+    for (uint8_t j = 0; j < i; ++j)
+      if (cand[j].move == mv) { dup = true; break; }
+    if (dup) continue;
+    if (produced++ == idx) { e = cand[i]; return 1; }
+    if (produced >= 9 && idx >= 9) break;
+  }
+  return 0;
+}
+
+static inline uint8_t legacySupplementTarget(int16_t dex) {
+  uint8_t total = legacyLearnCount(dex);
+  uint8_t natural = legacyNaturalLearnCount(dex);
+  // Preserve intentionally tiny gimmick learnsets rather than turning every
+  // cocoon/transform-only species into a generic attacker.
+  if (total <= 2 || natural >= 7) return 0;
+  return (uint8_t)(7 - natural);
+}
+
+static inline uint8_t legacySupplementEntry(int16_t dex, uint8_t idx,
+                                             SupplementalLearnEntry &e) {
+  uint8_t need = legacySupplementTarget(dex);
+  if (idx >= need || dex < 1 || dex > DEX_COUNT) return 0;
+  const DexEntry &d = DEX_TBL[dex];
+  uint8_t produced = 0;
+  uint8_t total = legacyLearnCount(dex);
+  // Prefer legal STAB attacks, then other legal attacks, then useful status.
+  for (uint8_t pass = 0; pass < 3; ++pass) {
+    for (uint8_t i = 0; i < total; ++i) {
+      if (legacyLearnLevel(dex, i) != 0) continue;  // only promote existing TM/legal entries
+      uint8_t mv = legacyLearnMove(dex, i);
+      if (!mv || mv >= MOVE_COUNT || legacyHasNaturalMove(dex, mv)) continue;
+      const MoveEntry &m = MOVE_TBL[mv];
+      bool stab = (m.type == d.type1 || m.type == d.type2);
+      if (pass == 0 && (m.cat == MC_STATUS || !stab)) continue;
+      if (pass == 1 && (m.cat == MC_STATUS || stab)) continue;
+      if (pass == 2 && m.cat != MC_STATUS) continue;
+      // The legacy table can contain the same TM more than once in odd forms.
+      bool dup = false;
+      for (uint8_t j = 0; j < i; ++j)
+        if (legacyLearnLevel(dex, j) == 0 && legacyLearnMove(dex, j) == mv) { dup = true; break; }
+      if (dup) continue;
+      if (produced == idx) {
+        e.move = mv;
+        e.level = supplementGateForMove(mv, produced);
+        return 1;
+      }
+      if (++produced >= need) return 0;
+    }
+  }
+  return 0;
+}
+
+static inline uint8_t supplementalLearnCount(int16_t dex) {
+  if (dex < 1 || dex > DEX_COUNT) return 0;
+  if (DEX_NATDEX[dex] > 809) {
+    uint8_t n = 0; SupplementalLearnEntry e{};
+    for (uint8_t i = 0; i < 9; ++i) if (post809SupplementEntry(dex, i, e)) ++n;
+    return n;
+  }
+  uint8_t need = legacySupplementTarget(dex), n = 0;
+  SupplementalLearnEntry e{};
+  for (uint8_t i = 0; i < need; ++i) if (legacySupplementEntry(dex, i, e)) ++n;
+  return n;
+}
+
+// Public learnset accessors: old table first, supplemental level-up entries
+// after it. All callers (relearn, level-up queue, move picker, AI setup) now see
+// one consistent pool.
+static inline uint8_t learnCount(int16_t dex) {
+  uint16_t n = (uint16_t)legacyLearnCount(dex) + supplementalLearnCount(dex);
+  return (uint8_t)(n > 255 ? 255 : n);
+}
+
+static inline uint8_t learnMove(int16_t dex, uint8_t i) {
+  if (dex < 1 || dex > DEX_COUNT) return MV_STRUGGLE;
+  uint8_t base = legacyLearnCount(dex);
+  if (i < base) return legacyLearnMove(dex, i);
+  SupplementalLearnEntry e{};
+  uint8_t si = (uint8_t)(i - base);
+  if (DEX_NATDEX[dex] > 809) {
+    if (post809SupplementEntry(dex, si, e)) return e.move;
+  } else if (legacySupplementEntry(dex, si, e)) return e.move;
+  return MV_STRUGGLE;
+}
+
+static inline uint8_t learnLevel(int16_t dex, uint8_t i) {
+  if (dex < 1 || dex > DEX_COUNT) return 0;
+  uint8_t base = legacyLearnCount(dex);
+  if (i < base) return legacyLearnLevel(dex, i);
+  SupplementalLearnEntry e{};
+  uint8_t si = (uint8_t)(i - base);
+  if (DEX_NATDEX[dex] > 809) {
+    if (post809SupplementEntry(dex, si, e)) return e.level;
+  } else if (legacySupplementEntry(dex, si, e)) return e.level;
+  return 0;
 }
 
 static inline uint8_t fallbackMovesForDex(int16_t dex, uint8_t lvl, uint8_t *out, uint8_t cap) {

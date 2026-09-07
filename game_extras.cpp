@@ -81,6 +81,15 @@ void GameExtras::begin() {
 }
 
 void GameExtras::save() {
+  if (_saveBatchDepth) {
+    _saveDirty = true;
+    return;
+  }
+  saveNow();
+}
+
+void GameExtras::saveNow() {
+  _saveDirty = false;
   prefs.putBytes("xitem", _items, sizeof(_items));
   prefs.putBytes("xtm", _tms, sizeof(_tms));
   prefs.putBool("xshb", _shinyBoost);
@@ -130,6 +139,19 @@ void GameExtras::save() {
   prefs.putUChar("xerid", _eventRewardId);
   prefs.putUChar("xerc", _eventRewardCount);
   prefs.putUInt("xelast", _lastEventMinute);
+}
+
+void GameExtras::beginBatch() {
+  if (_saveBatchDepth < 255) _saveBatchDepth++;
+}
+
+void GameExtras::endBatch(bool flushNow) {
+  if (_saveBatchDepth) _saveBatchDepth--;
+  if (_saveBatchDepth == 0 && _saveDirty && flushNow) saveNow();
+}
+
+void GameExtras::flushPendingSave() {
+  if (_saveBatchDepth == 0 && _saveDirty) saveNow();
 }
 
 uint32_t GameExtras::dayFor(const Pet &pet) const {

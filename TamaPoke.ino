@@ -44,7 +44,7 @@
 
 // Version del firmware. Subir este numero en cada release (y manifest.json para
 // el instalador web). Se muestra en la pantalla de ajustes y por serie al arrancar.
-#define FW_VERSION "3.62.7"
+#define FW_VERSION "3.63.0"
 // Set to 1 only for a connected USB soak test. Serial printf can itself cause
 // a visible hitch, so normal builds keep frame diagnostics completely off.
 #define TAMAPOKE_FRAME_DIAG 0
@@ -333,6 +333,19 @@ uint8_t sackIvReward = XITEM_COUNT;
 // training submenu (the 5th icon): routes to the trainer for each stat.
 // ATK = punching bag, SPEED = lightning targets, DEF = timing gauge.
 bool trainOpen = false;
+
+// v3.62.9 training persistence guard. Training results can touch the pet save,
+// two daily missions and a rare IV item at once. Writing all of those NVS blobs
+// back-to-back inside the minigame render/touch path can stall flash long enough
+// to look like (or become) a reset. Keep gameplay state in RAM, then commit the
+// pet and extras on separate loop passes after the minigame has closed.
+uint8_t trainingPersistPhase = 0;
+uint32_t trainingPersistAfter = 0;
+
+static void queueTrainingPersist() {
+  trainingPersistPhase = 1;
+  trainingPersistAfter = millis() + 250UL;
+}
 
 // move picker, opened from the MOVES card page. Most learnsets are level 0, so
 // a level-up "you learned a move" prompt would almost never fire -- the moveset
@@ -1063,6 +1076,26 @@ void loop() {
   // activo persiste igual por los guardados de cada accion (comer/jugar/...).
   if (pet.savePending() && (screenOff || dimStage >= 1 || pet.sleeping)) {
     pet.flushSave();
+  }
+  if (extras.savePending() && (screenOff || dimStage >= 1 || pet.sleeping)) {
+    extras.flushPendingSave();
+  }
+
+  // v3.62.9: after a training screen closes, persist at most ONE NVS domain
+  // per loop pass. This removes the multi-second flash-write burst that could
+  // make training appear to crash/reboot while keeping all rewards durable.
+  if (!gameOpen && !sackOpen && !spdOpen && trainingPersistPhase &&
+      (int32_t)(now - trainingPersistAfter) >= 0) {
+    if (trainingPersistPhase == 1) {
+      if (pet.savePending()) pet.flushSave();
+      trainingPersistPhase = 2;
+      trainingPersistAfter = millis() + 160UL;
+    } else {
+      if (extras.savePending()) extras.flushPendingSave();
+      trainingPersistPhase = 0;
+      trainingPersistAfter = 0;
+    }
+    now = millis();
   }
 
   // anota la hora real cada 30 s (se persiste en cada save del juego)
@@ -1972,7 +2005,7 @@ void onSwipe(int dir) {
   if (pet.awaitingStarter()) return;  // bloqueado durante la eleccion de inicial
   if (menuOpen) { menuOpen = false; return; }   // any swipe closes the menu
   if (bagOpen) {
-    if (tmPendingMove) { tmPendingMove = 0; tmPendingType = T_NONE; return; }
+    if (tmPendingMove && tmPendingMove < MOVE_COUNT) { tmPendingMove = 0; tmPendingType = T_NONE; return; }
     uint8_t pages = bagTab == 0 ? 3 : 5;
     int p = (int)bagPage + (dir > 0 ? -1 : 1);
     if (p < 0 || p >= pages) bagOpen = false; else bagPage = (uint8_t)p;
@@ -2185,20 +2218,9 @@ void onTap(int16_t x, int16_t y) {
     gymOpen = false;
     return;
   }
-  if (pet.hasLearnOffer()) {
-    for (int i = 0; i < MOVE_SLOTS; i++) {
-      int ry = LEARN_ROW_Y(i);
-      if (x < 70 || x > 396 || y < ry || y > ry + 50) continue;
-      sfxPlay(SFX_TAP);
-      pet.acceptLearn(i);
-      return;
-    }
-    if (x >= 70 && x <= 396 && y >= LEARN_SKIP_Y && y <= LEARN_SKIP_Y + 44) {
-      sfxPlay(SFX_TAP);
-      pet.declineLearn();
-    }
-    return;   // modal: nothing else on screen responds until it is answered
-  }
+  // Training UI has visual priority over a move-learning offer. Keep touch
+  // priority identical so a level-up during training cannot make an invisible
+  // learn dialog steal the next training tap.
   if (trainOpen) {
     bool inPanel = (x >= TRAIN_X && x <= TRAIN_X + TRAIN_W &&
                     y >= TRAIN_Y && y <= TRAIN_Y + TRAIN_H);
@@ -2215,6 +2237,20 @@ void onTap(int16_t x, int16_t y) {
       return;
     }
     return;
+  }
+  if (pet.hasLearnOffer()) {
+    for (int i = 0; i < MOVE_SLOTS; i++) {
+      int ry = LEARN_ROW_Y(i);
+      if (x < 70 || x > 396 || y < ry || y > ry + 50) continue;
+      sfxPlay(SFX_TAP);
+      pet.acceptLearn(i);
+      return;
+    }
+    if (x >= 70 && x <= 396 && y >= LEARN_SKIP_Y && y <= LEARN_SKIP_Y + 44) {
+      sfxPlay(SFX_TAP);
+      pet.declineLearn();
+    }
+    return;   // modal: nothing else on screen responds until it is answered
   }
   // The menu is modal and has three independent ways out: the CLOSE row, a tap
   // anywhere on the dimmed area outside the panel, and any swipe (see onSwipe).
@@ -3307,9 +3343,11 @@ uint8_t uiCurrentScreen() {
   if (pickOpen) return SCR_PICK;
   if (lanOpen) return SCR_LAN;
   if (gymOpen) return gymPick ? SCR_GYMPICK : SCR_GYM;
-  if (pet.hasLearnOffer()) return SCR_LEARN;
+  // Match render()/touch priority exactly. A level-up move offer can appear
+  // while a training session is open; it must wait until training closes.
   if (gameOpen || sackOpen || spdOpen) return SCR_GAME;
   if (trainOpen) return SCR_TRAIN;
+  if (pet.hasLearnOffer()) return SCR_LEARN;
   if (menuOpen) return SCR_MENU;
   return SCR_MAIN;
 }
@@ -3730,8 +3768,11 @@ static uint8_t maybeTrainingIvReward(uint8_t primary, uint16_t score, uint16_t g
 static void finishDefense() {
   if (gameOverUntil) return;
   gameNewHi = gameScore > pet.gameHi;
+  extras.beginBatch();
   gameGain = pet.playResult(gameScore);
   gameIvReward = maybeTrainingIvReward(XITEM_IV_DEF, gameScore, 24, 32);
+  extras.endBatch(false);
+  queueTrainingPersist();
   sfxPlay(gameIvReward < XITEM_COUNT || (gameNewHi && gameScore) ? SFX_MEDAL : SFX_LEVEL);
   gameOverUntil = millis() ? millis() : 1;
 }
@@ -3758,12 +3799,22 @@ void leaveGame() {
 }
 
 void leaveSack() {
-  if (!sackOverUntil) pet.trainStrength(sackHits);
+  if (!sackOverUntil) {
+    extras.beginBatch();
+    pet.trainStrength(sackHits);
+    extras.endBatch(false);
+    queueTrainingPersist();
+  }
   sackOpen = false;
 }
 
 void leaveSpeed() {
-  if (!spdOverUntil) pet.trainSpeed(spdHits);
+  if (!spdOverUntil) {
+    extras.beginBatch();
+    pet.trainSpeed(spdHits);
+    extras.endBatch(false);
+    queueTrainingPersist();
+  }
   spdOpen = false;
 }
 
@@ -4038,8 +4089,11 @@ void renderSack() {
   // se acabaron los 15 s: aplicar entrenamiento
   if (now >= sackUntil) {
     sackNewHi = (sackHits > pet.strHi);
+    extras.beginBatch();
     sackGain = pet.trainStrength(sackHits);
     sackIvReward = maybeTrainingIvReward(XITEM_IV_ATK, sackHits, 25, 45);
+    extras.endBatch(false);
+    queueTrainingPersist();
     sfxPlay(sackIvReward < XITEM_COUNT || sackNewHi ? SFX_MEDAL : SFX_PLAY);
     sackOverUntil = now + 3500;
     gfx->flush();
@@ -4556,6 +4610,7 @@ int drawTypeChip(int x, int y, uint8_t type) {
 void drawMoveRow(int y, uint8_t mv, bool highlight, int16_t dex) {
   gfx->fillRoundRect(70, y, 326, 50, 12, highlight ? UI_BAR_WARN : UI_BG_DAY);
   gfx->drawRoundRect(70, y, 326, 50, 12, UI_INK);
+  if (mv >= MOVE_COUNT) mv = 0;  // corrupted/legacy slot: never index outside MOVE_TBL
   if (!mv) {
     gfx->setTextColor(UI_TRACK);
     uiSetTextSize(2);
@@ -4753,10 +4808,10 @@ static void btlSfxFor(const TurnLog &lg) {
   if (lg.inflicted) { sfxPlay(SFX_STATUS); return; }
   if (lg.damage && lg.effPct > 100) { sfxPlay(SFX_SUPER); return; }
   if (lg.damage) {
-    sfxPlay(lg.move && MOVE_TBL[lg.move].cat == MC_SPEC ? SFX_BEAM : SFX_HIT);
+    sfxPlay(lg.move && lg.move < MOVE_COUNT && MOVE_TBL[lg.move].cat == MC_SPEC ? SFX_BEAM : SFX_HIT);
     return;
   }
-  if (lg.move && MOVE_TBL[lg.move].cat == MC_STATUS && !lg.missed) sfxPlay(SFX_STATUS);
+  if (lg.move && lg.move < MOVE_COUNT && MOVE_TBL[lg.move].cat == MC_STATUS && !lg.missed) sfxPlay(SFX_STATUS);
 }
 
 static void btlNarrate(const Combatant &actor, const Combatant &target, const TurnLog &lg) {
@@ -5590,9 +5645,10 @@ void renderBattle() {
     for (int i = 0; i < MOVE_SLOTS; i++) {
       int x = BTL_CELL_X(i), y = BTL_CELL_Y(i);
       uint8_t mv = btlYou.moves[i];
-      gfx->fillRoundRect(x, y, BTL_CELL_W, BTL_CELL_H, 10, mv ? UI_BG_DAY : UI_TRACK);
+      bool validMove = mv && mv < MOVE_COUNT;
+      gfx->fillRoundRect(x, y, BTL_CELL_W, BTL_CELL_H, 10, validMove ? UI_BG_DAY : UI_TRACK);
       gfx->drawRoundRect(x, y, BTL_CELL_W, BTL_CELL_H, 10, UI_INK);
-      if (!mv) continue;
+      if (!validMove) continue;
       gfx->setTextColor(UI_INK);
       uiSetTextSize(1);
       uiSetCursor(x + 10, y + 12);
@@ -5733,6 +5789,12 @@ void battleTap(int16_t x, int16_t y) {
     btlMsgCount = 0;
     if (btlOver) {
       btlFreeSprites();
+      // A special battle returns directly to its hub rather than the generic
+      // win sheet. Stop the victory/battle track at that exact transition;
+      // otherwise the boss hub could inherit the battle BGM.
+      audioMusic(MUS_NONE);
+      btlMenu = 0;
+      btlBossPhase2 = false;
       battleOpen = false;
       if (btlTower) { btlTower = false; towerOpen = true; }
       if (btlBoss) { btlBoss = false; bossOpen = true; }
@@ -6063,8 +6125,11 @@ void renderSpeed() {
 
   if (now >= spdUntil) {
     spdNewHi = (spdHits > pet.spdHi);
+    extras.beginBatch();
     spdGain = pet.trainSpeed(spdHits);
     spdIvReward = maybeTrainingIvReward(XITEM_IV_SPE, spdHits, 10, 18);
+    extras.endBatch(false);
+    queueTrainingPersist();
     sfxPlay(spdIvReward < XITEM_COUNT || spdNewHi ? SFX_MEDAL : SFX_PLAY);
     spdOverUntil = now + 3500;
     gfx->flush();
@@ -6969,12 +7034,13 @@ void renderBag() {
     gfx->print("교체할 기술을 선택하세요");
     for (int i = 0; i < MOVE_SLOTS; i++) {
       int y = 158 + i * 52;
+      uint8_t known = pet.moves[i] < MOVE_COUNT ? pet.moves[i] : 0;
       gfx->fillRoundRect(76, y, 314, 44, 10, UI_BG_DAY);
-      gfx->drawRoundRect(76, y, 314, 44, 10, typeColor(MOVE_TBL[pet.moves[i]].type));
+      gfx->drawRoundRect(76, y, 314, 44, 10, typeColor(known ? MOVE_TBL[known].type : T_NORMAL));
       gfx->setTextColor(UI_INK);
       uiSetTextSize(2);
       uiSetCursor(94, y + 12);
-      gfx->print(localizedMoveName(pet.moves[i]));
+      gfx->print(localizedMoveName(known));
     }
     gfx->setTextColor(UI_TRACK);
     uiSetTextSize(2); uiSetCursor(CX - uiTextHalfWidth("취소", 2), 390); gfx->print("취소");
@@ -7433,6 +7499,11 @@ void startTowerBattle() {
   if (lvl > MAX_LEVEL) lvl = MAX_LEVEL;
   startBattle(dex, (uint8_t)lvl);
   if (!battleOpen) return;
+  // render() gives towerOpen priority over battleOpen. Leaving this true meant
+  // the battle DID start internally but the tower hub stayed painted on top,
+  // while taps were already routed to battleTap(). Close the hub only after a
+  // successful battle start so failures still leave the player on the tower.
+  towerOpen = false;
   for (uint8_t i = 0; i < btlSquadN; i++) extras.applyTowerBuffs(btlSquad[i]);
   btlYou = btlSquad[btlSquadAt];
   btlHpShown[0] = btlYou.maxHp;

@@ -348,7 +348,7 @@ public:
   // offline catch-up -- which can cross a dozen levels in one go -- queues its
   // offers instead of firing a dozen dialogs at boot.
   uint8_t lastLearnLevel = 0;
-  uint8_t learnQueue[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+  uint8_t learnQueue[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   uint8_t learnQCount = 0;
   void checkLearnGates();
   bool hasLearnOffer() const { return learnQCount > 0; }

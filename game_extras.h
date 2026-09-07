@@ -87,6 +87,15 @@ public:
   void giveItem(uint8_t id, uint8_t count = 1);
   void giveTm(uint8_t type, uint8_t count = 1);
   bool consumeTm(uint8_t type);
+
+  // v3.62.9: training can award mission progress + IV items in one result.
+  // Batch those writes so rapid minigame completion never performs several
+  // full Preferences commits back-to-back on the render loop. endBatch(false)
+  // leaves one consolidated save pending for the main loop to flush safely.
+  void beginBatch();
+  void endBatch(bool flushNow = true);
+  bool savePending() const { return _saveDirty && _saveBatchDepth == 0; }
+  void flushPendingSave();
   uint8_t bestTmMove(const Pet &pet, uint8_t type) const;
   bool shinyBoostArmed() const { return _shinyBoost; }
   bool consumeShinyBoostForEgg();
@@ -243,12 +252,16 @@ private:
   uint8_t _eventRewardCount = 0;
   uint32_t _lastEventMinute = 0;
 
+  uint8_t _saveBatchDepth = 0;
+  bool _saveDirty = false;
+
   uint32_t dayFor(const Pet &pet) const;
   void rollMissions(uint32_t day);
   void rollEvent(Pet &pet);
   void rollExplorationReward(Pet &pet);
   void rollTowerBuffChoices();
   void save();
+  void saveNow();
 };
 
 extern GameExtras extras;

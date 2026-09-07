@@ -1,0 +1,64 @@
+TamaPoke KO v3.62.9 FINAL VALIDATION - Runtime Stability
+
+목적
+- 배틀타워 진입 실패를 화면/입력 상태 전환 레벨에서 수정합니다.
+- 3마리 타입 보스 승리 후 허브로 복귀할 때 잔류 BGM을 즉시 정리합니다.
+- 훈련 중 간헐적인 화면 튕김/정지/리셋 가능성을 줄이기 위해 입력 모달 우선순위와 NVS 저장 burst를 정리합니다.
+- v3.62.8 PUT4 proto=4 Web Serial 설치 UX와 85/100ms 프레임 cadence는 유지합니다.
+
+핵심 변경 검증
+1) Battle Tower
+- startTowerBattle() -> startBattle() 성공 후 battleOpen 확인
+- 성공한 경우에만 towerOpen=false
+- 전투 생성 실패 시 tower hub 유지
+- render()의 towerOpen 우선순위와 onTap()의 battleOpen 우선순위가 더 이상 충돌하지 않음
+
+2) Type Boss / special battle BGM
+- battleTap()의 btlOver narration-dismiss 경로에서 audioMusic(MUS_NONE)
+- hub 복귀 전 btlMenu=0 / btlBossPhase2=false
+- audioTask의 MUS_NONE 전환에서 이전 music synth envelope allOff
+
+3) Training stability
+- render/uiCurrentScreen/onTap의 training vs learn-offer 우선순위 정렬
+- Pet::playResult/trainStrength/trainSpeed는 즉시 save() 대신 pendingSave=true
+- GameExtras beginBatch/endBatch(false)/dirty save 사용
+- training result/early-exit 5개 경로에서 mission/IV reward 저장을 batch 처리
+- minigame 종료 후 Pet NVS와 Extras NVS를 서로 다른 loop pass로 분산
+- dim/off autosave에서도 Pet/Extras pending save를 안전하게 flush
+
+정적 검증 결과
+- Python tools py_compile: PASS
+- tools/verify_runtime_stability.py: PASS
+- tools/verify_evolution_levels.py: PASS
+- tools/verify_sd_serial_protocol.py: PASS (fw=3.62.9, proto=4 유지)
+- tools/verify_release_storage_policy.py: PASS
+- tools/verify_base_pack_policy.py: PASS
+- Installer JavaScript node --check: PASS
+- Installer duplicate HTML ID + v3.62.9 marker: PASS
+- GitHub Actions YAML parse: PASS
+- GITHUB_WORKFLOW_COPY.txt == .github/workflows/main.yml: PASS
+- modified C++ brace-count sanity: PASS
+
+Live-generated checks
+- tools/verify_canonical_forms.py / tools/verify_regional_evolutions.py는 현재 패키지에 live-generated tools/pmd_catalog.json이 없으므로 로컬에서 실행하지 않았습니다.
+- GitHub Actions는 최신 PMDCollab/PokeAPI sync 이후 해당 generated catalog 검사를 수행합니다.
+- 실제 ESP32-S3 Arduino compile 역시 GitHub Actions 성공 여부가 최종 권위입니다.
+
+중요
+- v3.62.9는 런타임 안정화 패치이며 도감/스프라이트 ID/스프라이트 내용은 바꾸지 않습니다.
+- v3.62.8에서 스프라이트 설치가 정상 완료됐다면 다시 받을 필요가 없습니다.
+- 이전 sprite 전송이 중간 실패했다면 해당 지역 또는 전체 sync를 다시 실행하면 됩니다.
+- 기존 GitHub tools/catalog_lock.json은 반드시 보존해야 합니다.
+
+Core SHA256
+f4faedaa148f454a1f745679dcff7fba3c26c18a8ff11e31503965c71e7e8990  TamaPoke.ino
+7edc594fe5f4343462d0d66cd6514bed0275801d621aa79092b1a29f619ac498  audio.cpp
+ae29da17159c95ab5503f87e661256823a9439b9be843019fd51bce9b816a815  pet.cpp
+804c8d6a3c7276f4b2abd1990f436cab5d70ed99b1a9325c063c9e0553dd9960  game_extras.cpp
+5f007dfc5cb003ffce3d3ca15e0677e57e6699c24257ef64a54effce771253f1  game_extras.h
+5dc62dc801bcd5cb7318c1838e37212d10d227c09859d022ff4a38807ffed2b4  TamaPoke-KO-OneClick-Installer.html
+67f26d33af9b950200b48a9f653a57bc738a1e02ae162eb024c907a1d095eda5  .github/workflows/main.yml
+4f6c23fae5590df6b8e58f20f04439c83c745b0304bc1d33144bb95d14873660  tools/verify_runtime_stability.py
+b53826d13d99805a327c619d474bdcdc8ac4c90b2418c320d135a73a01569376  tools/verify_sd_serial_protocol.py
+6dde9826d28138ace3b925cd484e5ac34d36f4f210143c7372ca4c9ff44fd2c4  tools/verify_base_pack_policy.py
+c5bc434b93cb98d31bb0411cfeb2896f3b4b6d3bea86ec911f0391fc58a9862b  PROJECT_STATE_v3.62.9.json

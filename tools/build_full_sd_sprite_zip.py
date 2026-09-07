@@ -28,7 +28,7 @@ BASE_RANGES={
     'kanto':(1,151),'johto':(152,251),'hoenn':(252,386),'sinnoh':(387,493),
     'unova':(494,649),'kalos':(650,721),'alola':(722,809),
 }
-UA='TamaPoke-v3.62.7-FullSDSpriteBundle/1.0 (+noncommercial classroom project)'
+UA='TamaPoke-v3.62.8-FullSDSpriteBundle/1.0 (+noncommercial classroom project)'
 BANNED=('altcolor','alt colour','alternate','cutscene','beta')
 
 
