@@ -274,7 +274,7 @@ jobs:
           cp "$GITHUB_WORKSPACE"/*.cpp "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
           cp "$GITHUB_WORKSPACE"/*.h "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
 
-      - name: Compile TamaPoke v3.62.9 runtime-stable catalog firmware
+      - name: Compile TamaPoke v3.63.0 learnset-expanded runtime-stable firmware
         run: |
           set -euxo pipefail
           mkdir -p "$GITHUB_WORKSPACE/build"
@@ -299,7 +299,18 @@ jobs:
             "$GITHUB_WORKSPACE/oneclick-firmware" \
             "$GITHUB_WORKSPACE/index.html"
           test -s "$GITHUB_WORKSPACE/index.html"
-          grep -q '3.62.9-ko-runtime-stability-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36' "$GITHUB_WORKSPACE/index.html"
+          INSTALLER_VERSION="$(python3 - <<'PYVER'
+          import re
+          from pathlib import Path
+          s=Path('TamaPoke-KO-OneClick-Installer.html').read_text(encoding='utf-8')
+          m=re.search(r'const\s+FW_VERSION\s*=\s*["\']([^"\']+)["\']', s)
+          if not m:
+              raise SystemExit('installer FW_VERSION marker not found')
+          print(m.group(1))
+          PYVER
+          )"
+          echo "installer marker: $INSTALLER_VERSION"
+          grep -Fq "$INSTALLER_VERSION" "$GITHUB_WORKSPACE/index.html"
 
       - name: Publish full sprite ZIP to one rolling GitHub Release
         env:
@@ -416,7 +427,7 @@ jobs:
           e=[x for x in c['entries'] if x.get('enabled')]
           f=[x for x in e if x.get('kind')=='form']
           out=[
-            'TamaPoke KO v3.62.9 PMDCatalog - Runtime Stability + SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolution + Framed PUT4 + Mega36',
+            f'TamaPoke KO v{fw} PMDCatalog - Learnset Expansion + Runtime Stability + SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolution + Framed PUT4 + Mega36',
             f'firmware={fw}',
             f"national_dex_max={c['national_dex_max']}",
             f"dex_count={c['dex_count']}",
@@ -453,7 +464,8 @@ jobs:
           if git diff --cached --quiet; then
             echo "No generated changes to commit"
           else
-            git commit -m "Build v3.62.9 runtime-stable canonical PMDCollab catalog [skip ci]"
+            FW_COMMIT_VERSION="$(sed -n 's/^#define FW_VERSION "\([^"]*\)"/\1/p' TamaPoke.ino | head -1)"
+            git commit -m "Build v${FW_COMMIT_VERSION} learnset-expanded runtime-stable PMDCollab catalog [skip ci]"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
@@ -498,5 +510,5 @@ jobs:
 
       - name: Show TamaPoke installer URL
         run: |
-          echo "### TamaPoke v3.62.9 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
+          echo "### TamaPoke GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
           echo "${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
