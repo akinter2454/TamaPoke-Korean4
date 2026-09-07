@@ -1,4 +1,4 @@
-name: TamaPoke v3.62.5 PMDCatalog - Canonical Forms + Regional Evolutions + Reliable SD Sync + Mega36 GitHub Pages
+name: TamaPoke v3.62.7 PMDCatalog - SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolutions + Reliable SD Sync + Mega36 GitHub Pages
 
 on:
   workflow_dispatch:
@@ -14,6 +14,7 @@ jobs:
   build:
     permissions:
       contents: write
+      actions: write
       pages: write
       id-token: write
     runs-on: ubuntu-latest
@@ -44,6 +45,10 @@ jobs:
           cat "$GITHUB_WORKSPACE/tools/regional_evolution_report.txt"
           python3 "$GITHUB_WORKSPACE/tools/verify_canonical_forms.py"
           cat "$GITHUB_WORKSPACE/tools/canonical_forms_report.txt"
+          python3 "$GITHUB_WORKSPACE/tools/verify_base_pack_policy.py"
+          cat "$GITHUB_WORKSPACE/tools/base_pack_policy_report.txt"
+          python3 "$GITHUB_WORKSPACE/tools/verify_release_storage_policy.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_full_sd_bundle.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_sd_serial_protocol.py"
           grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'MEGA_EVOLVE_LEVEL = 70' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
@@ -138,7 +143,7 @@ jobs:
               print('WARNING: upstream PokeAPI National Dex currently reports below 1025')
           PY
 
-      - name: Verify v3.62.5 canonical forms + regional evolutions + reliable SD sync + existing guards
+      - name: Verify v3.62.7 single-release storage + base-pack guard + canonical forms + regional evolutions + reliable SD sync
         run: |
           set -euxo pipefail
           grep -q 'targetFrameMs = activeAnimated ? 85UL : 100UL' "$GITHUB_WORKSPACE/TamaPoke.ino"
@@ -221,6 +226,25 @@ jobs:
             exit 1
           fi
 
+      - name: Build PC full microSD sprite ZIP
+        run: |
+          set -euxo pipefail
+          python3 "$GITHUB_WORKSPACE/tools/build_full_sd_sprite_zip.py"
+          python3 - <<'PYBUNDLE'
+          import json,zipfile
+          from pathlib import Path
+          m=json.loads(Path('tools/web_extra/sprite-bundle.json').read_text(encoding='utf-8'))
+          z=Path('tools/web_extra')/m['filename']
+          assert z.is_file() and z.stat().st_size>1024*1024, z
+          with zipfile.ZipFile(z) as q:
+              bad=q.testzip(); assert bad is None,bad
+              names=set(q.namelist())
+              assert 'README-SD-KO.txt' in names and 'BUNDLE-INFO.json' in names and 'SHA256SUMS.txt' in names
+              assert any(n.startswith('mons/p001.bin') for n in names)
+          print('full microSD ZIP OK:',z,z.stat().st_size,m['sha256'])
+          PYBUNDLE
+          cat "$GITHUB_WORKSPACE/tools/web_extra/full-sprite-bundle-report.txt"
+
       - name: Install Arduino CLI
         uses: arduino/setup-arduino-cli@v2
 
@@ -246,7 +270,7 @@ jobs:
           cp "$GITHUB_WORKSPACE"/*.cpp "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
           cp "$GITHUB_WORKSPACE"/*.h "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
 
-      - name: Compile TamaPoke v3.62.5 canonical-form catalog firmware
+      - name: Compile TamaPoke v3.62.7 SingleRelease catalog firmware
         run: |
           set -euxo pipefail
           mkdir -p "$GITHUB_WORKSPACE/build"
@@ -271,7 +295,89 @@ jobs:
             "$GITHUB_WORKSPACE/oneclick-firmware" \
             "$GITHUB_WORKSPACE/index.html"
           test -s "$GITHUB_WORKSPACE/index.html"
-          grep -q '3.62.5-ko-canonical-forms-regional-evolution-reliable-fullsync-mega36' "$GITHUB_WORKSPACE/index.html"
+          grep -q '3.62.7-ko-single-release-fullsd-canonical-forms-regional-evolution-reliable-fullsync-mega36' "$GITHUB_WORKSPACE/index.html"
+
+      - name: Publish full sprite ZIP to one rolling GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          readarray -t META < <(python3 - <<'PYREL'
+          import json
+          from pathlib import Path
+          m=json.loads(Path('tools/web_extra/sprite-bundle.json').read_text(encoding='utf-8'))
+          print(m['version']); print(m['filename'])
+          PYREL
+          )
+          VER="${META[0]}"
+          BUILD_FILE="${META[1]}"
+          TAG="sprites-current"
+          STABLE_FILE="TamaPoke-SD-Sprites-Current-Full.zip"
+          BUILD_ASSET="$GITHUB_WORKSPACE/tools/web_extra/$BUILD_FILE"
+          STABLE_ASSET="$RUNNER_TEMP/$STABLE_FILE"
+          NOTES="$RUNNER_TEMP/sprite-release-notes.txt"
+          cp "$BUILD_ASSET" "$STABLE_ASSET"
+          cat > "$NOTES" <<EOF
+          TamaPoke KO 현재 버전(v${VER}) PC용 microSD 전체 스프라이트 ZIP입니다.
+
+          이 Release는 저장공간 낭비를 막기 위한 단일 rolling Release입니다.
+          새 빌드가 성공하면 같은 ZIP asset을 교체하므로 이전 대용량 ZIP이 누적되지 않습니다.
+
+          - microSD의 기존 /mons 폴더를 백업/삭제한 뒤 ZIP의 mons 폴더를 SD 루트에 복사하세요.
+          - AltColor / Alternate / Cutscene / Beta 표현용 슬롯은 독립 종으로 포함하지 않습니다.
+          - PMD SpriteCollab 리소스는 비상업적 사용 및 원 프로젝트의 크레딧/라이선스 조건을 따릅니다.
+          EOF
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            IMMUTABLE="$(gh release view "$TAG" --json isImmutable --jq '.isImmutable')"
+            if [ "$IMMUTABLE" = "true" ]; then
+              echo 'sprites-current Release is immutable; rolling asset replacement is impossible. Disable GitHub Immutable Releases for this repository or remove/recreate this sprite Release manually.' >&2
+              exit 1
+            fi
+            gh release edit "$TAG" --title "TamaPoke current full SD sprites (v${VER})" --notes-file "$NOTES"
+          else
+            gh release create "$TAG" --title "TamaPoke current full SD sprites (v${VER})" --notes-file "$NOTES" --latest=false
+          fi
+          gh release upload "$TAG" "$STABLE_ASSET" --clobber
+
+          # v3.62.6 and earlier created one large Release per firmware version.
+          # Remove only those auto-generated sprite Releases so the large assets do not accumulate.
+          mapfile -t OLD_TAGS < <(gh release list --limit 100 --json tagName --jq '.[].tagName' | grep -E '^sprites-v[0-9]+\.[0-9]+\.[0-9]+$' || true)
+          for OLD_TAG in "${OLD_TAGS[@]}"; do
+            [ "$OLD_TAG" = "$TAG" ] && continue
+            echo "Removing legacy auto-generated sprite Release: $OLD_TAG"
+            gh release delete "$OLD_TAG" -y --cleanup-tag
+          done
+
+          python3 - <<'PYURL'
+          import json,os
+          from pathlib import Path
+          p=Path('tools/web_extra/sprite-bundle.json')
+          m=json.loads(p.read_text(encoding='utf-8'))
+          m['generated_filename']=m.get('filename')
+          m['filename']='TamaPoke-SD-Sprites-Current-Full.zip'
+          m['release_tag']='sprites-current'
+          m['storage_policy']='single rolling GitHub Release; no full-ZIP Actions artifact'
+          m['download_url']=f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/releases/download/sprites-current/{m['filename']}"
+          p.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(m['download_url'])
+          PYURL
+
+
+      - name: Remove legacy full-sprite Actions artifact backups
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          mapfile -t OLD_ARTIFACTS < <(
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+              --jq '.artifacts[] | select(.name | test("^TamaPoke-v[0-9]+\\.[0-9]+\\.[0-9]+-full-sd-sprites$")) | [.id,.name] | @tsv' || true
+          )
+          for ROW in "${OLD_ARTIFACTS[@]}"; do
+            [ -z "$ROW" ] && continue
+            IFS=$'\t' read -r ARTIFACT_ID ARTIFACT_NAME <<< "$ROW"
+            echo "Deleting legacy large Actions artifact: $ARTIFACT_NAME (id=$ARTIFACT_ID)"
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}"
+          done
 
       - name: Prepare complete GitHub Pages site
         run: |
@@ -288,6 +394,9 @@ jobs:
           cp "$GITHUB_WORKSPACE/tools/sprite_mapping_report.txt" "$GITHUB_WORKSPACE/site/sprite-mapping-report.txt"
           cp "$GITHUB_WORKSPACE/tools/regional_evolution_report.txt" "$GITHUB_WORKSPACE/site/regional-evolution-report.txt"
           cp "$GITHUB_WORKSPACE/tools/canonical_forms_report.txt" "$GITHUB_WORKSPACE/site/canonical-forms-report.txt"
+          cp "$GITHUB_WORKSPACE/tools/base_pack_policy_report.txt" "$GITHUB_WORKSPACE/site/base-pack-policy-report.txt"
+          cp "$GITHUB_WORKSPACE/tools/web_extra/sprite-bundle.json" "$GITHUB_WORKSPACE/site/sprite-bundle.json"
+          cp "$GITHUB_WORKSPACE/tools/web_extra/full-sprite-bundle-report.txt" "$GITHUB_WORKSPACE/site/full-sprite-bundle-report.txt"
           if [ -d "$GITHUB_WORKSPACE/tools/web_extra/previews" ]; then cp -R "$GITHUB_WORKSPACE/tools/web_extra/previews" "$GITHUB_WORKSPACE/site/previews"; fi
           cp "$GITHUB_WORKSPACE/PMDCOLLAB_CREDITS.txt" "$GITHUB_WORKSPACE/site/"
           python3 - <<'PY'
@@ -303,7 +412,7 @@ jobs:
           e=[x for x in c['entries'] if x.get('enabled')]
           f=[x for x in e if x.get('kind')=='form']
           out=[
-            'TamaPoke KO v3.62.5 PMDCatalog - Canonical Forms + Regional Evolution + Reliable SD Sync + Mega36',
+            'TamaPoke KO v3.62.7 PMDCatalog - SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolution + Reliable SD Sync + Mega36',
             f'firmware={fw}',
             f"national_dex_max={c['national_dex_max']}",
             f"dex_count={c['dex_count']}",
@@ -316,6 +425,7 @@ jobs:
             'evolution=level-only; split evolution uses Eevee-style branch selection',
             'regional_evolution=form-aware Alola/Galar/Hisui; White Basculin is Hisui-origin; Paldea Wooper guard enabled',
             'sprites=PMDCollab behavior pixel sprites only',
+            'pc_sprite_bundle=one stable sprites-current Release asset only; no full-ZIP Actions artifact; installer reads sprite-bundle.json',
             'power=5min auto screen-off; physical side button only wake; screen-off SFX muted',
             'gyms=galar sword ladder + paldea gym/elite4/champion',
             'badges=galar/paldea original device pixel emblems',
@@ -339,7 +449,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No generated changes to commit"
           else
-            git commit -m "Build v3.62.5 canonical-form PMDCollab catalog [skip ci]"
+            git commit -m "Build v3.62.7 SingleRelease canonical PMDCollab catalog [skip ci]"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
@@ -384,5 +494,5 @@ jobs:
 
       - name: Show TamaPoke installer URL
         run: |
-          echo "### TamaPoke v3.62.5 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
+          echo "### TamaPoke v3.62.7 GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
           echo "${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
