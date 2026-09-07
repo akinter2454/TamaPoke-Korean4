@@ -1,4 +1,4 @@
-TamaPoke v3.62.7 PMDCollab behavior-sprite pack report + previews
+TamaPoke v3.62.8 PMDCollab behavior-sprite pack report + previews
 Source: https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/tracker.json
 Policy: real PMDCollab animated pixel assets only; approved Mega36 only; no G-Max/static-art fallback
 
