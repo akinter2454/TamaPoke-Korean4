@@ -140,7 +140,7 @@ esp-web-install-button{display:inline-block}esp-web-install-button[install-unsup
   <div class="card">
     <h2><span class="step">2</span>microSD 스프라이트 넣기</h2>
     <p>펌웨어 설치 후 보드를 정상 부팅하고 microSD 카드를 꽂으세요. <b>기기 연결</b>을 누른 뒤 원하는 지역을 선택하면 스프라이트를 USB Serial로 전송합니다.</p>
-    <p class="small">지역 하나가 약 20–42MB라 몇 분 이상 걸릴 수 있습니다. 전송 중에는 탭과 USB 연결을 유지하세요. <b>v3.62.5부터 연결 직후 펌웨어/SD 상태를 먼저 확인한 뒤 전송 버튼이 활성화됩니다.</b></p>
+    <p class="small">지역 하나가 약 20–42MB라 몇 분 이상 걸릴 수 있습니다. 전송 중에는 탭과 USB 연결을 유지하세요. <b>v3.62.6부터 기본 지역 팩도 고정된 검수 버전에서만 받고, 전송 전에 지역 범위/파일 형식까지 검사합니다. 연결 직후 펌웨어/SD 상태를 먼저 확인한 뒤 전송 버튼이 활성화됩니다.</b></p>
     <div class="row">
       <button id="connect">🔌 기기 연결</button>
       <span id="serialState" class="small">연결 안 됨</span>
@@ -169,9 +169,15 @@ esp-web-install-button{display:inline-block}esp-web-install-button[install-unsup
     </div>
     <div id="spritePanelAll" class="sprite-tab-panel">
       <div class="full-install">
-        <b>microSD의 스프라이트를 현재 카탈로그와 한 번에 맞춥니다.</b>
-        <p class="small">관동→성도→호연→신오→하나→칼로스→알로라 기본팩을 차례로 전송한 뒤, 가라르·히스이·팔데아·공식폼·Mega36 전체를 현재 ID로 덮어씁니다. 먼저 과거 버전이 잘못 species로 만든 <b>AltColor / Alternate / Cutscene / Beta</b> 스프라이트 파일을 자동 정리합니다. 플레이 세이브는 삭제하지 않으며, 해당 잘못된 폼으로 저장된 포켓몬은 펌웨어가 정상 종으로 자동 복구합니다.</p>
-        <button id="installAllSprites" class="primary" disabled>⬇ 모든 스프라이트 한 번에 설치/동기화</button>
+        <b>💾 권장: PC에 전체 스프라이트 ZIP을 한 번 저장</b>
+        <p class="small">현재 빌드의 관동~팔데아·공식폼·Mega36을 모두 합친 <code>mons/</code> 폴더를 ZIP 하나로 받습니다. 기기의 전원을 끄고 microSD를 PC에 연결한 뒤, 기존 <code>/mons</code>를 백업/삭제하고 ZIP의 <code>mons</code> 폴더를 SD 루트에 복사하면 됩니다. Web Serial로 수천 파일을 다시 전송할 필요가 없습니다. <b>v3.62.7부터 대용량 ZIP은 <code>sprites-current</code> GitHub Release 하나에만 저장되고, 새 빌드가 같은 파일을 교체합니다. Actions Artifact에는 전체 ZIP을 올리지 않습니다.</b></p>
+        <button id="downloadFullSpriteZip" class="green" style="width:100%">💾 PC용 전체 스프라이트 ZIP 다운로드</button>
+        <div id="spriteBundleInfo" class="small" style="margin-top:8px">빌드 정보 확인 전</div>
+      </div>
+      <div class="full-install" style="margin-top:12px">
+        <b>USB로 직접 전체 동기화</b>
+        <p class="small">카드리더기를 사용할 수 없을 때만 권장합니다. 관동→성도→호연→신오→하나→칼로스→알로라 기본팩을 <b>검수된 고정 commit</b>에서 받아 지역 ID/TPK 형식을 확인한 뒤 차례로 전송하고, 가라르·히스이·팔데아·공식폼·Mega36 전체를 현재 ID로 덮어씁니다. 먼저 과거 버전이 잘못 species로 만든 <b>AltColor / Alternate / Cutscene / Beta</b> 스프라이트 파일을 자동 정리합니다. 플레이 세이브는 삭제하지 않습니다.</p>
+        <button id="installAllSprites" class="primary" disabled>⬇ USB로 모든 스프라이트 설치/동기화</button>
       </div>
     </div>
     <div id="spritePanelAudit" class="sprite-tab-panel">
@@ -186,7 +192,7 @@ esp-web-install-button{display:inline-block}esp-web-install-button[install-unsup
       <button id="auditMore" class="hidden" style="margin-top:10px">더 보기</button>
     </div>
     <p class="small">자동 전송이 막히면 <label style="text-decoration:underline;cursor:pointer">생성된 <code>.pak</code> 직접 선택<input id="pakFiles" type="file" accept=".pak" multiple hidden disabled></label>을 사용할 수 있습니다.</p>
-    <p class="small"><a href="./sprite-manifest.json" download>스프라이트 팩 목록</a> · <a href="./sprite-audit.json" download>스프라이트 ID/원본 매핑</a> · <a href="./sprite-mapping-report.txt" download>매핑 검수 보고서</a> · <a href="./regional-evolution-report.txt" download>지역폼 진화 보고서</a> · <a href="./canonical-forms-report.txt" download>공식폼/AltColor 정리 보고서</a> · <a href="./pmd_catalog_report.txt" download>카탈로그 보고서</a> · <a href="./pmd_sprite_report.txt" download>스프라이트 보고서</a></p>
+    <p class="small"><a href="./sprite-manifest.json" download>스프라이트 팩 목록</a> · <a href="./sprite-audit.json" download>스프라이트 ID/원본 매핑</a> · <a href="./sprite-mapping-report.txt" download>매핑 검수 보고서</a> · <a href="./regional-evolution-report.txt" download>지역폼 진화 보고서</a> · <a href="./canonical-forms-report.txt" download>공식폼/AltColor 정리 보고서</a> · <a href="./base-pack-policy-report.txt" download>기본팩 검수 보고서</a> · <a href="./full-sprite-bundle-report.txt" download>PC 전체 ZIP 보고서</a> · <a href="./pmd_catalog_report.txt" download>카탈로그 보고서</a> · <a href="./pmd_sprite_report.txt" download>스프라이트 보고서</a></p>
     <div class="bar" id="bar"><div></div></div>
     <pre id="log"></pre>
   </div>
@@ -218,7 +224,7 @@ const EMBEDDED_FIRMWARE = {
   boot_app0: "",
   app: ""
 };
-const FW_VERSION = "3.62.5-ko-canonical-forms-regional-evolution-reliable-fullsync-mega36";
+const FW_VERSION = "3.62.7-ko-single-release-fullsd-canonical-forms-regional-evolution-reliable-fullsync-mega36";
 const EMBEDDED_SPRITE_PAKS = {};
 
 const OFFSETS = {
@@ -390,7 +396,7 @@ async function preflightSd() {
   await writer.write(enc.encode('SDINFO\n'));
   const line = await waitForPrefix('SDINFO ', 12000);
   if (!line) {
-    transferError = '기기가 SDINFO에 응답하지 않습니다. v3.62.5 이상 펌웨어인지 확인하고 기기를 재부팅한 뒤 다시 연결하세요.';
+    transferError = '기기가 SDINFO에 응답하지 않습니다. v3.62.6 이상 펌웨어인지 확인하고 기기를 재부팅한 뒤 다시 연결하세요.';
     return false;
   }
   if (!line.startsWith('SDINFO OK')) {
@@ -399,7 +405,7 @@ async function preflightSd() {
   }
   const pm=line.match(/proto=(\d+)/);
   if(!pm || Number(pm[1]) < 3) {
-    transferError = '현재 펌웨어의 SD 전송 프로토콜이 오래되었습니다. v3.62.5 펌웨어를 먼저 설치하고 재부팅하세요.';
+    transferError = '현재 펌웨어의 SD 전송 프로토콜이 오래되었습니다. v3.62.6 펌웨어를 먼저 설치하고 재부팅하세요.';
     return false;
   }
   log('SD 사전 점검: ' + line);
@@ -542,7 +548,7 @@ connectBtn.addEventListener('click', async () => {
       document.getElementById('serialState').textContent = '⚠ 연결됨 · SD/펌웨어 점검 필요';
       document.getElementById('serialState').className = 'small bad';
       log('사전 점검 실패: ' + transferError);
-      log('기기를 재부팅한 뒤 다시 연결하세요. 계속 안 되면 v3.62.5 펌웨어를 먼저 설치하세요.');
+      log('기기를 재부팅한 뒤 다시 연결하세요. 계속 안 되면 v3.62.6 펌웨어를 먼저 설치하세요.');
       await closeSerialQuietly();
       connectBtn.disabled = false;
       return;
@@ -560,21 +566,49 @@ connectBtn.addEventListener('click', async () => {
   }
 });
 
-const PAK_BASES = [
-  'https://raw.githubusercontent.com/DylanPDao/TamaPoke/main/web/',
-  'https://github.com/DylanPDao/TamaPoke/releases/latest/download/'
-];
+// v3.62.6 BasePackGuard.
+// The Gen1-7 base packs are immutable, pinned to the exact audited upstream
+// commit that built all seven packs with normal=/sprite/NNNN and
+// shiny=/sprite/NNNN/0000/0001.  Never follow mutable main/latest URLs here.
+const BASE_PACK_COMMIT = '7d5a2b3f4a4bee4f107cdae77ad13949dddfc615';
+const BASE_PACK_URL = `https://raw.githubusercontent.com/DylanPDao/TamaPoke/${BASE_PACK_COMMIT}/web/`;
+const BASE_PACK_RANGES = {
+  kanto:[1,151], johto:[152,251], hoenn:[252,386], sinnoh:[387,493],
+  unova:[494,649], kalos:[650,721], alola:[722,809]
+};
+
+function validateBasePak(region, items) {
+  const range=BASE_PACK_RANGES[region];
+  if(!range) throw new Error(`알 수 없는 기본팩 지역: ${region}`);
+  if(!Array.isArray(items) || !items.length) throw new Error(`${region} 기본팩이 비어 있습니다.`);
+  const seen=new Set();
+  let sprites=0;
+  for(const item of items){
+    const name=String(item.name||'');
+    if(seen.has(name)) throw new Error(`${region} 기본팩 중복 파일: ${name}`);
+    seen.add(name);
+    if(name==='mons/thumbs.bin') continue;
+    const m=name.match(/^mons\/(ps?)(\d{3,4})\.bin$/);
+    if(!m) throw new Error(`${region} 기본팩 허용되지 않은 파일: ${name}`);
+    const id=Number(m[2]);
+    if(id<range[0] || id>range[1]) throw new Error(`${region} 기본팩 ID 범위 오류: ${name} (허용 ${range[0]}-${range[1]})`);
+    if(!item.data || item.data.length<4) throw new Error(`${name}: 비어 있거나 손상된 스프라이트`);
+    const magic=new TextDecoder().decode(item.data.slice(0,4));
+    if(magic!=='TPK2' && magic!=='TPK3') throw new Error(`${name}: TPK2/TPK3가 아닌 스프라이트 (${JSON.stringify(magic)})`);
+    sprites++;
+  }
+  if(!sprites) throw new Error(`${region} 기본팩에 스프라이트가 없습니다.`);
+  return {sprites, min:range[0], max:range[1]};
+}
 
 async function fetchPak(region) {
-  let lastErr = null;
-  for (const base of PAK_BASES) {
-    try {
-      const r = await fetch(base + `sprites-${region}.pak`, {cache:'no-store'});
-      if (r.ok) return await r.arrayBuffer();
-      lastErr = new Error('HTTP ' + r.status);
-    } catch (e) { lastErr = e; }
-  }
-  throw lastErr || new Error('다운로드 실패');
+  const r = await fetch(BASE_PACK_URL + `sprites-${region}.pak`, {cache:'no-store'});
+  if(!r.ok) throw new Error(`고정 기본팩 HTTP ${r.status}`);
+  const buf=await r.arrayBuffer();
+  const items=parsePak(buf);
+  const info=validateBasePak(region,items);
+  log(`기본팩 검증 OK · ${REGION_KO[region]||region} ${info.min}-${info.max} · ${info.sprites} sprite · source ${BASE_PACK_COMMIT.slice(0,12)}`);
+  return {buf,items};
 }
 
 let extraManifest = null;
@@ -612,7 +646,7 @@ for (const b of document.querySelectorAll('[data-region]')) {
     b.disabled = true;
     try {
       log(`${REGION_KO[region]} 스프라이트 다운로드 중...`);
-      const items = parsePak(await fetchPak(region));
+      const items = (await fetchPak(region)).items;
       log(`${items.length}개 기본 지역 파일 전송 시작...`);
       if(!await sendAll(items)) throw new Error(`${REGION_KO[region]} 기본팩 전송 중단`);
       // Forms owned by an older generation (Rotom, Deoxys, regional forms,
@@ -647,7 +681,7 @@ for (const b of document.querySelectorAll('[data-extra]')) {
   });
 }
 
-// v3.62.5: sprite installer tabs + canonical resource cleanup
+// v3.62.7: sprite installer tabs + canonical cleanup + pinned base-pack guard + single Release asset
 for (const t of document.querySelectorAll('[data-sprite-tab]')) {
   t.addEventListener('click',()=>{
     document.querySelectorAll('.sprite-tab').forEach(x=>x.classList.toggle('active',x===t));
@@ -656,6 +690,38 @@ for (const t of document.querySelectorAll('[data-sprite-tab]')) {
       document.getElementById(id).classList.toggle('active',k===key);
   });
 }
+
+let spriteBundleMeta=null;
+async function getSpriteBundleMeta(){
+  if(spriteBundleMeta)return spriteBundleMeta;
+  const r=await fetch('./sprite-bundle.json',{cache:'no-store'});
+  if(!r.ok)throw new Error(`sprite-bundle.json HTTP ${r.status}`);
+  spriteBundleMeta=await r.json();return spriteBundleMeta;
+}
+function fmtBytes(n){
+  n=Number(n||0);if(n>=1024*1024*1024)return (n/1024/1024/1024).toFixed(2)+' GiB';
+  if(n>=1024*1024)return (n/1024/1024).toFixed(1)+' MiB';
+  return (n/1024).toFixed(0)+' KiB';
+}
+async function showSpriteBundleInfo(){
+  const el=document.getElementById('spriteBundleInfo');
+  try{
+    const m=await getSpriteBundleMeta();
+    el.textContent=`v${m.version} · ${fmtBytes(m.size_bytes)} · 단일 Release(${m.release_tag||'sprites-current'}) · catalog ${m.catalog_fingerprint||'unknown'} · SHA-256 ${String(m.sha256||'').slice(0,12)}…`;
+  }catch(e){el.textContent='전체 ZIP 정보를 불러오지 못했습니다: '+e.message;}
+}
+document.getElementById('downloadFullSpriteZip').addEventListener('click',async(ev)=>{
+  const b=ev.currentTarget;b.disabled=true;
+  try{
+    const m=await getSpriteBundleMeta();
+    const url=m.download_url||('./'+m.filename);
+    if(!url||!m.filename)throw new Error('다운로드 주소가 아직 생성되지 않았습니다. GitHub Actions가 성공했는지 확인하세요.');
+    log(`PC용 전체 ZIP 다운로드 · ${m.filename} · ${fmtBytes(m.size_bytes)} · SHA-256 ${m.sha256}`);
+    const a=document.createElement('a');a.href=url;a.download=m.filename;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+  }catch(e){log('PC용 전체 스프라이트 ZIP 다운로드 실패: '+e.message);}
+  finally{b.disabled=false;}
+});
+showSpriteBundleInfo();
 
 const ALL_BASE_REGIONS=['kanto','johto','hoenn','sinnoh','unova','kalos','alola'];
 document.getElementById('installAllSprites').addEventListener('click', async (ev)=>{
@@ -670,7 +736,7 @@ document.getElementById('installAllSprites').addEventListener('click', async (ev
     for(let i=0;i<ALL_BASE_REGIONS.length;i++){
       const region=ALL_BASE_REGIONS[i];
       log(`[기본 ${i+1}/${ALL_BASE_REGIONS.length}] ${REGION_KO[region]} 다운로드...`);
-      const items=parsePak(await fetchPak(region));
+      const items=(await fetchPak(region)).items;
       log(`[기본 ${i+1}/${ALL_BASE_REGIONS.length}] ${items.length}개 전송...`);
       if(!await sendAll(items)) throw new Error(`${REGION_KO[region]} 기본팩에서 중단`);
     }
@@ -731,6 +797,11 @@ document.getElementById('pakFiles').addEventListener('change', async (ev) => {
     try {
       log(`${f.name} 읽는 중...`);
       const items = parsePak(await f.arrayBuffer());
+      const bm=f.name.toLowerCase().match(/^sprites-(kanto|johto|hoenn|sinnoh|unova|kalos|alola)\.pak$/);
+      if(bm){
+        const info=validateBasePak(bm[1],items);
+        log(`직접 선택 기본팩 검증 OK · ${REGION_KO[bm[1]]} ${info.min}-${info.max} · ${info.sprites} sprite`);
+      }
       log(`${items.length}개 파일 전송 시작...`);
       await sendAll(items);
     } catch (e) { log(`${f.name} 실패: ${e.message}`); }

@@ -7,7 +7,7 @@ sd = (root / 'sdmon.cpp').read_text(encoding='utf-8')
 html = (root / 'TamaPoke-KO-OneClick-Installer.html').read_text(encoding='utf-8')
 
 m = re.search(r'^#define\s+FW_VERSION\s+"([^"]+)"', ino, re.M)
-assert m and m.group(1) == '3.62.5', m.group(1) if m else 'missing'
+assert m and m.group(1) == '3.62.7', m.group(1) if m else 'missing'
 
 # Normal gameplay remains non-blocking. Explicit SD commands temporarily make
 # USB TX reliable so OK/#/DONE flow-control cannot be silently discarded.
@@ -37,6 +37,6 @@ assert "waitFor('#', 15000)" in html
 assert "waitFor('DONE', 30000)" in html
 assert '데이터 ACK 누락' in html
 assert 'SD 준비 완료' in html
-assert '3.62.5-ko-canonical-forms-regional-evolution-reliable-fullsync-mega36' in html
+assert '3.62.7-ko-single-release-fullsd-canonical-forms-regional-evolution-reliable-fullsync-mega36' in html
 
-print('SD/WebSerial protocol regression OK: fw=3.62.5 proto=3 reliable PUT + retired-file DEL cleanup')
+print('SD/WebSerial protocol regression OK: fw=3.62.7 proto=3 reliable PUT + retired-file DEL cleanup')

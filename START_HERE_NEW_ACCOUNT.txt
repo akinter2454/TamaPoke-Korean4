@@ -1,17 +1,9 @@
-이 ZIP과 TamaPoke-v3.62.5-HANDOFF.md는 내가 계속 개발하는 TamaPoke KO 프로젝트의 최신 기준본입니다.
+이 ZIP과 TamaPoke-v3.62.7-HANDOFF.md는 TamaPoke KO 프로젝트의 최신 기준본입니다.
 
-대상 기기는 Waveshare ESP32-S3-Touch-AMOLED-1.75 (466x466 원형 AMOLED)이고 현재 기준 버전은 v3.62.5입니다.
-반드시 v3.62.5를 최신 기준선으로 사용하고 과거 실험판으로 롤백하지 마세요.
+대상 기기: Waveshare ESP32-S3-Touch-AMOLED-1.75 (466x466 원형 AMOLED)
+현재 기준 버전: v3.62.7
 
-중요: 실제 GitHub 저장소의 tools/catalog_lock.json은 1200+ form ID 안정성에 필수입니다. 새 작업본을 덮어쓸 때 삭제하지 마세요. v3.62.5 sync는 이 lock에서 PMDCollab 표현용 슬롯만 퇴역시키고 next_form_id는 유지합니다.
+반드시 v3.62.7을 최신 기준선으로 사용하고 과거 실험판으로 롤백하지 마세요.
+실제 GitHub 저장소의 tools/catalog_lock.json은 1200+ 공식 폼 ID 안정성에 필수이므로 덮어쓰기 때 삭제하지 마세요.
 
-v3.62.5 핵심:
-- PMDCollab AltColor/Alt Colour, Alternate, Cutscene, Beta를 공식 폼/species로 취급하지 않는다.
-- 기존 잘못된 presentation-only ID는 폐기하지만 다른 포켓몬에 재사용하지 않는다.
-- 과거 세이브의 리자몽 Altcolor 등은 정상 base 또는 정상 지역폼 species로 자동 migration한다. 레벨/IV/닉네임은 유지한다.
-- 리자드 -> 정상 리자몽 -> Lv.70 Mega Charizard X 경로를 회귀검사한다.
-- regional form evolution audit(Alola/Galar/Hisui/Paldea)를 유지한다.
-- SDINFO proto=3 restricted DEL + sprite manifest schema 4로 retired pNNN/psNNN 파일을 전체/추가 동기화 시 자동 삭제한다.
-- 전체 스프라이트 탭, 리소스 검수, catalog fingerprint, Mega36, IV 랜덤/훈련 보상, 진화 Lv.100 상한, 절전/물리 버튼 wake를 유지한다.
-
-다음 작업에서도 PMDCollab의 resource slot 이름을 곧바로 공식 폼으로 간주하지 말고 canonical form 정책을 지키세요.
+v3.62.7 핵심: PC용 전체 sprite ZIP은 Actions Artifact에 저장하지 않고 `sprites-current` Release의 고정 asset 하나만 교체합니다. v3.62.6의 BasePackGuard, Canonical Forms, 지역폼 진화, Mega36, SD proto=3은 유지합니다.

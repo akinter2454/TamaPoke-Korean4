@@ -46,7 +46,7 @@ TRACKER_URL = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/t
 POKE = 'https://pokeapi.co/api/v2'
 SPECIES_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv'
 EVOLUTION_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_evolution.csv'
-USER_AGENT = 'TamaPoke-v3.62.5-CanonicalForms/1.0 (+noncommercial classroom project)'
+USER_AGENT = 'TamaPoke-v3.62.7-SingleRelease-BasePackGuard/1.0 (+noncommercial classroom project)'
 FORM_ID_START = 1200
 EVOLUTION_LEVEL_CAP = 100
 MEGA_EVOLVE_LEVEL = 70
@@ -263,11 +263,21 @@ def base_sprite_path(nat:int,node:dict):
     n0=(node.get('subgroups') or {}).get('0000')
     if isinstance(n0,dict):
         if has_sprite(n0): return f'{root}/0000'
+        # A grouping-only species may keep its true default under a nested
+        # 0000/Normal node.  Never fall through to a sibling presentation slot
+        # (AltColor/Alternate/Cutscene/Beta), battle gimmick, regional form, or
+        # arbitrary named child.  Returning None is safer than silently binding
+        # the base dex number to the wrong visual resource.
         for ck,ch in sorted((n0.get('subgroups') or {}).items()):
             if not isinstance(ch,dict): continue
-            nm=low(ch.get('name'))
+            raw_name=clean(ch.get('name'))
+            nm=low(raw_name)
             if 'shiny' in nm or 'female' in nm or 'male' in nm: continue
-            if has_sprite(ch): return f'{root}/0000/{ck}'
+            if presentation_variant_reason(raw_name): continue
+            if is_gimmick(raw_name): continue
+            if any(w in nm for w in ('alola','galar','hisui','paldea')): continue
+            is_default = ck == '0000' or not nm or any(w in nm for w in ('normal','default','base'))
+            if is_default and has_sprite(ch): return f'{root}/0000/{ck}'
     return None
 
 def find_shiny_path(node:dict, path:str, base_root:bool=False):

@@ -1,0 +1,58 @@
+TamaPoke KO v3.62.7 FINAL VALIDATION - SingleRelease FullSD Storage Guard
+
+Version
+- FW_VERSION = 3.62.7
+- Installer marker = 3.62.7-ko-single-release-fullsd-canonical-forms-regional-evolution-reliable-fullsync-mega36
+
+Storage policy
+- Full sprite ZIP is NOT uploaded through actions/upload-artifact.
+- Legacy full-sprite Actions artifacts are deleted through the Actions REST API using actions: write.
+- GitHub Pages does NOT copy the full sprite ZIP into site/.
+- One rolling Release tag: sprites-current
+- One stable public asset: TamaPoke-SD-Sprites-Current-Full.zip
+- Successful builds replace the stable asset with gh release upload --clobber.
+- Legacy auto-generated sprite Releases are cleaned only when tag matches sprites-vX.Y.Z.
+- Legacy tag cleanup uses gh release delete ... --cleanup-tag.
+- Existing sprites-current Release is checked for isImmutable before replacement.
+- sprite-bundle.json is rewritten to the stable sprites-current download URL.
+- tools/verify_release_storage_policy.py enforces the policy in CI.
+
+Preserved behavior
+- Full SD ZIP contents remain BasePackGuard #001-809 + exact current 810+/official forms/Mega36 catalog.
+- AltColor/Alternate/Cutscene/Beta remain excluded.
+- Retired IDs remain forbidden from current managed sprite bundle.
+- Regional evolution routing, Mega36 Lv70, reliable SD proto=3, save migration, frame/power/gameplay policies unchanged.
+- This storage-only update does not require the user's microSD sprites to be redownloaded if v3.62.6 sync is already correct.
+
+Local validation PASS
+- python3 -m py_compile tools/*.py
+- tools/verify_evolution_levels.py
+- tools/verify_sd_serial_protocol.py
+- tools/verify_base_pack_policy.py
+- tools/verify_release_storage_policy.py
+- tools/verify_full_sd_bundle.py -- self-test path
+- GitHub Actions YAML parse with PyYAML
+- PROJECT_STATE_v3.62.7.json parse
+- Installer JS extraction + node --check
+- Rolling Release shell block bash -n
+- Mock existing-release execution: isImmutable=false -> edit -> clobber upload -> legacy sprites-v3.62.6 cleanup
+- Mock legacy Actions artifact cleanup: list -> matched full-sd-sprites artifact -> DELETE by artifact id
+- No full-sprite actions/upload-artifact step remains
+
+Not locally performed
+- Live GitHub Release mutation on the user's repository
+- Full online PMDCollab/PokeAPI sync
+- Final ESP32-S3 Arduino compile (GitHub Actions remains the compilation authority)
+
+Core SHA-256
+a401444b72b78841f1879a26cab83252b0fb7d2b284e163b864a0f5eaaddf299  TamaPoke.ino
+367ae67b631619bf06e37658cf736653281c5a05f4c790c006ca7c6492fdd104  TamaPoke-KO-OneClick-Installer.html
+c0402a7cca257c594e31403bd0b8a22bd7db7d1427eae920911397e8b2879ca9  .github/workflows/main.yml
+ee637b6e8e2810da594cc83c5bc90b10bbee7b671df15f97f159242689dceb01  tools/build_full_sd_sprite_zip.py
+bbddb03007c17d007bb935a3f5ea1aaedb7393179fa428c9da8b0145ed3f2e3a  tools/verify_release_storage_policy.py
+46ac9f445d8d2b94af096791e5d4603dfd9e017dac70500c2890d17f2744f4a5  tools/verify_full_sd_bundle.py
+9f21b4794f4baed794b2433c277636a829ba0a31eebc14e08c948691cb722646  tools/verify_sd_serial_protocol.py
+38ccb6d3550d30b0407adc781f81027440cf97c8c9ab3b06602dc3ffbdbc844c  tools/verify_base_pack_policy.py
+eabf85d5ca3550486654b0040caa05d748b3e2a7b342103d7ef62df9d79e72b2  tools/sync_pmd_catalog.py
+fcbb2198911105faec60796743d6179a90467d1565c3d42315f98c1a3567f11c  tools/pack_pmd_catalog.py
+5a1b6867193c5b3627976556768d8e8baeb3b0684ea800afc4fa5678418a6a13  PROJECT_STATE_v3.62.7.json

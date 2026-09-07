@@ -1,0 +1,25 @@
+TamaPoke KO v3.62.7 - SingleRelease FullSD Storage Guard
+
+목적
+- PC용 전체 스프라이트 ZIP 때문에 GitHub Actions Artifact 저장공간이 커지는 문제를 막는다.
+- 대용량 ZIP이 버전별 Release에 계속 누적되지 않게 한다.
+
+변경
+1. 전체 스프라이트 ZIP을 actions/upload-artifact에 더 이상 업로드하지 않는다.
+2. 과거 run에 남아 있는 `TamaPoke-vX.Y.Z-full-sd-sprites` Actions Artifact도 다음 성공 build에서 API로 삭제한다.
+3. GitHub Release tag를 `sprites-current` 하나로 고정한다.
+4. Release asset 파일명을 `TamaPoke-SD-Sprites-Current-Full.zip`으로 고정한다.
+5. 새 빌드 성공 시 같은 asset을 `--clobber`로 교체한다.
+6. 기존 자동 생성 sprite Release 중 `sprites-vX.Y.Z` 패턴만 정리하고 해당 tag도 함께 정리한다.
+7. 설치 페이지의 sprite-bundle.json은 안정적인 `/releases/download/sprites-current/TamaPoke-SD-Sprites-Current-Full.zip` 주소를 사용한다.
+8. GitHub Pages에는 대용량 ZIP을 복사하지 않고 작은 metadata/report만 게시한다.
+9. `tools/verify_release_storage_policy.py`로 위 정책이 다시 깨지지 않게 CI에서 검사한다.
+
+보존
+- 기본팩 고정 commit 및 AltColor/Alternate/Cutscene/Beta 차단 정책 유지.
+- 지역폼 진화, Mega36, SD proto=3, 세이브 migration, 게임 프레임/전력 정책 변경 없음.
+- PC용 ZIP 내부의 mons/ 및 SHA256SUMS 구조도 그대로 유지.
+
+주의
+- 이 업데이트는 저장/배포 방식 변경이 핵심이다. microSD 스프라이트 내용 자체가 바뀌는 업데이트가 아니다.
+- 기존 GitHub 저장소의 tools/catalog_lock.json은 계속 보존해야 한다.

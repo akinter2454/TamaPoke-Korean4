@@ -1,14 +1,18 @@
-TamaPoke KO v3.62.5 Canonical Forms + Regional Evolution + Reliable SD Sync + Full Sync + Mega36
+TamaPoke KO v3.62.7 SingleRelease FullSD
 
-1) 기존 저장소를 삭제하지 말고 이 ZIP의 파일을 루트에 덮어씁니다.
-2) tools/catalog_lock.json이 이미 있으면 반드시 보존합니다. ZIP에는 이 파일을 새로 덮어쓰지 않습니다.
-3) GitHub Actions에서 v3.62.5 workflow를 실행합니다.
-4) Sync 단계에서 regional evolution audit OK + canonical forms audit OK를 확인합니다.
-5) Actions가 기존 lock의 AltColor/Alternate/Cutscene/Beta 항목을 제거하되 퇴역 ID는 재사용하지 않고 cleaned lock을 저장소에 다시 커밋합니다.
-6) build/deploy 성공 후 Pages에서 v3.62.5 펌웨어를 먼저 설치하고 재부팅합니다.
-7) microSD의 '전체 스프라이트' 동기화를 1회 실행합니다. manifest의 retired_files가 먼저 삭제된 뒤 현재 canonical 리소스가 기록됩니다.
+1) 기존 GitHub 저장소를 비우지 않습니다.
+2) 이 전체본의 파일을 저장소 루트에 덮어씁니다.
+3) 기존 tools/catalog_lock.json은 반드시 보존합니다.
+4) GitHub Actions에서 v3.62.7 workflow를 실행합니다.
+5) build/deploy 성공을 확인합니다.
+6) PC 전체 sprite ZIP이 필요하면 Pages의 전체 스프라이트 탭에서 다운로드합니다. 다운로드 대상은 `sprites-current/TamaPoke-SD-Sprites-Current-Full.zip`입니다.
 
-주의
-- 기존 tools/catalog_lock.json을 삭제하면 1200+ form ID 안정성이 깨질 수 있습니다.
-- microSD를 포맷할 필요는 없습니다.
-- 잘못 저장된 AltColor/Alternate species는 v3.62.5 로드 시 정상 base/지역폼으로 자동 복구됩니다.
+저장공간 정책
+- full sprite ZIP은 Actions Artifact에 저장하지 않습니다.
+- `sprites-current` Release 한 개만 유지합니다.
+- 이전 자동 생성 `sprites-vX.Y.Z` sprite Release는 정리합니다.
+- Pages에는 ZIP 자체를 넣지 않습니다.
+
+게임/도감/스프라이트 내용은 v3.62.6에서 변경하지 않았으므로 이 저장정책 업데이트만으로 microSD를 다시 동기화할 필요는 없습니다.
+
+- 과거 Actions Artifact 중 `TamaPoke-vX.Y.Z-full-sd-sprites` 이름의 대용량 백업도 다음 성공 build에서 자동 정리됩니다.
