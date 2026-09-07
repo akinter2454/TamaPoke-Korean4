@@ -1,0 +1,24 @@
+TamaPoke KO v3.62.8 - Framed PUT4 Stable WebSerial
+
+문제
+- 기존 PUT proto=3은 브라우저가 2048바이트를 한 번 write해도 ESP32 USB CDC에서 여러 조각으로 도착할 수 있었는데, 펌웨어가 readBytes() 1회 결과가 2048보다 작아도 정상 블록처럼 SD에 기록했습니다.
+- 이 경우 블록 경계가 밀려 ps277.bin 28/69, p386.bin 42/85처럼 서로 다른 파일/블록에서 랜덤하게 ACK 누락이 발생할 수 있었습니다.
+
+수정
+- 기존 설치 UI/버튼/지역별 및 전체 동기화 흐름은 그대로 유지.
+- SDINFO proto=4.
+- PUT4 command + BLK4 framed blocks 도입.
+- 블록 구조: magic(4) + seq(u16) + len(u16) + crc32(u32 LE) + payload.
+- 펌웨어는 len 바이트를 exact-read 루프로 모두 모을 때까지 기다린 후 CRC를 확인합니다.
+- ACK <seq> / NAK <seq>로 블록 번호를 명시합니다.
+- ACK/CRC 문제 시 같은 블록 최대 4회 자동 재전송.
+- ACK가 이미 처리된 블록에서 유실되면 duplicate seq를 다시 받아 ACK만 재전송하고 SD에는 두 번 쓰지 않습니다.
+- 마지막 블록 후에도 END4를 받을 때까지 세션을 유지하여 마지막 ACK도 안전하게 재시도할 수 있습니다.
+- 파일 전체 CRC32가 맞아야 커밋합니다.
+- 전송 중 새 데이터는 <target>.part에 쓰고, 완료 시 기존 target을 .bak4로 보존한 후 새 파일 rename이 성공했을 때만 backup을 삭제합니다.
+- ABT4로 전송 세션을 자동 종료할 수 있어 일부 오류는 물리 재부팅 없이 파일 단위 재시도합니다.
+- DONE4만 유실된 경우 PUTSTAT으로 마지막 커밋 size/CRC를 확인해 성공으로 복구합니다.
+- legacy PUT proto=3 handler는 구형 페이지 호환을 위해 남겨 둡니다.
+
+사용
+- v3.62.8 펌웨어를 먼저 설치 -> 재부팅 -> 기존과 동일하게 기기 연결 -> 지역별/전체 스프라이트 설치.

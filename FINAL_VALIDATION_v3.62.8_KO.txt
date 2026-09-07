@@ -1,0 +1,48 @@
+TamaPoke KO v3.62.8 FINAL VALIDATION - Framed PUT4 Stable WebSerial
+
+목적
+- 기존 Web Serial 설치 방식/버튼/지역별/전체 동기화 UX는 유지합니다.
+- 랜덤한 "데이터 ACK 누락"의 원인이 될 수 있던 proto=3 raw PUT의 부분 readBytes 처리 문제를 제거합니다.
+
+핵심 변경 검증
+- FW_VERSION = 3.62.8
+- SDINFO = proto=4
+- 새 설치기 = PUT4 framed transfer 사용
+- 2 KiB payload exact-read 누적
+- BLK4 seq/len/CRC32
+- ACK <seq> / NAK <seq>
+- 같은 seq 재수신 시 중복 SD write 없이 ACK 재전송
+- 블록 최대 4회 전송 시도
+- transient ERR4 / ACK 실패 후 파일 단위 1회 자동 재시도
+- END4 + 전체 파일 CRC32 확인 후 commit
+- .part 임시 기록 + .bak4 보호 교체
+- ABT4 세션 해제
+- PUTSTAT 완료 복구(DONE4만 누락된 경우)
+- legacy PUT handler는 구형 installer 호환용으로 유지
+
+정적 검증 결과
+- Python py_compile: PASS
+- tools/verify_evolution_levels.py: PASS
+- tools/verify_sd_serial_protocol.py: PASS
+  - IEEE CRC32 known vector
+  - 2048-byte USB fragmented-read reconstruction model
+  - lost-ACK duplicate block model
+  - CRC NAK/retry model
+- Installer JavaScript node --check: PASS
+- Installer duplicate HTML ID check: PASS
+- GitHub Actions YAML parse: PASS
+- GITHUB_WORKFLOW_COPY.txt == .github/workflows/main.yml: PASS
+
+중요
+- 현재 로컬 환경에서는 ESP32 Arduino core/libraries가 설치되어 있지 않아 실제 ESP32-S3 compile은 실행하지 않았습니다.
+- 실제 PMDCollab/PokeAPI live catalog generation과 ESP32-S3 compile은 GitHub Actions 성공 여부가 최종 권위입니다.
+- v3.62.8 installer는 proto=4를 요구하므로 firmware를 먼저 v3.62.8로 설치하고 재부팅한 뒤 sprite 전송을 실행해야 합니다.
+- 기존 tools/catalog_lock.json은 GitHub 저장소에서 보존해야 합니다.
+
+Core SHA256
+ed48d2ba40d4b852a43d54f618e8260661f7258d0b01007be38fcacdf1ecabff  TamaPoke.ino
+48d38f7402d09b2d06bf64d88ea34e7d46e9e0438336af32c4d47b0f3a5ae9de  sdmon.cpp
+cbe1406fe4819709571ec6b6ae30759a5a3a3275c6ba77993e81ba4bae6849c6  TamaPoke-KO-OneClick-Installer.html
+169898600ddfdaa31db254f61f7ffc441b537f1fe786bb7a8df07712b6451f6a  .github/workflows/main.yml
+dc01efeee7cd02668ce8c85edc5090173129fcb332e61753d6f9c71d44fb8de2  tools/verify_sd_serial_protocol.py
+7d921ba57f85f0dd6d23c22b808b18e1992cdc941a1bd2eac6acefb04e7044e0  PROJECT_STATE_v3.62.8.json

@@ -1,0 +1,26 @@
+TamaPoke KO v3.62.3 - Reliable WebSerial / microSD Sprite Sync
+
+증상
+- 전체 스프라이트 동기화가 첫 파일 mons/p001.bin 또는 임의 파일에서 멈춤.
+- 설치기에는 USB/SD 연결 확인 메시지가 표시됨.
+
+원인
+- 평상시 게임 프레임 블로킹 방지를 위해 USB CDC TX timeout을 0ms로 사용한다.
+- PUT 프로토콜도 같은 설정을 사용하면서 브라우저가 기다리는 OK / # / DONE ACK가 USB TX 버퍼 상황에 따라 버려질 수 있었다.
+- WebSerial read timeout 구현도 timeout 후 pending read를 관리하지 않아 재시도 시 불안정할 여지가 있었다.
+
+수정
+1. 평상시 Serial.setTxTimeoutMs(0)는 유지한다.
+2. SDINFO / PUT 명령 처리 중에만 TX timeout 1000ms를 사용하고 각 ACK를 Serial.flush()한다.
+3. 2KiB마다 실제 SD write 길이를 검사하고 실패 시 ERR 처리한다.
+4. 데이터 수신 timeout을 8초로 늘리고 완료 후 즉시 non-blocking TX로 복귀한다.
+5. SDINFO proto=2 사전 점검을 추가한다. 설치 페이지는 펌웨어와 microSD가 준비된 경우에만 전송 버튼을 활성화한다.
+6. 브라우저 ACK 대기 시간을 15초로 늘리고 OK / block ACK / DONE 중 어느 단계에서 실패했는지 로그에 표시한다.
+7. WebSerial pending read를 하나만 유지하여 timeout/reconnect 중 중복 reader.read()를 방지한다.
+8. workflow의 중복 PYMEGADELTA heredoc 실행 줄도 제거했다.
+
+유지
+- Sprite Audit / Full Sync 탭
+- PMDCollab Mega36 Lv.70 영구 진화
+- catalog_lock / catalog fingerprint 정책
+- IV 보상, 메뉴 잔상 수정, 체육관, 절전/물리버튼 wake 정책

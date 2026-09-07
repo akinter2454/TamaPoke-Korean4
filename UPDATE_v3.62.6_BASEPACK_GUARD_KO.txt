@@ -1,0 +1,24 @@
+TamaPoke KO v3.62.6 - BasePackGuard
+
+문제:
+- 관동~알로라 기본 팩은 현재 Actions가 생성하는 810+ 팩과 달리 외부 DylanPDao/TamaPoke에서 받았다.
+- 기존 설치기는 mutable main 및 releases/latest fallback을 사용하므로 향후 upstream 변경을 조용히 받아올 수 있었다.
+- sync_pmd_catalog.py의 드문 grouping-only base fallback도 presentation-only child를 완전히 차단하지 않았다.
+
+수정:
+- 7개 기본팩을 검수된 immutable commit 7d5a2b3f4a4bee4f107cdae77ad13949dddfc615에 고정.
+- main/latest fallback 제거.
+- 전송 전 지역별 정확한 National Dex ID 범위, 허용 파일명, TPK2/TPK3 magic, 중복 파일을 브라우저에서 검증.
+- base_sprite_path fallback에서 AltColor/Alternate/Cutscene/Beta, gimmick, 지역폼 sibling 차단.
+- Pages에 base-pack-policy-report.txt 제공.
+
+게임/세이브/진화/전투 수치는 변경하지 않음.
+
+PC용 전체 스프라이트 ZIP
+- GitHub Actions가 현재 카탈로그와 정확히 일치하는 `TamaPoke-SD-Sprites-v3.62.6-Full.zip`을 생성한다.
+- ZIP 내부는 microSD 루트에 바로 복사할 수 있는 `mons/` 폴더 구조다.
+- 관동~알로라는 검수된 고정 commit의 TPAK을 다시 검증/해제하고, 810+/공식폼/Mega36은 같은 Actions run에서 생성한 TPK3만 합친다.
+- AltColor/Alternate/Cutscene/Beta와 retired ID는 bundle에 들어갈 수 없도록 다시 검사한다.
+- ZIP에는 README-SD-KO.txt, BUNDLE-INFO.json, SHA256SUMS.txt, PMDCOLLAB_CREDITS.txt를 포함한다.
+- GitHub Release의 `sprites-v3.62.6` asset으로 게시하고, 설치기의 `PC용 전체 스프라이트 ZIP 다운로드` 버튼이 sprite-bundle.json을 통해 해당 파일을 받는다.
+- Actions artifact에도 같은 ZIP을 백업한다.

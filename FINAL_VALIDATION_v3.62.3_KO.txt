@@ -1,0 +1,22 @@
+TamaPoke KO v3.62.3 FINAL VALIDATION - Reliable WebSerial / SD Sprite Sync
+
+Source guards
+- FW_VERSION 3.62.3
+- normal gameplay USB TX remains non-blocking (0ms)
+- SDINFO/PUT temporarily use 1000ms TX timeout
+- OK/#/DONE ACKs are flushed
+- SD write return length is checked
+- PUT receive timeout = 8000ms
+- browser SDINFO preflight required before enabling transfer buttons
+- browser stage-specific ACK timeout reporting enabled
+- one pending WebSerial read guard enabled
+
+Regression retained
+- v3.62.2 sprite mapping audit + one-click full sync
+- Paldea Tauros 0128 source guard
+- Mega36 exactly 36, Lv.70, Charizard X only, Mewtwo Y only
+- evolution level <= 100 guard
+- IV reward balance and shop exclusion
+- menu redraw / power / gym / casual battle fixes
+
+Final hardware validation remains GitHub Actions Arduino CLI compile + Pages deploy, followed by a real-device one-file/region/full-sync test.

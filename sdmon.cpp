@@ -9,6 +9,15 @@ bool sdDirty = false;
 bool sdArtDirty = false;
 SdThumbs thumbs;
 
+// v3.62.8: last successfully committed framed transfer. Used only to recover
+// from the rare case where DONE4 itself is lost after the atomic SD rename.
+static String gLastPut4Path;
+static uint32_t gLastPut4Size = 0;
+static uint32_t gLastPut4Crc = 0;
+void sdRememberPut4(const String &path, uint32_t size, uint32_t crc) {
+  gLastPut4Path = path; gLastPut4Size = size; gLastPut4Crc = crc;
+}
+
 bool PmdMon::load(int16_t dexNum, bool shiny) {
   // int16_t, NOT uint8_t. The dex reached 386 and this did not follow, so
   // everything from 256 up wrapped into Kanto: MARSHTOMP (258) opened
@@ -294,8 +303,9 @@ void SdMon::unload() {
 
 // ---------------------------------------------------------------------------
 // Protocolo de carga por USB (para llenar la SD sin sacarla de la placa):
-//   PUT <ruta> <bytes>\n  + datos crudos   -> "OK" ... "DONE"
-//   SDINFO\n                               -> SDINFO OK proto=3 ...\n//   DEL mons/pNNN.bin\n                    -> DONE (safe /mons sprite cleanup)\n//   LS\n                                   -> listado de /mons
+//   PUT4 <ruta> <bytes> <block> <crc32>\n + framed blocks -> numbered ACK/NAK + DONE4
+//   PUT <ruta> <bytes>\n  + datos crudos   -> legacy "OK" ... "DONE"
+//   SDINFO\n                               -> SDINFO OK proto=4 ...\n//   DEL mons/pNNN.bin\n                    -> DONE (safe /mons sprite cleanup)\n//   LS\n                                   -> listado de /mons
 // Usar con tools/send_sd.py
 // ---------------------------------------------------------------------------
 
@@ -309,7 +319,7 @@ bool sdSerialCommand(const String &line) {
   if (line == "SDINFO") {
     Serial.setTxTimeoutMs(1000);
     if (sdReady) {
-      Serial.printf("SDINFO OK proto=3 cardMB=%llu\n",
+      Serial.printf("SDINFO OK proto=4 cardMB=%llu\n",
                     (unsigned long long)(SD_MMC.cardSize() / (1024ULL * 1024ULL)));
     } else {
       Serial.println("SDINFO ERR no-card");
@@ -335,6 +345,223 @@ bool sdSerialCommand(const String &line) {
     if (ok) { sdDirty = true; sdArtDirty = true; }
     Serial.println(ok ? "DONE" : "ERR");
     Serial.flush();
+    Serial.setTxTimeoutMs(0);
+    return true;
+  }
+
+
+  if (line.startsWith("PUTSTAT ")) {
+    String path = line.substring(8); path.trim();
+    if (!path.startsWith("/")) path = "/" + path;
+    Serial.setTxTimeoutMs(1000);
+    if (path == gLastPut4Path && gLastPut4Size > 0) {
+      Serial.printf("PUTSTAT OK %u %08lX\n", (unsigned)gLastPut4Size, (unsigned long)gLastPut4Crc);
+    } else {
+      Serial.println("PUTSTAT MISS");
+    }
+    Serial.flush();
+    Serial.setTxTimeoutMs(0);
+    return true;
+  }
+
+  // v3.62.8 reliable framed transfer.  The original PUT stream depended on a
+  // single readBytes() call returning the complete 2 KiB block.  USB CDC may
+  // legally split one browser write into several reads, which occasionally
+  // shifted block boundaries and left the browser waiting forever for '#'.
+  //
+  // PUT4 keeps the same Web-Serial installation workflow, but frames every
+  // block as:
+  //   "BLK4" + u16 seq + u16 len + u32 CRC32(IEEE) + raw payload
+  // The receiver accumulates EXACTLY len bytes, validates CRC, acknowledges the
+  // block number, and accepts a duplicate block if an ACK was lost.  The file is
+  // written to *.part and atomically renamed only after an END4 commit frame, so
+  // an interrupted transfer never destroys the previously valid sprite.
+  if (line.startsWith("PUT4 ")) {
+    String args = line.substring(5);
+    int a = args.indexOf(' ');
+    int b = a >= 0 ? args.indexOf(' ', a + 1) : -1;
+    int c = b >= 0 ? args.indexOf(' ', b + 1) : -1;
+    String path = a >= 0 ? args.substring(0, a) : String();
+    uint32_t size = (a >= 0 && b > a) ? (uint32_t)args.substring(a + 1, b).toInt() : 0;
+    uint32_t blockSize = (b >= 0 && c > b) ? (uint32_t)args.substring(b + 1, c).toInt() : 0;
+    uint32_t expectedFileCrc = c >= 0 ? (uint32_t)strtoul(args.substring(c + 1).c_str(), nullptr, 16) : 0;
+
+    auto txLine = [](const String &msg) {
+      Serial.println(msg);
+      Serial.flush();
+    };
+    auto crcUpdate = [](uint32_t crc, const uint8_t *data, size_t len) {
+      for (size_t i = 0; i < len; ++i) {
+        crc ^= data[i];
+        for (uint8_t bit = 0; bit < 8; ++bit)
+          crc = (crc >> 1) ^ (0xEDB88320UL & (uint32_t)-(int32_t)(crc & 1U));
+      }
+      return crc;
+    };
+    auto readExact = [](uint8_t *dst, size_t len, uint32_t idleTimeoutMs) {
+      size_t got = 0;
+      uint32_t lastProgress = millis();
+      while (got < len) {
+        int avail = Serial.available();
+        if (avail > 0) {
+          size_t want = len - got;
+          if ((size_t)avail < want) want = (size_t)avail;
+          size_t n = Serial.readBytes(dst + got, want);
+          if (n > 0) {
+            got += n;
+            lastProgress = millis();
+            continue;
+          }
+        }
+        if ((uint32_t)(millis() - lastProgress) >= idleTimeoutMs) return false;
+        delay(1);
+        yield();
+      }
+      return true;
+    };
+
+    if (!path.startsWith("/")) path = "/" + path;
+    const bool safePath = path.length() > 1 && path.indexOf("..") < 0;
+    const bool valid = sdReady && safePath && size > 0 && size <= 4UL * 1024 * 1024 &&
+                       blockSize >= 512 && blockSize <= 4096;
+    Serial.setTxTimeoutMs(1500);
+    Serial.setTimeout(250);
+    if (!valid) {
+      txLine("ERR4 PARAM");
+      Serial.setTimeout(1000);
+      Serial.setTxTimeoutMs(0);
+      return true;
+    }
+
+    String tmpPath = path + ".part";
+    if (SD_MMC.exists(tmpPath.c_str())) SD_MMC.remove(tmpPath.c_str());
+    File f = SD_MMC.open(tmpPath.c_str(), FILE_WRITE);
+    if (!f) {
+      txLine("ERR4 OPEN");
+      Serial.setTimeout(1000);
+      Serial.setTxTimeoutMs(0);
+      return true;
+    }
+
+    const uint32_t blocks = (size + blockSize - 1) / blockSize;
+    txLine(String("OK4 ") + blocks);
+    static uint8_t frameBuf[4096];
+    uint8_t hdr[12];
+    uint32_t nextSeq = 0;
+    uint32_t remaining = size;
+    uint32_t fileCrcState = 0xFFFFFFFFUL;
+    bool transferOk = true;
+    bool committed = false;
+
+    // Once all data blocks have arrived we deliberately stay in this loop until
+    // END4.  Therefore even the FINAL data ACK can be lost: the browser may
+    // resend that same BLK4 and will receive the numbered ACK again safely.
+    while (transferOk && !committed) {
+      if (!readExact(hdr, sizeof(hdr), 30000)) {
+        txLine(String("ERR4 TIMEOUT ") + nextSeq);
+        transferOk = false;
+        break;
+      }
+      const bool isBlock = memcmp(hdr, "BLK4", 4) == 0;
+      const bool isEnd = memcmp(hdr, "END4", 4) == 0;
+      const bool isAbort = memcmp(hdr, "ABT4", 4) == 0;
+      const uint16_t seq = (uint16_t)hdr[4] | ((uint16_t)hdr[5] << 8);
+      const uint16_t len = (uint16_t)hdr[6] | ((uint16_t)hdr[7] << 8);
+      const uint32_t frameCrc = (uint32_t)hdr[8] | ((uint32_t)hdr[9] << 8) |
+                                ((uint32_t)hdr[10] << 16) | ((uint32_t)hdr[11] << 24);
+
+      if (isAbort) {
+        txLine("ABORT4");
+        transferOk = false;
+        break;
+      }
+      if (isEnd) {
+        if (nextSeq != blocks || remaining != 0 || len != 0 || seq != (uint16_t)blocks) {
+          txLine(String("NAK END ORDER ") + nextSeq);
+          continue;
+        }
+        const uint32_t actualFileCrc = fileCrcState ^ 0xFFFFFFFFUL;
+        if (frameCrc != expectedFileCrc || actualFileCrc != expectedFileCrc) {
+          txLine(String("ERR4 FILECRC ") + String(actualFileCrc, HEX));
+          transferOk = false;
+          break;
+        }
+        f.flush();
+        f.close();
+        // Two-phase replace: keep the old valid sprite as .bak4 until the new
+        // .part file has been renamed successfully.  A transfer/power failure
+        // before commit therefore cannot turn a good sprite into a partial one.
+        String bakPath = path + ".bak4";
+        if (SD_MMC.exists(bakPath.c_str())) SD_MMC.remove(bakPath.c_str());
+        const bool hadOld = SD_MMC.exists(path.c_str());
+        if (hadOld && !SD_MMC.rename(path.c_str(), bakPath.c_str())) {
+          txLine("ERR4 BACKUP");
+          transferOk = false;
+          break;
+        }
+        if (!SD_MMC.rename(tmpPath.c_str(), path.c_str())) {
+          if (hadOld) SD_MMC.rename(bakPath.c_str(), path.c_str());
+          txLine("ERR4 RENAME");
+          transferOk = false;
+          break;
+        }
+        if (hadOld && SD_MMC.exists(bakPath.c_str())) SD_MMC.remove(bakPath.c_str());
+        sdDirty = true;
+        sdArtDirty = true;
+        // Save the last committed transfer so the browser can recover if only
+        // the final DONE4 line was lost after the SD rename succeeded.
+        sdRememberPut4(path, size, actualFileCrc);
+        txLine(String("DONE4 ") + String(actualFileCrc, HEX));
+        committed = true;
+        break;
+      }
+      if (!isBlock || len == 0 || len > blockSize) {
+        txLine(String("ERR4 HEADER ") + nextSeq);
+        transferOk = false;
+        break;
+      }
+      if (!readExact(frameBuf, len, 30000)) {
+        txLine(String("ERR4 DATA_TIMEOUT ") + seq);
+        transferOk = false;
+        break;
+      }
+      uint32_t blockCrc = crcUpdate(0xFFFFFFFFUL, frameBuf, len) ^ 0xFFFFFFFFUL;
+      if (blockCrc != frameCrc) {
+        txLine(String("NAK ") + seq + " CRC");
+        continue;
+      }
+
+      // ACK-loss recovery: consume and validate a repeated already-committed
+      // block, but never write it twice.
+      if ((uint32_t)seq < nextSeq) {
+        txLine(String("ACK ") + seq);
+        continue;
+      }
+      if ((uint32_t)seq > nextSeq) {
+        txLine(String("NAK ") + seq + " ORDER " + nextSeq);
+        continue;
+      }
+      const uint32_t expectedLen = remaining > blockSize ? blockSize : remaining;
+      if (len != expectedLen) {
+        txLine(String("NAK ") + seq + " LEN " + expectedLen);
+        continue;
+      }
+      size_t wr = f.write(frameBuf, len);
+      if (wr != len) {
+        txLine(String("ERR4 WRITE ") + seq);
+        transferOk = false;
+        break;
+      }
+      fileCrcState = crcUpdate(fileCrcState, frameBuf, len);
+      remaining -= len;
+      nextSeq++;
+      txLine(String("ACK ") + seq);
+      yield();
+    }
+
+    if (f) f.close();
+    if (!committed && SD_MMC.exists(tmpPath.c_str())) SD_MMC.remove(tmpPath.c_str());
+    Serial.setTimeout(1000);
     Serial.setTxTimeoutMs(0);
     return true;
   }

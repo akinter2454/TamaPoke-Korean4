@@ -1,0 +1,30 @@
+TamaPoke KO v3.62.6 FINAL VALIDATION - BasePackGuard
+
+- FW_VERSION = 3.62.6
+- Gen1-7 base pack URL pinned to immutable DylanPDao/TamaPoke commit 7d5a2b3f4a4bee4f107cdae77ad13949dddfc615
+- mutable /main/web and /releases/latest base-pack fallbacks removed
+- browser validates exact regional ID ranges, TPK2/TPK3 magic, allowed filenames, duplicate filenames before any base-pack transfer
+- local base_sprite_path grouping fallback rejects AltColor/Alternate/Cutscene/Beta, gimmick, and regional siblings
+- presentation-only resources remain excluded from Dex/species generation from v3.62.5
+- v3.62.5 save migration / retired file cleanup retained
+- SDINFO proto=3 / reliable PUT retained
+- regional evolution / Mega36 / IV / battle / power-save behavior unchanged
+
+Real Arduino compile and live upstream catalog sync remain GitHub Actions checks.
+
+- PC full SD bundle integration: tools/build_full_sd_sprite_zip.py + offline parser/range self-test
+- Bundle contains root mons/ + README/credits/audit/checksums; current managed IDs only
+- Installer direct-download button reads sprite-bundle.json; no device connection required
+- Workflow publishes versioned ZIP as GitHub Release asset and upload-artifact backup
+- Full bundle builder independently blocks AltColor/Alternate/Cutscene/Beta and retired managed IDs
+
+Core SHA-256 (final source):
+5cf8642b0bc31b9e3df1e2752ea9d67a8d630105a2167ee119904213ba939af0  TamaPoke.ino
+96fa9c8049894b38f5a6d5b9fc7bdb5ae0b060a7e5e4367285504e3e33a198e0  TamaPoke-KO-OneClick-Installer.html
+053fe5cbcbb3d92b0efbaa1ca6bf9c60c5f72c697455a8888496140a490d0803  .github/workflows/main.yml
+ad1af47862e3ec2706571cd21c956a4db45e3690ad6783d56e2c39db29bf09e9  tools/sync_pmd_catalog.py
+c2904e31d04a55419d1b5cedbe4be26d29f0116ce31eea1e5cf1708a570d45fc  tools/pack_pmd_catalog.py
+b65053dfb9bea267a30bbec792f76fc5035de335b2a18515f23faff57ef58f59  tools/verify_base_pack_policy.py
+ec1b6b85addc91af6d84b46873145680ea6dcdd48488ac842a9970b914bf06e0  tools/build_full_sd_sprite_zip.py
+13c1e38c6ac1fe16ff159adcdef97c82162ef02c60f1979742a84b584ca0c56d  tools/verify_full_sd_bundle.py
+c50fee78b1f62833c3fd8a250b30ed393fa90aee95d5543270521ad393e8ff76  tools/verify_sd_serial_protocol.py
