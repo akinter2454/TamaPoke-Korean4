@@ -1,4 +1,4 @@
-name: TamaPoke v3.63.4 PMDCatalog - Training Rewards + Learnset Expansion + Runtime Stability + SingleRelease FullSD + BasePackGuard + Canonical Forms + Regional Evolutions + Framed PUT4 + Mega36 GitHub Pages
+name: TamaPoke PMDCatalog - Training Rewards + Learnset Expansion + Runtime Stability + GitHub Pages
 
 on:
   workflow_dispatch:
@@ -53,6 +53,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/verify_runtime_stability.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_learnset_expansion.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_training_rewards.py"
+          # Training reward amounts/probabilities are intentionally validated only by verify_training_rewards.py.
           grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'MEGA_EVOLVE_LEVEL = 70' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'effectiveEvolutionTargetLevel' "$GITHUB_WORKSPACE/pet.cpp"
@@ -61,8 +62,6 @@ jobs:
           grep -n 'XITEM_IV_ATK' "$GITHUB_WORKSPACE/game_extras.h"
           grep -n 'XITEM_GOLD_CROWN' "$GITHUB_WORKSPACE/game_extras.h"
           grep -n 'XITEM_SHINY_BERRY' "$GITHUB_WORKSPACE/game_extras.h"
-          grep -n 'count = random(100) < 30 ? 2 : 1;' "$GITHUB_WORKSPACE/TamaPoke.ino"
-          grep -n 'random(100) >= 3' "$GITHUB_WORKSPACE/TamaPoke.ino"
           grep -n 'random(100) < 16 ? 8' "$GITHUB_WORKSPACE/game_extras.cpp"
           grep -n 'random(100) < 8 ? XITEM_GOLD_CROWN' "$GITHUB_WORKSPACE/game_extras.cpp"
           grep -n 'uint16_t A = effStat(atk, SI_ATK)' "$GITHUB_WORKSPACE/battle.cpp"
@@ -148,7 +147,7 @@ jobs:
               print('WARNING: upstream PokeAPI National Dex currently reports below 1025')
           PY
 
-      - name: Verify v3.63.4 training rewards + learnset expansion + runtime stability + single-release storage + base-pack guard + canonical forms + regional evolutions + framed PUT4
+      - name: Verify current training rewards + learnset expansion + runtime stability + storage + forms + PUT4
         run: |
           set -euxo pipefail
           grep -q 'targetFrameMs = activeAnimated ? 85UL : 100UL' "$GITHUB_WORKSPACE/TamaPoke.ino"
@@ -278,7 +277,7 @@ jobs:
           cp "$GITHUB_WORKSPACE"/*.cpp "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
           cp "$GITHUB_WORKSPACE"/*.h "$GITHUB_WORKSPACE/_sketch/TamaPoke/"
 
-      - name: Compile TamaPoke v3.63.4 training-reward learnset-expanded runtime-stable firmware
+      - name: Compile current TamaPoke firmware
         run: |
           set -euxo pipefail
           mkdir -p "$GITHUB_WORKSPACE/build"
