@@ -16,10 +16,10 @@ def need(cond,msg):
 
 # Version/installer marker for this runtime stabilization release.
 m=re.search(r'^#define\s+FW_VERSION\s+"([^"]+)"', ino, re.M)
-need(bool(m) and m.group(1)=='3.63.3','version: FW_VERSION is not 3.63.3')
+need(bool(m) and m.group(1)=='3.63.4','version: FW_VERSION is not 3.63.4')
 installer=(root/'TamaPoke-KO-OneClick-Installer.html').read_text(encoding='utf-8')
-need('3.63.3-ko-training-reward-persistence-stability-learnset-expansion-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36' in installer,
-     'version: installer marker is not v3.63.3 learnset/stability')
+need('3.63.4-ko-training-reward-boost-persistence-stability-learnset-expansion-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36' in installer,
+     'version: installer marker is not v3.63.4 learnset/stability')
 
 def body(src, name):
     pat=re.compile(r'^[^;{}\n]*\b(?:[A-Za-z_]\w*::)?'+re.escape(name)+r'\s*\([^;{}\n]*\)\s*\{', re.M)

@@ -15,7 +15,7 @@ wfcopy=(root/'GITHUB_WORKFLOW_COPY.txt').read_text(encoding='utf-8')
 def need(cond,msg):
     if not cond: raise SystemExit('FAIL: '+msg)
 
-need('#define FW_VERSION "3.63.3"' in ino, 'firmware version')
+need('#define FW_VERSION "3.63.4"' in ino, 'firmware version')
 # Save compatibility: new item must be appended AFTER Gold Crown, while old XITEM_SHINY stays in place.
 need(re.search(r'XITEM_GOLD_CROWN,\s*XITEM_SHINY_BERRY,\s*XITEM_COUNT',h,re.S), 'Shiny Berry appended after legacy items')
 need('case XITEM_SHINY:' in cpp and '_shinyBoost = true' in cpp, 'original next-egg Shiny boost retained')
@@ -24,9 +24,9 @@ need('case XITEM_SHINY_BERRY:' in cpp and 'pet.makeCurrentShiny()' in cpp, 'curr
 need('pet.registerSpecies(pet.speciesId);' not in cpp, 'GameExtras illegally calls private Pet::registerSpecies')
 need('bool makeCurrentShiny();' in pet_h, 'public Shiny conversion API missing')
 need('bool Pet::makeCurrentShiny()' in pet_cpp and 'registerSpecies(speciesId);' in pet_cpp, 'Pet Shiny API must register Shiny Pokedex entry internally')
-need('count = random(100) < 30 ? 2 : 1;' in ino, '30 percent double IV berry roll')
+need('count = random(100) < 30 ? 9 : 5;' in ino, '30 percent nine-IV-berry bonus roll with five guaranteed')
 need('extras.giveItem(id, count);' in ino, 'guaranteed IV berry grant')
-need('random(100) >= 3' in ino and 'XITEM_SHINY_BERRY' in ino, '3 percent Shiny Berry drop')
+need('random(100) >= 30' in ino and 'XITEM_SHINY_BERRY' in ino, '30 percent Shiny Berry drop')
 need('defRound >= DEF_ROUNDS' in ino, 'defence requires proper completion')
 need('sackHits > 0' in ino and 'spdHits > 0' in ino, 'attack/speed require participation')
 need('훈련 보상:' in ino and '희귀 보상:' in ino, 'result screen reward labels')
@@ -39,4 +39,4 @@ need("score >= great ? 38 : (score >= good ? 22 : 0)" not in wf, 'workflow still
 need(wf.count('verify_training_rewards.py') >= 2, 'workflow does not run training reward regression in both verification stages')
 need(wf == wfcopy, 'GITHUB_WORKFLOW_COPY.txt drifted from .github/workflows/main.yml')
 need('다음 알: 반짝부적 적용 중", 1), 82' in ino, 'Shiny Charm armed label overlaps the fourth item row')
-print('Training reward regression OK: guaranteed IV berry, 30% x2, 3% current-Shiny berry, egg Shiny boost preserved, private Pet API compile guard OK')
+print('Training reward regression OK: 5 IV berries guaranteed, 30% total x9, 30% current-Shiny berry, egg Shiny boost preserved, private Pet API compile guard OK')

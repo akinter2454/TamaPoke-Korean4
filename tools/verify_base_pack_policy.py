@@ -44,7 +44,7 @@ assert mod.base_sprite_path(25,group(has=True))=='0025'
 assert mod.base_sprite_path(25,group(children={'0000':group(has=True)}))=='0025/0000'
 
 lines=[
- 'TamaPoke v3.63.3 BASE PACK POLICY AUDIT',
+ 'TamaPoke v3.63.4 BASE PACK POLICY AUDIT',
  '',
  f'Pinned upstream commit: {PIN}',
  'Upstream repository: DylanPDao/TamaPoke',

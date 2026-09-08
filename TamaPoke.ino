@@ -44,7 +44,7 @@
 
 // Version del firmware. Subir este numero en cada release (y manifest.json para
 // el instalador web). Se muestra en la pantalla de ajustes y por serie al arrancar.
-#define FW_VERSION "3.63.3"
+#define FW_VERSION "3.63.4"
 // Set to 1 only for a connected USB soak test. Serial printf can itself cause
 // a visible hitch, so normal builds keep frame diagnostics completely off.
 #define TAMAPOKE_FRAME_DIAG 0
@@ -3769,15 +3769,15 @@ static int defenseBlockHalf() {
   return v < 84 ? 84 : v;
 }
 
-// v3.63.2 training drops ----------------------------------------------------
-// A properly completed training session always earns one IV berry. There is a
-// 30% bonus roll for a second copy. A small 10% redirect keeps HP IV berries
+// v3.63.4 training drops ----------------------------------------------------
+// A properly completed training session always earns five IV berries. There is a
+// 30% bonus roll that upgrades the total reward to nine. A small 10% redirect keeps HP IV berries
 // obtainable even though HP has no dedicated minigame.
 static uint8_t grantTrainingIvBerry(uint8_t primary, bool completed, uint8_t &count) {
   count = 0;
   if (!completed) return XITEM_COUNT;
   uint8_t id = random(100) < 10 ? XITEM_IV_HP : primary;
-  count = random(100) < 30 ? 2 : 1;
+  count = random(100) < 30 ? 9 : 5;
   extras.giveItem(id, count);
   return id;
 }
@@ -3785,7 +3785,7 @@ static uint8_t grantTrainingIvBerry(uint8_t primary, bool completed, uint8_t &co
 // Separate from the original XITEM_SHINY/반짝부적. This rare berry changes the
 // CURRENT Pokemon and never consumes or replaces the next-egg Shiny boost.
 static bool grantTrainingShinyBerry(bool completed) {
-  if (!completed || random(100) >= 3) return false;  // 3% per proper completion
+  if (!completed || random(100) >= 30) return false;  // 30% per proper completion
   extras.giveItem(XITEM_SHINY_BERRY, 1);
   return true;
 }
