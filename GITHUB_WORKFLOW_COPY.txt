@@ -1,4 +1,4 @@
-name: TamaPoke PMDCatalog - Training Rewards + Learnset Expansion + Runtime Stability + GitHub Pages
+name: TamaPoke PMDCatalog - Reserved Species Guard + Training Rewards + Stability + GitHub Pages
 
 on:
   workflow_dispatch:
@@ -53,6 +53,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/verify_runtime_stability.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_learnset_expansion.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_training_rewards.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_reserved_species.py"
           # Training reward amounts/probabilities are intentionally validated only by verify_training_rewards.py.
           grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -n 'MEGA_EVOLVE_LEVEL = 70' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
@@ -73,6 +74,7 @@ jobs:
           rm -rf "$GITHUB_WORKSPACE/tools/sdcard/mons" "$GITHUB_WORKSPACE/tools/web_extra"
           mkdir -p "$GITHUB_WORKSPACE/tools/sdcard/mons"
           python3 "$GITHUB_WORKSPACE/tools/pack_pmd_catalog.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_reserved_species.py"
           cat "$GITHUB_WORKSPACE/tools/pmd_sprite_report.txt"
           test -d "$GITHUB_WORKSPACE/tools/web_extra/previews"
           test "$(find "$GITHUB_WORKSPACE/tools/web_extra/previews" -type f -name 'p*.png' | wc -l)" -gt 0
@@ -246,9 +248,9 @@ jobs:
           with zipfile.ZipFile(z) as q:
               bad=q.testzip(); assert bad is None,bad
               names=set(q.namelist())
-              assert 'README-SD-KO.txt' in names and 'BUNDLE-INFO.json' in names and 'SHA256SUMS.txt' in names
+              assert 'README-SD-KO.txt' in names and 'BUNDLE-INFO.json' in names
               assert any(n.startswith('mons/p001.bin') for n in names)
-          print('full microSD ZIP OK:',z,z.stat().st_size,m['sha256'])
+          print('full microSD ZIP OK:',z,z.stat().st_size)
           PYBUNDLE
           cat "$GITHUB_WORKSPACE/tools/web_extra/full-sprite-bundle-report.txt"
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
-import hashlib, io, json, re, shutil, struct, tempfile, time, zipfile
+import io, json, re, shutil, struct, tempfile, time, zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 TOOLS=ROOT/'tools'
@@ -164,7 +164,7 @@ def build(fetcher=fetch, out_dir:Path|None=None):
     # Include human-readable instructions and exact provenance.
     file_rows=[]
     for p in sorted(mons.iterdir(),key=lambda x:x.name):
-        b=p.read_bytes(); file_rows.append((f'mons/{p.name}',len(b),hashlib.sha256(b).hexdigest(),sources.get(p.name,'')))
+        b=p.read_bytes(); file_rows.append((f'mons/{p.name}',len(b),sources.get(p.name,'')))
     total_bytes=sum(r[1] for r in file_rows)
     info=(
         f'TamaPoke KO v{version} - PC용 microSD 전체 스프라이트\n\n'
@@ -185,8 +185,6 @@ def build(fetcher=fetch, out_dir:Path|None=None):
     if CREDITS.is_file(): shutil.copy2(CREDITS,stage/'PMDCOLLAB_CREDITS.txt')
     shutil.copy2(TOOLS/'sprite_audit.json',stage/'sprite-audit.json')
     shutil.copy2(TOOLS/'web_extra'/'sprite-manifest.json',stage/'sprite-manifest.json')
-    checksum='\n'.join(f'{sha}  {name}' for name,_,sha,_ in file_rows)+'\n'
-    (stage/'SHA256SUMS.txt').write_text(checksum,encoding='utf-8')
     detail={
         'schema':1,'firmware_version':version,'catalog_fingerprint':audit.get('catalog_fingerprint'),
         'base_pack_commit':BASE_PACK_COMMIT,'region_counts':region_counts,'managed_files':managed,
@@ -201,9 +199,8 @@ def build(fetcher=fetch, out_dir:Path|None=None):
     with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6,allowZip64=True) as z:
         for p in sorted(stage.rglob('*')):
             if p.is_file(): z.write(p,p.relative_to(stage).as_posix())
-    zsha=hashlib.sha256(out.read_bytes()).hexdigest()
     metadata={
-        'schema':1,'version':version,'filename':filename,'sha256':zsha,'size_bytes':out.stat().st_size,
+        'schema':1,'version':version,'filename':filename,'size_bytes':out.stat().st_size,
         'uncompressed_sprite_bytes':total_bytes,'catalog_fingerprint':audit.get('catalog_fingerprint'),
         'base_pack_commit':BASE_PACK_COMMIT,'counts':detail,'download_url':None,
         'release_tag':'sprites-current','storage_policy':'single rolling GitHub Release; no full-ZIP Actions artifact',
@@ -212,7 +209,7 @@ def build(fetcher=fetch, out_dir:Path|None=None):
     (out_dir/'sprite-bundle.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     report=(
         f'TamaPoke v{version} FULL SD SPRITE BUNDLE\n'
-        f'file={filename}\nsha256={zsha}\nzip_bytes={out.stat().st_size}\n'
+        f'file={filename}\nzip_bytes={out.stat().st_size}\n'
         f'uncompressed_sprite_bytes={total_bytes}\nbase_pack_commit={BASE_PACK_COMMIT}\n'
         f'catalog_fingerprint={audit.get("catalog_fingerprint")}\n'
         f'base_region_counts={json.dumps(region_counts,ensure_ascii=False)}\nmanaged_files={managed}\n'

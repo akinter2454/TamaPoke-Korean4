@@ -224,7 +224,7 @@ const EMBEDDED_FIRMWARE = {
   boot_app0: "",
   app: ""
 };
-const FW_VERSION = "3.63.5-ko-training-reward-boost-persistence-stability-learnset-expansion-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36";
+const FW_VERSION = "3.63.6-ko-reserved-species-disable-training-reward-boost-persistence-stability-learnset-expansion-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36";
 const EMBEDDED_SPRITE_PAKS = {};
 
 const OFFSETS = {
@@ -416,7 +416,7 @@ async function deleteSpriteFile(name) {
   transferError='';
   await writer.write(enc.encode(`DEL ${name}\n`));
   if(!await waitFor('DONE',10000)) {
-    transferError=`${name}: 오래된 표현용 스프라이트 삭제 실패`;
+    transferError=`${name}: 오래된/비활성 스프라이트 삭제 실패`;
     return false;
   }
   return true;
@@ -425,7 +425,7 @@ async function deleteSpriteFile(name) {
 async function cleanupRetiredSprites(manifest) {
   const files=(manifest&&manifest.retired_files)||[];
   if(!files.length) return true;
-  log(`표현용 AltColor/Alternate/Cutscene/Beta 잔여 파일 ${files.length}개 정리...`);
+  log(`비활성/retired 스프라이트 잔여 파일 ${files.length}개 정리...`);
   let done=0;
   for(const name of files) {
     if(!await deleteSpriteFile(name)) {
@@ -435,7 +435,7 @@ async function cleanupRetiredSprites(manifest) {
     done++;
     if(done===files.length || done%25===0) log(`정리 ${done}/${files.length}`);
   }
-  log(`표현용 잔여 스프라이트 정리 완료: ${done}개`);
+  log(`비활성/retired 스프라이트 정리 완료: ${done}개`);
   return true;
 }
 
@@ -838,7 +838,7 @@ async function showSpriteBundleInfo(){
   const el=document.getElementById('spriteBundleInfo');
   try{
     const m=await getSpriteBundleMeta();
-    el.textContent=`v${m.version} · ${fmtBytes(m.size_bytes)} · 단일 Release(${m.release_tag||'sprites-current'}) · catalog ${m.catalog_fingerprint||'unknown'} · SHA-256 ${String(m.sha256||'').slice(0,12)}…`;
+    el.textContent=`v${m.version} · ${fmtBytes(m.size_bytes)} · 단일 Release(${m.release_tag||'sprites-current'}) · catalog ${m.catalog_fingerprint||'unknown'}`;
   }catch(e){el.textContent='전체 ZIP 정보를 불러오지 못했습니다: '+e.message;}
 }
 document.getElementById('downloadFullSpriteZip').addEventListener('click',async(ev)=>{
@@ -847,7 +847,7 @@ document.getElementById('downloadFullSpriteZip').addEventListener('click',async(
     const m=await getSpriteBundleMeta();
     const url=m.download_url||('./'+m.filename);
     if(!url||!m.filename)throw new Error('다운로드 주소가 아직 생성되지 않았습니다. GitHub Actions가 성공했는지 확인하세요.');
-    log(`PC용 전체 ZIP 다운로드 · ${m.filename} · ${fmtBytes(m.size_bytes)} · SHA-256 ${m.sha256}`);
+    log(`PC용 전체 ZIP 다운로드 · ${m.filename} · ${fmtBytes(m.size_bytes)}`);
     const a=document.createElement('a');a.href=url;a.download=m.filename;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
   }catch(e){log('PC용 전체 스프라이트 ZIP 다운로드 실패: '+e.message);}
   finally{b.disabled=false;}

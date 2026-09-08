@@ -46,7 +46,7 @@ TRACKER_URL = 'https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/t
 POKE = 'https://pokeapi.co/api/v2'
 SPECIES_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species.csv'
 EVOLUTION_CSV_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_evolution.csv'
-USER_AGENT = 'TamaPoke-v3.62.8-SingleRelease-BasePackGuard/1.0 (+noncommercial classroom project)'
+USER_AGENT = 'TamaPoke-PMDCatalog/1.0 (+noncommercial classroom project)'
 FORM_ID_START = 1200
 EVOLUTION_LEVEL_CAP = 100
 MEGA_EVOLVE_LEVEL = 70
@@ -61,6 +61,12 @@ FIXED_ALOLA = {
     (103,'0001'):826,(105,'0001'):827,
 }
 NO_ART_BASE = {514,516,520,522,523,538,558,564,565,591,592,616,626,668,732,735,741,756,765}
+
+# User-requested temporary removals. Keep their National Dex/internal slots reserved
+# so they can be re-enabled later without renumbering saves, moves, or catalog IDs.
+# #1020 Gouging Fire / 꿰뚫는화염 -> internal base ID 1038
+# #1021 Raging Bolt / 날뛰는우레 -> internal base ID 1039
+USER_DISABLED_NATDEX = {1020, 1021}
 
 # Temporary/battle-powerup mechanics remain excluded by default.  Mega is
 # deliberately left in this list so ONLY the explicit whitelist below can pass.
@@ -687,7 +693,7 @@ def main():
     by_region_form_all={}
     for lk,rec in sorted(lock['forms'].items(),key=lambda kv:int(kv[1]['id'])):
         nat=int(rec['natdex']); iid=int(rec['id']); f=discovered.get(lk)
-        enabled=bool(f)
+        enabled=bool(f) and nat not in USER_DISABLED_NATDEX
         label=(f or {}).get('form_name') or rec.get('label','Form')
         full=(f or {}).get('full_name') or f"{nat} {label}"
         region=form_region(full,nat)
@@ -706,7 +712,7 @@ def main():
     # form IDs 810..827 are enabled ONLY when the CURRENT PMDCollab tracker
     # actually exposes their behaviour sprite; this prevents a phantom form
     # from remaining hatchable after an upstream removal.
-    enabled_ids=set(range(1,810)) - NO_ART_BASE
+    enabled_ids=(set(range(1,810)) - NO_ART_BASE) - USER_DISABLED_NATDEX
     # New base species 810..current_max have deterministic ids.
     for nat in range(810,current_max+1):
         iid=internal_base_id(nat)
@@ -723,11 +729,13 @@ def main():
         meta=meta_from_pokemon(d,pokemon_data.get(nat))
         node=tracker.get(f'{nat:04d}') or tracker.get(str(nat)) or {}
         base_path=base_sprite_path(nat,node)
-        enabled=bool(base_path)
+        user_disabled = nat in USER_DISABLED_NATDEX
+        enabled=bool(base_path) and not user_disabled
         parent=parent_of.get(nat)
         if parent: meta['rarity']='R_EVO'
         entry={'id':iid,'natdex':nat,'name':eng,'ko_name':ko,'enabled':enabled,'region':gen_region(nat),
-               'pmd_path':base_path,'shiny_path':find_shiny_path(node,f'{nat:04d}',base_root=True) if enabled else None,'kind':'base',**meta}
+               'pmd_path':base_path,'shiny_path':find_shiny_path(node,f'{nat:04d}',base_root=True) if enabled else None,
+               'disabled_reason':('user-disabled reserved slot' if user_disabled else None),'kind':'base',**meta}
         new_entries[iid]=entry
         if enabled: enabled_ids.add(iid)
 
@@ -771,7 +779,9 @@ def main():
             eng=(basename+' '+f['form_name']).upper()
             ko=ko_form_name(baseko,f['form_name'])
         new_entries[iid]={'id':iid,'natdex':nat,'name':eng,'ko_name':ko,'enabled':f['enabled'],'region':f['region'],
-                          'pmd_path':f['pmd_path'],'shiny_path':f.get('shiny_path'),'kind':'form','form_key':f['form_key'],
+                          'pmd_path':f['pmd_path'],'shiny_path':f.get('shiny_path'),
+                          'disabled_reason':('user-disabled reserved slot' if nat in USER_DISABLED_NATDEX else None),
+                          'kind':'form','form_key':f['form_key'],
                           'form_name':f['form_name'],'mega':bool(f.get('mega')),**meta}
         if f['enabled']:enabled_ids.add(iid)
 
@@ -898,6 +908,16 @@ def main():
         nat=int(r['natdex']); tag=regional_tag(r.get('label',''),nat)
         r['canonical_id']=int(by_region_form.get((nat,tag), internal_base_id(nat))) if tag else internal_base_id(nat)
     retired_ids=[int(x['id']) for x in retired_forms]
+    # Also retire sprite FILES for temporarily user-disabled species. Their catalog/Dex
+    # IDs remain reserved; only p<ID>.bin/ps<ID>.bin are tombstoned for SD cleanup.
+    user_disabled_sprite_ids=[]
+    for nat in sorted(USER_DISABLED_NATDEX):
+        if nat <= current_max:
+            user_disabled_sprite_ids.append(internal_base_id(nat))
+    for f in form_entries:
+        if int(f['natdex']) in USER_DISABLED_NATDEX:
+            user_disabled_sprite_ids.append(int(f['id']))
+    retired_ids=sorted(set(retired_ids) | set(user_disabled_sprite_ids))
     max_id=max([827,current_max+18]+[int(x['id']) for x in lock['forms'].values()]+retired_ids)
     # Build every positional row; holes are disabled placeholders.
     all_rows=[None]*(max_id+1)
@@ -1028,9 +1048,11 @@ def main():
         catalog_entries.append({'id':iid,'natdex':e['natdex'],'lock_key':(f"{e['natdex']:04d}/{e.get('form_key','')}" if e['kind']=='form' else None),
                                 'form_key':e.get('form_key'),'form_name':e.get('form_name'),
                                 'pmd_path':e.get('pmd_path'),'shiny_path':e.get('shiny_path'),'name':e['ko_name'],
-                                'region':e['region'],'kind':e['kind'],'enabled':bool(e['enabled']),'mega':bool(e.get('mega'))})
+                                'region':e['region'],'kind':e['kind'],'enabled':bool(e['enabled']),'mega':bool(e.get('mega')),
+                                'disabled_reason':e.get('disabled_reason')})
     cat={'schema':1,'generated_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'source':TRACKER_URL,
          'national_dex_max':current_max,'dex_count':max_id,'entries':catalog_entries,
+         'user_disabled_natdex':sorted(USER_DISABLED_NATDEX),
          'extra_edges':[{'base':a,'target':b,'level':l,'reason':r} for a,b,l,r in extra_edges],
          'regional_descendant_routes':[{'natdex':n,'base':a,'target':b,'level':l} for n,a,b,l in regional_route_rows],
          'excluded_gimmicks':[x for x in excluded if not x.get('presentation')],
@@ -1103,14 +1125,17 @@ def main():
     included=sum(1 for x in catalog_entries if x['enabled'])
     form_included=sum(1 for x in catalog_entries if x['enabled'] and x['kind']=='form')
     mega_included=sum(1 for x in catalog_entries if x['enabled'] and x.get('mega'))
-    missing=[x for x in catalog_entries if not x['enabled']]
+    user_disabled_entries=[x for x in catalog_entries if int(x.get('natdex',0)) in USER_DISABLED_NATDEX]
+    missing=[x for x in catalog_entries if not x['enabled'] and int(x.get('natdex',0)) not in USER_DISABLED_NATDEX]
     report=[
       'TamaPoke v3.62.5 current PMDCollab catalog sync - canonical forms + regional evolution + Mega36',
       f'Source: {TRACKER_URL}',f'National Dex detected: 1..{current_max}',f'TamaPoke DEX_COUNT: {max_id}',
       f'Added/managed entries with real current sprite: {included}',f'Form entries with real current sprite: {form_included}',
       f'Approved Mega entries with real current sprite: {mega_included}/{APPROVED_MEGA_COUNT}',
       f'Excluded non-approved battle-gimmick forms: {sum(1 for x in excluded if not x.get("presentation"))}',
-      f'Retired presentation-only form IDs: {len(retired_forms)}',f'Current new/base locked entries without sprite: {len(missing)}','',
+      f'Retired presentation-only form IDs: {len(retired_forms)}',
+      f'User-disabled reserved National Dex: {",".join(map(str,sorted(USER_DISABLED_NATDEX)))}',
+      f'Current new/base locked entries without sprite: {len(missing)}','',
       'APPROVED MEGA EVOLUTIONS:'
     ]
     report += [f"- id {x['id']} nat#{x['natdex']} {x['name']} Lv.{MEGA_EVOLVE_LEVEL} ({x.get('pmd_path')})" for x in catalog_entries if x.get('enabled') and x.get('mega')]
@@ -1118,6 +1143,8 @@ def main():
     report += [f"- #{x['natdex']} {x['full_name']} ({x['pmd_path']})" for x in excluded if not x.get('presentation')]
     report += ['', 'RETIRED PRESENTATION-ONLY PMDCOLLAB SLOTS:']
     report += [f"- id {r['id']} nat#{r['natdex']} {r['label']} -> canonical id {r.get('canonical_id')}" for r in retired_forms]
+    report += ['', 'USER-DISABLED / RESERVED IDS:']
+    report += [f"- id {x['id']} nat#{x['natdex']} {x['name']} (reserved; not hatchable/encounterable/packed)" for x in user_disabled_entries]
     report += ['', 'NO CURRENT SPRITE / DISABLED:']
     report += [f"- id {x['id']} nat#{x['natdex']} {x['name']}" for x in missing]
     if failures:

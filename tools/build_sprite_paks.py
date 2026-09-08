@@ -75,6 +75,6 @@ def main():
 
     (OUT/'sprite-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
     if total==0:raise SystemExit('No added PMDCollab sprite files to publish')
-    print(f'added sprite files: {total}; pak chunks: {len(manifest["all"])}; Mega36 delta: {len(mega_fs)} files/{len(mega_parts)} chunks; retired presentation files: {len(retired_files)}')
+    print(f'added sprite files: {total}; pak chunks: {len(manifest["all"])}; Mega36 delta: {len(mega_fs)} files/{len(mega_parts)} chunks; retired/disabled files: {len(retired_files)}')
 
 if __name__=='__main__':main()

@@ -44,7 +44,7 @@
 
 // Version del firmware. Subir este numero en cada release (y manifest.json para
 // el instalador web). Se muestra en la pantalla de ajustes y por serie al arrancar.
-#define FW_VERSION "3.63.5"
+#define FW_VERSION "3.63.6"
 // Set to 1 only for a connected USB soak test. Serial printf can itself cause
 // a visible hitch, so normal builds keep frame diagnostics completely off.
 #define TAMAPOKE_FRAME_DIAG 0
@@ -993,7 +993,9 @@ void ensureMon() {
   beh.x = beh.targetX = 233;
   beh.mode = 0;
   beh.until = 0;
-  if (pet.speciesId >= 1 && pet.speciesId <= DEX_COUNT) {
+  // DEX_ENABLED is authoritative. Even if an older microSD still contains a
+  // retired/temporarily-disabled p<ID>.bin, never render it from stale media.
+  if (pet.speciesId >= 1 && pet.speciesId <= DEX_COUNT && speciesHasArt(pet.speciesId)) {
     pmd.load(pet.speciesId, pet.shiny);          // principal: PMD
     if (!pmd.loaded) mon.load(pet.speciesId, pet.shiny);  // respaldo: B/N
   }
@@ -3769,7 +3771,7 @@ static int defenseBlockHalf() {
   return v < 84 ? 84 : v;
 }
 
-// v3.63.5 training drops ----------------------------------------------------
+// v3.63.6 training drops ----------------------------------------------------
 // A properly completed training session always earns five IV berries. There is a
 // 30% bonus roll that upgrades the total reward to nine. A small 10% redirect keeps HP IV berries
 // obtainable even though HP has no dedicated minigame.
@@ -4969,7 +4971,7 @@ static void buildSquad(uint8_t maxLvl, uint8_t maxCount, uint16_t mask) {
   btlSquadAt = 0;
   btlPetIn = false;
   if (maxCount > TRAINER_TEAM_MAX) maxCount = TRAINER_TEAM_MAX;
-  if (!pet.isEgg() && btlSquadN < maxCount && (mask & 1)) {
+  if (!pet.isEgg() && speciesHasArt(pet.speciesId) && btlSquadN < maxCount && (mask & 1)) {
     Pet tmp = pet;                       // a copy: the real pet is untouched
     if (maxLvl && tmp.level() > maxLvl) {
       tmp.ageMinutes = (uint32_t)(maxLvl - 1) * MINUTES_PER_LEVEL;
@@ -4980,7 +4982,7 @@ static void buildSquad(uint8_t maxLvl, uint8_t maxCount, uint16_t mask) {
     btlPetIn = true;      // the training reward goes to whoever fought for it
   }
   for (int i = 0; i < PARTY_SLOTS && btlSquadN < maxCount; i++) {
-    if (party.slots[i].empty() || !(mask & (1 << (i + 1)))) continue;
+    if (party.slots[i].empty() || !speciesHasArt(party.slots[i].dex) || !(mask & (1 << (i + 1)))) continue;
     PartyMon m = party.slots[i];
     if (maxLvl && m.level > maxLvl) m.level = maxLvl;
     combatantFromParty(btlSquad[btlSquadN++], m);
@@ -6241,8 +6243,8 @@ void renderSpeed() {
 
 // candidate n: 0 = the live pet, 1..PARTY_SLOTS = banked members
 bool pickExists(uint8_t n) {
-  if (n == 0) return !pet.isEgg();
-  return n <= PARTY_SLOTS && !party.slots[n - 1].empty();
+  if (n == 0) return !pet.isEgg() && speciesHasArt(pet.speciesId);
+  return n <= PARTY_SLOTS && !party.slots[n - 1].empty() && speciesHasArt(party.slots[n - 1].dex);
 }
 uint8_t pickChosen() {
   uint8_t c = 0;
@@ -7304,9 +7306,13 @@ void renderRandomEvent() {
 
 static int careSlotDex(uint8_t slot) {
   if (slot >= CARE_SLOT_COUNT) return -1;
-  if (slot == careSlots.active()) return pet.speciesId;
-  const CareSnapshot *cs = careSlots.snapshot(slot);
-  return cs ? cs->speciesId : -1;
+  int16_t d = -1;
+  if (slot == careSlots.active()) d = pet.speciesId;
+  else {
+    const CareSnapshot *cs = careSlots.snapshot(slot);
+    d = cs ? cs->speciesId : -1;
+  }
+  return speciesHasArt(d) ? d : -1;
 }
 
 static uint8_t careSnapshotLevel(const CareSnapshot &cs, uint32_t nowEpoch) {
@@ -7335,12 +7341,12 @@ static uint16_t careCalcStat(uint8_t base, uint8_t iv, uint8_t lvl, uint8_t tr) 
 static bool combatantFromCareSlot(uint8_t slot, Combatant &c, uint32_t nowEpoch) {
   if (slot >= CARE_SLOT_COUNT) return false;
   if (slot == careSlots.active()) {
-    if (pet.isEgg()) return false;
+    if (pet.isEgg() || !speciesHasArt(pet.speciesId)) return false;
     combatantFromPet(c, pet);
     return true;
   }
   const CareSnapshot *ps = careSlots.snapshot(slot);
-  if (!ps || ps->speciesId < 1 || ps->speciesId > DEX_COUNT) return false;
+  if (!ps || ps->speciesId < 1 || ps->speciesId > DEX_COUNT || !speciesHasArt(ps->speciesId)) return false;
   const CareSnapshot &m = *ps;
   uint8_t lvl = careSnapshotLevel(m, nowEpoch);
   uint8_t pers = personalityIdFor(m.speciesId, m.ivAtk, m.ivDef, m.ivSpe, m.ivHp);
