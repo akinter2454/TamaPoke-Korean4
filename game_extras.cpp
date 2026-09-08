@@ -245,7 +245,7 @@ bool GameExtras::claimMission(uint8_t i, Pet &pet) {
 const char *GameExtras::itemNameKo(uint8_t id) const {
   static const char *const N[XITEM_COUNT] = {
     "공격사탕", "방어사탕", "스피드사탕", "활력사탕", "반짝부적", "기력사탕",
-    "공격개체캡슐", "방어개체캡슐", "스피드개체캡슐", "체력개체캡슐", "금빛왕관"
+    "공격개체열매", "방어개체열매", "스피드개체열매", "체력개체열매", "금빛왕관", "샤이니열매"
   };
   return id < XITEM_COUNT ? N[id] : "아이템";
 }
@@ -253,7 +253,7 @@ const char *GameExtras::itemNameKo(uint8_t id) const {
 const char *GameExtras::itemEffectKo(uint8_t id) const {
   static const char *const N[XITEM_COUNT] = {
     "공격 훈련 +8", "방어 훈련 +8", "스피드 훈련 +8", "기력·행복 회복", "다음 알 Shiny 2배", "기력 +70",
-    "공격 개체값 +1", "방어 개체값 +1", "스피드 개체값 +1", "체력 개체값 +1", "모든 개체값 +1"
+    "공격 개체값 +1", "방어 개체값 +1", "스피드 개체값 +1", "체력 개체값 +1", "모든 개체값 +1", "현재 포켓몬을 Shiny로 변화"
   };
   return id < XITEM_COUNT ? N[id] : "";
 }
@@ -337,6 +337,16 @@ bool GameExtras::useItem(uint8_t id, Pet &pet) {
       used = any;
       break;
     }
+    case XITEM_SHINY_BERRY:
+      // v3.63.1: unlike XITEM_SHINY (the next-egg boost), this berry changes
+      // the living companion immediately. registerSpecies() also records the
+      // Shiny form in the Pokedex. IVs are intentionally untouched.
+      if (!pet.shiny) {
+        pet.shiny = true;
+        pet.registerSpecies(pet.speciesId);
+        used = true;
+      }
+      break;
   }
   if (!used) return false;
   _items[id]--;

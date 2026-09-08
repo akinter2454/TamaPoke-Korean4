@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+from pathlib import Path
+import re
+root=Path(__file__).resolve().parents[1]
+ino=(root/'TamaPoke.ino').read_text(encoding='utf-8')
+h=(root/'game_extras.h').read_text(encoding='utf-8')
+cpp=(root/'game_extras.cpp').read_text(encoding='utf-8')
+save=(root/'save.cpp').read_text(encoding='utf-8')
+sd=(root/'sdmon.cpp').read_text(encoding='utf-8')
+wf=(root/'.github/workflows/main.yml').read_text(encoding='utf-8')
+wfcopy=(root/'GITHUB_WORKFLOW_COPY.txt').read_text(encoding='utf-8')
+
+def need(cond,msg):
+    if not cond: raise SystemExit('FAIL: '+msg)
+
+need('#define FW_VERSION "3.63.2"' in ino, 'firmware version')
+# Save compatibility: new item must be appended AFTER Gold Crown, while old XITEM_SHINY stays in place.
+need(re.search(r'XITEM_GOLD_CROWN,\s*XITEM_SHINY_BERRY,\s*XITEM_COUNT',h,re.S), 'Shiny Berry appended after legacy items')
+need('case XITEM_SHINY:' in cpp and '_shinyBoost = true' in cpp, 'original next-egg Shiny boost retained')
+need('consumeShinyBoostForEgg' in cpp, 'next-egg Shiny consumption retained')
+need('case XITEM_SHINY_BERRY:' in cpp and 'pet.shiny = true' in cpp, 'current Pokemon Shiny transformation')
+need('pet.registerSpecies(pet.speciesId);' in cpp, 'Shiny Pokedex registration')
+need('count = random(100) < 30 ? 2 : 1;' in ino, '30 percent double IV berry roll')
+need('extras.giveItem(id, count);' in ino, 'guaranteed IV berry grant')
+need('random(100) >= 3' in ino and 'XITEM_SHINY_BERRY' in ino, '3 percent Shiny Berry drop')
+need('defRound >= DEF_ROUNDS' in ino, 'defence requires proper completion')
+need('sackHits > 0' in ino and 'spdHits > 0' in ino, 'attack/speed require participation')
+need('훈련 보상:' in ino and '희귀 보상:' in ino, 'result screen reward labels')
+need('const uint8_t utility[4] = { XITEM_SHINY, XITEM_ENERGY, XITEM_GOLD_CROWN, XITEM_SHINY_BERRY }' in ino, 'bag page exposes Shiny Berry')
+need('size_t n = itemStored < sizeof(_items) ? itemStored : sizeof(_items);' in cpp and
+     'prefs.getBytes("xitem", _items, n);' in cpp, 'older shorter xitem arrays migrate safely')
+need('{ "xitem", SK_BYTES }' in save, 'xitem inventory remains in serial backup whitelist')
+need('if (!f && shiny)' in sd, 'missing Shiny sprite must fall back to normal sprite')
+need("score >= great ? 38 : (score >= good ? 22 : 0)" not in wf, 'workflow still checks obsolete random IV-drop formula')
+need(wf.count('verify_training_rewards.py') >= 2, 'workflow does not run training reward regression in both verification stages')
+need(wf == wfcopy, 'GITHUB_WORKFLOW_COPY.txt drifted from .github/workflows/main.yml')
+need('다음 알: 반짝부적 적용 중", 1), 82' in ino, 'Shiny Charm armed label overlaps the fourth item row')
+print('Training reward regression OK: guaranteed IV berry, 30% x2, 3% current-Shiny berry, egg Shiny boost preserved')

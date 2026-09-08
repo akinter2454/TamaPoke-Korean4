@@ -1,11 +1,7 @@
-TamaPoke KO v3.63.0 Learnset Expansion + Stability Guard
+TamaPoke KO v3.63.2 GitHub 업로드 안내
 
-1) 기존 GitHub 저장소를 비우지 않습니다.
-2) 이 전체본의 파일을 저장소 루트에 덮어씁니다.
-3) 기존 tools/catalog_lock.json은 반드시 보존합니다.
-4) GitHub Actions에서 v3.63.0 workflow를 실행합니다.
-5) build/deploy 성공을 확인합니다.
-6) Pages 설치기에서 v3.63.0 펌웨어를 기기에 설치하고 재부팅합니다.
-7) 스프라이트 전송은 기존 proto=4 PUT4 방식 그대로 사용할 수 있습니다.
+이 ZIP의 내용을 GitHub 저장소 루트에 그대로 덮어씁니다.
+기존 tools/catalog_lock.json이 실제 저장소에 있다면 삭제하지 마세요.
+그 후 Actions에서 v3.63.2 workflow를 실행하고 build/deploy 성공을 확인하세요.
 
-이번 버전은 기술 learnset/안정성 패치이며 스프라이트 ID/리소스 팩은 변경하지 않습니다. 기존 스프라이트 설치가 정상 완료됐다면 다시 동기화할 필요가 없습니다.
+과거 업데이트 노트/변경이력 파일과 SHA-256 체크섬 파일은 포함하지 않습니다.

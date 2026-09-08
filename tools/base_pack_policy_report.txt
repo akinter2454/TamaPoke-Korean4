@@ -1,4 +1,4 @@
-TamaPoke v3.63.0 BASE PACK POLICY AUDIT
+TamaPoke v3.63.2 BASE PACK POLICY AUDIT
 
 Pinned upstream commit: 7d5a2b3f4a4bee4f107cdae77ad13949dddfc615
 Upstream repository: DylanPDao/TamaPoke

@@ -44,7 +44,7 @@
 
 // Version del firmware. Subir este numero en cada release (y manifest.json para
 // el instalador web). Se muestra en la pantalla de ajustes y por serie al arrancar.
-#define FW_VERSION "3.63.0"
+#define FW_VERSION "3.63.2"
 // Set to 1 only for a connected USB soak test. Serial printf can itself cause
 // a visible hitch, so normal builds keep frame diagnostics completely off.
 #define TAMAPOKE_FRAME_DIAG 0
@@ -308,6 +308,8 @@ uint16_t gameScore = 0;
 uint8_t gameGain = 0;
 bool gameNewHi = false;
 uint8_t gameIvReward = XITEM_COUNT;
+uint8_t gameIvRewardCount = 0;
+bool gameShinyBerryReward = false;
 uint8_t defRound = 0;                 // completed attempts, 0..12
 uint16_t defBlocks = 0, defGoods = 0, defPerfects = 0;
 uint32_t defRoundStarted = 0;
@@ -329,13 +331,15 @@ float sackShake = 0;
 uint8_t sackGain = 0;
 bool sackNewHi = false;
 uint8_t sackIvReward = XITEM_COUNT;
+uint8_t sackIvRewardCount = 0;
+bool sackShinyBerryReward = false;
 
 // training submenu (the 5th icon): routes to the trainer for each stat.
 // ATK = punching bag, SPEED = lightning targets, DEF = timing gauge.
 bool trainOpen = false;
 
 // v3.62.9 training persistence guard. Training results can touch the pet save,
-// two daily missions and a rare IV item at once. Writing all of those NVS blobs
+// two daily missions, a guaranteed IV berry and a rare Shiny Berry at once. Writing all of those NVS blobs
 // back-to-back inside the minigame render/touch path can stall flash long enough
 // to look like (or become) a reset. Keep gameplay state in RAM, then commit the
 // pet and extras on separate loop passes after the minigame has closed.
@@ -506,6 +510,8 @@ uint32_t spdUntil = 0, spdOverUntil = 0, spdBorn = 0;
 int16_t spdX = 0, spdY = 0;
 uint16_t spdHits = 0, spdMisses = 0;   // spdHits is the score (gold targets give +2)
 uint8_t spdIvReward = XITEM_COUNT;
+uint8_t spdIvRewardCount = 0;
+bool spdShinyBerryReward = false;
 uint16_t spdCombo = 0, spdBestCombo = 0;
 uint8_t spdGain = 0;
 bool spdNewHi = false;
@@ -1074,17 +1080,25 @@ void loop() {
   // y aqui no hay animacion que se corte ni dedo esperando respuesta. Con 90s
   // de inactividad la pantalla ya atenua, asi que se vuelca enseguida; el uso
   // activo persiste igual por los guardados de cada accion (comer/jugar/...).
-  if (pet.savePending() && (screenOff || dimStage >= 1 || pet.sleeping)) {
+  // A queued training result owns its own staggered persistence path below.
+  // Do not let the generic idle/sleep saver flush pet + extras back-to-back and
+  // accidentally recreate the flash-write burst this guard was added to avoid.
+  if (!trainingPersistPhase && pet.savePending() && (screenOff || dimStage >= 1 || pet.sleeping)) {
     pet.flushSave();
   }
-  if (extras.savePending() && (screenOff || dimStage >= 1 || pet.sleeping)) {
+  if (!trainingPersistPhase && extras.savePending() && (screenOff || dimStage >= 1 || pet.sleeping)) {
     extras.flushPendingSave();
   }
 
-  // v3.62.9: after a training screen closes, persist at most ONE NVS domain
-  // per loop pass. This removes the multi-second flash-write burst that could
-  // make training appear to crash/reboot while keeping all rewards durable.
-  if (!gameOpen && !sackOpen && !spdOpen && trainingPersistPhase &&
+  // v3.63.2: persist at most ONE NVS domain per loop pass after training. A
+  // static result screen is also safe, so the earned berry/mission progress is
+  // committed before the player dismisses the result instead of living only in
+  // RAM for several seconds. Active gameplay still never writes flash here.
+  bool trainingPersistSafe = (!gameOpen && !sackOpen && !spdOpen) ||
+                             (gameOpen && gameOverUntil) ||
+                             (sackOpen && sackOverUntil) ||
+                             (spdOpen && spdOverUntil);
+  if (trainingPersistSafe && trainingPersistPhase &&
       (int32_t)(now - trainingPersistAfter) >= 0) {
     if (trainingPersistPhase == 1) {
       if (pet.savePending()) pet.flushSave();
@@ -3755,14 +3769,25 @@ static int defenseBlockHalf() {
   return v < 84 ? 84 : v;
 }
 
-static uint8_t maybeTrainingIvReward(uint8_t primary, uint16_t score, uint16_t good, uint16_t great) {
-  uint8_t chance = score >= great ? 38 : (score >= good ? 22 : 0);
-  if (!chance || random(100) >= chance) return XITEM_COUNT;
-  // HP has no dedicated minigame, so a small share of successful drops redirects to
-  // the HP capsule. Attack/Defence/Speed remain the overwhelmingly common fit.
+// v3.63.2 training drops ----------------------------------------------------
+// A properly completed training session always earns one IV berry. There is a
+// 30% bonus roll for a second copy. A small 10% redirect keeps HP IV berries
+// obtainable even though HP has no dedicated minigame.
+static uint8_t grantTrainingIvBerry(uint8_t primary, bool completed, uint8_t &count) {
+  count = 0;
+  if (!completed) return XITEM_COUNT;
   uint8_t id = random(100) < 10 ? XITEM_IV_HP : primary;
-  extras.giveItem(id, 1);
+  count = random(100) < 30 ? 2 : 1;
+  extras.giveItem(id, count);
   return id;
+}
+
+// Separate from the original XITEM_SHINY/반짝부적. This rare berry changes the
+// CURRENT Pokemon and never consumes or replaces the next-egg Shiny boost.
+static bool grantTrainingShinyBerry(bool completed) {
+  if (!completed || random(100) >= 3) return false;  // 3% per proper completion
+  extras.giveItem(XITEM_SHINY_BERRY, 1);
+  return true;
 }
 
 static void finishDefense() {
@@ -3770,10 +3795,12 @@ static void finishDefense() {
   gameNewHi = gameScore > pet.gameHi;
   extras.beginBatch();
   gameGain = pet.playResult(gameScore);
-  gameIvReward = maybeTrainingIvReward(XITEM_IV_DEF, gameScore, 24, 32);
+  bool rewardReady = defRound >= DEF_ROUNDS;
+  gameIvReward = grantTrainingIvBerry(XITEM_IV_DEF, rewardReady, gameIvRewardCount);
+  gameShinyBerryReward = grantTrainingShinyBerry(rewardReady);
   extras.endBatch(false);
   queueTrainingPersist();
-  sfxPlay(gameIvReward < XITEM_COUNT || (gameNewHi && gameScore) ? SFX_MEDAL : SFX_LEVEL);
+  sfxPlay(gameShinyBerryReward || gameIvRewardCount > 1 || (gameNewHi && gameScore) ? SFX_MEDAL : SFX_LEVEL);
   gameOverUntil = millis() ? millis() : 1;
 }
 
@@ -3785,6 +3812,8 @@ void startGame() {
   gameGain = 0;
   gameNewHi = false;
   gameIvReward = XITEM_COUNT;
+  gameIvRewardCount = 0;
+  gameShinyBerryReward = false;
   defRound = 0;
   defBlocks = defGoods = defPerfects = 0;
   defRoundStarted = millis();
@@ -3939,14 +3968,19 @@ void renderGame() {
     snprintf(b, sizeof(b), "방어 +%u", (unsigned)gameGain);
     gfx->setTextColor(UI_BAR_OK); uiSetTextSize(3);
     uiSetCursor(CX-uiTextHalfWidth(b,3),286); gfx->print(b);
-    if (gameIvReward < XITEM_COUNT) {
-      snprintf(b, sizeof(b), "희귀 보상: %s", extras.itemNameKo(gameIvReward));
+    if (gameIvReward < XITEM_COUNT && gameIvRewardCount) {
+      snprintf(b, sizeof(b), "훈련 보상: %s x%u", extras.itemNameKo(gameIvReward), (unsigned)gameIvRewardCount);
+      gfx->setTextColor(UI_BAR_OK); uiSetTextSize(1);
+      uiSetCursor(CX-uiTextHalfWidth(b,1),310); gfx->print(b);
+    }
+    if (gameShinyBerryReward) {
+      snprintf(b, sizeof(b), "희귀 보상: %s x1", extras.itemNameKo(XITEM_SHINY_BERRY));
       gfx->setTextColor(UI_BAR_WARN); uiSetTextSize(1);
-      uiSetCursor(CX-uiTextHalfWidth(b,1),324); gfx->print(b);
+      uiSetCursor(CX-uiTextHalfWidth(b,1),328); gfx->print(b);
     }
     const char *foot = gameNewHi ? "신기록!  터치해서 돌아가기" : "터치해서 돌아가기";
     gfx->setTextColor(gameNewHi ? UI_BAR_WARN : UI_TRACK); uiSetTextSize(2);
-    uiSetCursor(CX-uiTextHalfWidth(foot,2),350); gfx->print(foot);
+    uiSetCursor(CX-uiTextHalfWidth(foot,2),352); gfx->print(foot);
     gfx->flush();
     return;
   }
@@ -4031,6 +4065,8 @@ void startSack() {
   sackShake = 0;
   sackNewHi = false;
   sackIvReward = XITEM_COUNT;
+  sackIvRewardCount = 0;
+  sackShinyBerryReward = false;
 }
 
 void sackTap() {
@@ -4077,10 +4113,15 @@ void renderSack() {
       uiSetCursor(CX - uiTextHalfWidth(r, 2), 256);
       gfx->print(r);
     }
-    if (sackIvReward < XITEM_COUNT) {
-      char rw[64]; snprintf(rw, sizeof(rw), "희귀 보상: %s", extras.itemNameKo(sackIvReward));
-      gfx->setTextColor(UI_BAR_WARN); uiSetTextSize(1);
+    if (sackIvReward < XITEM_COUNT && sackIvRewardCount) {
+      char rw[72]; snprintf(rw, sizeof(rw), "훈련 보상: %s x%u", extras.itemNameKo(sackIvReward), (unsigned)sackIvRewardCount);
+      gfx->setTextColor(UI_BAR_OK); uiSetTextSize(1);
       uiSetCursor(CX - uiTextHalfWidth(rw, 1), 302); gfx->print(rw);
+    }
+    if (sackShinyBerryReward) {
+      char rw[72]; snprintf(rw, sizeof(rw), "희귀 보상: %s x1", extras.itemNameKo(XITEM_SHINY_BERRY));
+      gfx->setTextColor(UI_BAR_WARN); uiSetTextSize(1);
+      uiSetCursor(CX - uiTextHalfWidth(rw, 1), 322); gfx->print(rw);
     }
     gfx->flush();
     return;
@@ -4091,10 +4132,12 @@ void renderSack() {
     sackNewHi = (sackHits > pet.strHi);
     extras.beginBatch();
     sackGain = pet.trainStrength(sackHits);
-    sackIvReward = maybeTrainingIvReward(XITEM_IV_ATK, sackHits, 25, 45);
+    bool rewardReady = sackHits > 0;
+    sackIvReward = grantTrainingIvBerry(XITEM_IV_ATK, rewardReady, sackIvRewardCount);
+    sackShinyBerryReward = grantTrainingShinyBerry(rewardReady);
     extras.endBatch(false);
     queueTrainingPersist();
-    sfxPlay(sackIvReward < XITEM_COUNT || sackNewHi ? SFX_MEDAL : SFX_PLAY);
+    sfxPlay(sackShinyBerryReward || sackIvRewardCount > 1 || sackNewHi ? SFX_MEDAL : SFX_PLAY);
     sackOverUntil = now + 3500;
     gfx->flush();
     return;
@@ -6045,6 +6088,8 @@ void startSpeedGame() {
   spdGain = 0;
   spdNewHi = false;
   spdIvReward = XITEM_COUNT;
+  spdIvRewardCount = 0;
+  spdShinyBerryReward = false;
   spdGold = false;
   spdSpawn();
 }
@@ -6114,10 +6159,15 @@ void renderSpeed() {
       uiSetCursor(CX - uiTextHalfWidth(r, 2), 286);
       gfx->print(r);
     }
-    if (spdIvReward < XITEM_COUNT) {
-      char rw[64]; snprintf(rw, sizeof(rw), "희귀 보상: %s", extras.itemNameKo(spdIvReward));
+    if (spdIvReward < XITEM_COUNT && spdIvRewardCount) {
+      char rw[72]; snprintf(rw, sizeof(rw), "훈련 보상: %s x%u", extras.itemNameKo(spdIvReward), (unsigned)spdIvRewardCount);
+      gfx->setTextColor(UI_BAR_OK); uiSetTextSize(1);
+      uiSetCursor(CX - uiTextHalfWidth(rw, 1), 316); gfx->print(rw);
+    }
+    if (spdShinyBerryReward) {
+      char rw[72]; snprintf(rw, sizeof(rw), "희귀 보상: %s x1", extras.itemNameKo(XITEM_SHINY_BERRY));
       gfx->setTextColor(UI_BAR_WARN); uiSetTextSize(1);
-      uiSetCursor(CX - uiTextHalfWidth(rw, 1), 326); gfx->print(rw);
+      uiSetCursor(CX - uiTextHalfWidth(rw, 1), 336); gfx->print(rw);
     }
     gfx->flush();
     return;
@@ -6127,10 +6177,12 @@ void renderSpeed() {
     spdNewHi = (spdHits > pet.spdHi);
     extras.beginBatch();
     spdGain = pet.trainSpeed(spdHits);
-    spdIvReward = maybeTrainingIvReward(XITEM_IV_SPE, spdHits, 10, 18);
+    bool rewardReady = spdHits > 0;
+    spdIvReward = grantTrainingIvBerry(XITEM_IV_SPE, rewardReady, spdIvRewardCount);
+    spdShinyBerryReward = grantTrainingShinyBerry(rewardReady);
     extras.endBatch(false);
     queueTrainingPersist();
-    sfxPlay(spdIvReward < XITEM_COUNT || spdNewHi ? SFX_MEDAL : SFX_PLAY);
+    sfxPlay(spdShinyBerryReward || spdIvRewardCount > 1 || spdNewHi ? SFX_MEDAL : SFX_PLAY);
     spdOverUntil = now + 3500;
     gfx->flush();
     return;
@@ -7064,17 +7116,18 @@ void renderBag() {
         uiSetTextSize(2); uiSetCursor(bagRowQtyX(cnt), y + 13); gfx->print(cnt);
       }
     } else {
-      // Page 2 keeps legacy utility items plus the rare Gold Crown. Page 3 is
-      // dedicated to the four IV capsules. Existing item IDs 0..5 never move.
-      const uint8_t utility[3] = { XITEM_SHINY, XITEM_ENERGY, XITEM_GOLD_CROWN };
+      // Page 2 keeps the original next-egg Shiny Charm, utility items and the
+      // v3.63.2 current-Pokemon Shiny Berry. Page 3 is the four IV berries.
+      // Existing item IDs 0..10 never move; the new berry is appended.
+      const uint8_t utility[4] = { XITEM_SHINY, XITEM_ENERGY, XITEM_GOLD_CROWN, XITEM_SHINY_BERRY };
       const uint8_t ivs[4] = { XITEM_IV_ATK, XITEM_IV_DEF, XITEM_IV_SPE, XITEM_IV_HP };
       const uint8_t *ids = bagPage == 1 ? utility : ivs;
-      uint8_t rows = bagPage == 1 ? 3 : 4;
+      uint8_t rows = 4;
       for (uint8_t i = 0; i < rows; i++) {
         uint8_t id = ids[i];
         int y = BAG_ROW_Y(i) - 20;
         bool have = extras.itemCount(id) > 0;
-        uint16_t edge = (id == XITEM_SHINY || id == XITEM_GOLD_CROWN) ? UI_BAR_WARN : UI_BAR_OK;
+        uint16_t edge = (id == XITEM_SHINY || id == XITEM_GOLD_CROWN || id == XITEM_SHINY_BERRY) ? UI_BAR_WARN : UI_BAR_OK;
         const int rx = bagRowBaseX();
         gfx->fillRoundRect(rx, y, BAG_ROW_W, BAG_ROW_H, 11, have ? UI_WHITE : UI_BG_DAY);
         gfx->drawRoundRect(rx, y, BAG_ROW_W, BAG_ROW_H, 11, have ? edge : UI_TRACK);
@@ -7085,7 +7138,7 @@ void renderBag() {
       }
       if (bagPage == 1 && extras.shinyBoostArmed()) {
         gfx->setTextColor(UI_BAR_OK); uiSetTextSize(1);
-        uiSetCursor(CX - uiTextHalfWidth("다음 알: 반짝부적 적용 중", 1), 300);
+        uiSetCursor(CX - uiTextHalfWidth("다음 알: 반짝부적 적용 중", 1), 82);
         gfx->print("다음 알: 반짝부적 적용 중");
       }
     }
@@ -7145,8 +7198,8 @@ void bagTap(int16_t x, int16_t y) {
       int id = -1;
       if (bagPage == 0) id = i;
       else if (bagPage == 1) {
-        const int ids[3] = { XITEM_SHINY, XITEM_ENERGY, XITEM_GOLD_CROWN };
-        if (i < 3) id = ids[i];
+        const int ids[4] = { XITEM_SHINY, XITEM_ENERGY, XITEM_GOLD_CROWN, XITEM_SHINY_BERRY };
+        id = ids[i];
       } else if (bagPage == 2) {
         const int ids[4] = { XITEM_IV_ATK, XITEM_IV_DEF, XITEM_IV_SPE, XITEM_IV_HP };
         id = ids[i];
@@ -7154,7 +7207,7 @@ void bagTap(int16_t x, int16_t y) {
       if (id < 0 || id >= XITEM_COUNT || !extras.useItem((uint8_t)id, pet)) { sfxPlay(SFX_DENY); return; }
       if (id != XITEM_SHINY) pet.itemEatReaction();
       bagOpen = false;                 // one consumable per opening: feedback stays visible
-      sfxPlay(id == XITEM_SHINY ? SFX_MEDAL : SFX_EAT);
+      sfxPlay((id == XITEM_SHINY || id == XITEM_SHINY_BERRY) ? SFX_MEDAL : SFX_EAT);
       return;
     }
 

@@ -16,10 +16,10 @@ def need(cond,msg):
 
 # Version/installer marker for this runtime stabilization release.
 m=re.search(r'^#define\s+FW_VERSION\s+"([^"]+)"', ino, re.M)
-need(bool(m) and m.group(1)=='3.63.0','version: FW_VERSION is not 3.63.0')
+need(bool(m) and m.group(1)=='3.63.2','version: FW_VERSION is not 3.63.2')
 installer=(root/'TamaPoke-KO-OneClick-Installer.html').read_text(encoding='utf-8')
-need('3.63.0-ko-learnset-expansion-stability-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36' in installer,
-     'version: installer marker is not v3.63.0 learnset/stability')
+need('3.63.2-ko-training-reward-persistence-stability-learnset-expansion-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36' in installer,
+     'version: installer marker is not v3.63.2 learnset/stability')
 
 def body(src, name):
     pat=re.compile(r'^[^;{}\n]*\b(?:[A-Za-z_]\w*::)?'+re.escape(name)+r'\s*\([^;{}\n]*\)\s*\{', re.M)
@@ -82,6 +82,13 @@ need(ino.count('extras.endBatch(false);') >= 5,
      'training: not all minigame result/early-exit paths defer extras save')
 need('trainingPersistPhase' in ino and 'extras.flushPendingSave();' in ino,
      'training: staggered post-minigame persistence missing')
+need('if (!trainingPersistPhase && pet.savePending()' in ino and
+     'if (!trainingPersistPhase && extras.savePending()' in ino,
+     'training: generic idle saver can bypass staggered persistence')
+need('bool trainingPersistSafe = (!gameOpen && !sackOpen && !spdOpen)' in ino and
+     '(gameOpen && gameOverUntil)' in ino and '(sackOpen && sackOverUntil)' in ino and
+     '(spdOpen && spdOverUntil)' in ino,
+     'training: static result screens are not eligible for early durable persistence')
 
 # Preserve frame cadence; stabilization must not lower FPS.
 need('targetFrameMs = activeAnimated ? 85UL : 100UL' in ino,

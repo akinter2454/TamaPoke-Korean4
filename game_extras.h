@@ -16,14 +16,17 @@ enum ExtraItemId : uint8_t {
   XITEM_VITAL,
   XITEM_SHINY,
   XITEM_ENERGY,
-  // v3.61.6: IV growth items are appended so legacy xitem[] save prefixes
-  // keep exactly the same meaning. Each capsule raises one IV by +1; the
-  // Gold Crown raises every non-perfect IV by +1.
+  // v3.61.6+: IV growth items are appended so legacy xitem[] save prefixes
+  // keep exactly the same meaning. The four IV berries raise one IV by +1;
+  // Gold Crown raises every non-perfect IV by +1. v3.63.1 appends a separate
+  // Shiny Berry that transforms the CURRENT Pokemon; XITEM_SHINY above stays
+  // the original next-egg Shiny boost and its ID/meaning never changes.
   XITEM_IV_ATK,
   XITEM_IV_DEF,
   XITEM_IV_SPE,
   XITEM_IV_HP,
   XITEM_GOLD_CROWN,
+  XITEM_SHINY_BERRY,
   XITEM_COUNT
 };
 
