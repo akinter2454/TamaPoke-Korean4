@@ -521,6 +521,9 @@ public:
   // autosave to notice. Defined out of line: save() is private and declared
   // further down.
   void saveNow();
+  // Converts the current living companion to Shiny through a public, save-safe API.
+  // registerSpecies() remains private so callers cannot mutate Pokedex state directly.
+  bool makeCurrentShiny();
   // Lightweight runtime integrity check. Reads only the compact guard blob and
   // self-heals badges/training if a rollback is detected while the device is on.
   void verifyCriticalProgress();

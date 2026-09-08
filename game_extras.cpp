@@ -338,14 +338,10 @@ bool GameExtras::useItem(uint8_t id, Pet &pet) {
       break;
     }
     case XITEM_SHINY_BERRY:
-      // v3.63.1: unlike XITEM_SHINY (the next-egg boost), this berry changes
-      // the living companion immediately. registerSpecies() also records the
-      // Shiny form in the Pokedex. IVs are intentionally untouched.
-      if (!pet.shiny) {
-        pet.shiny = true;
-        pet.registerSpecies(pet.speciesId);
-        used = true;
-      }
+      // Unlike XITEM_SHINY (the next-egg boost), this berry changes the living
+      // companion immediately. Pet owns Pokedex registration internally;
+      // GameExtras must never call Pet::registerSpecies(), which is private.
+      used = pet.makeCurrentShiny();
       break;
   }
   if (!used) return false;

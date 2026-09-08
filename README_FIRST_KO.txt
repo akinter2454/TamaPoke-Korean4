@@ -1,13 +1,16 @@
-TamaPoke 한국어판 v3.63.2 Stability Recheck
+TamaPoke 한국어판 v3.63.3 Compile Fix + Stability
 
 1. ZIP을 풀어 GitHub 저장소 루트에 덮어씁니다.
 2. 기존 tools/catalog_lock.json이 있다면 유지합니다.
 3. GitHub Pages Source는 GitHub Actions를 사용합니다.
-4. Actions에서 v3.63.2 workflow를 실행합니다.
+4. Actions에서 v3.63.3 workflow를 실행합니다.
 5. build/deploy 성공을 확인합니다.
-6. Pages 설치기에서 v3.63.2 펌웨어를 설치하고 기기를 재부팅합니다.
+6. Pages 설치기에서 v3.63.3 펌웨어를 설치하고 기기를 재부팅합니다.
 
-v3.63.2 핵심
+v3.63.3 핵심
+- 샤이니열매 사용 시 private Pet::registerSpecies()를 직접 호출하던 컴파일 오류 수정
+- Pet::makeCurrentShiny() 공개 API 추가: Shiny 전환 + Shiny 도감 등록을 Pet 내부에서 안전하게 처리
+- Actions 컴파일 실패 시 실제 error 줄을 로그 마지막에 다시 출력하도록 진단 강화
 - v3.63.1 훈련 보상(개체열매 1개 확정, 30% x2, 샤이니열매 3%) 유지
 - 기존 반짝부적의 다음 알 Shiny 확률 증가 기능 유지
 - GitHub Actions에 남아 있던 구형 훈련 보상 검사 제거

@@ -534,6 +534,13 @@ void Pet::snapshotForParty() {
 // animacion para que el paron de la escritura a flash no se vea)
 void Pet::saveNow() { save(); }
 
+bool Pet::makeCurrentShiny() {
+  if (isEgg() || ceremony != CER_NONE || shiny || speciesId < 1 || speciesId > DEX_COUNT) return false;
+  shiny = true;
+  registerSpecies(speciesId);
+  return true;
+}
+
 void Pet::flushSave() {
   if (pendingSave) save();
 }

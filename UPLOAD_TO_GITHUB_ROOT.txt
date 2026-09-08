@@ -1,7 +1,7 @@
-TamaPoke KO v3.63.2 GitHub 업로드 안내
+TamaPoke KO v3.63.3 GitHub 업로드 안내
 
 이 ZIP의 내용을 GitHub 저장소 루트에 그대로 덮어씁니다.
 기존 tools/catalog_lock.json이 실제 저장소에 있다면 삭제하지 마세요.
-그 후 Actions에서 v3.63.2 workflow를 실행하고 build/deploy 성공을 확인하세요.
+그 후 Actions에서 v3.63.3 workflow를 실행하고 build/deploy 성공을 확인하세요.
 
 과거 업데이트 노트/변경이력 파일과 SHA-256 체크섬 파일은 포함하지 않습니다.
