@@ -230,8 +230,8 @@ OK 1034 기로치 [1016] | 0:Idle:6f@48x64->30x36, 1:Walk:4f@48x56->39x36, 2:Wal
 OK 1035 오거폰 [1017] | 0:Idle:6f@40x56->36x35, 1:Walk:17f@40x72->27x39, 2:Walk:17f@40x72->27x39, 3:Sleep:2f@32x48->28x33, 5:Hurt:2f@48x64->34x35, 6:Attack:10f@80x88->35x56, 8:Hop:10f@32x104->32x55 | shiny: PMDCollab shiny [1017/0000/0001]
 OK 1036 브리두라스 [1018] | 0:Idle:10f@40x64->38x37, 1:Walk:4f@40x56->38x38, 2:Walk:4f@40x56->37x38, 3:Sleep:2f@56x32->43x27, 5:Hurt:2f@56x72->40x41, 6:Attack:14f@80x88->38x62, 8:Hop:10f@40x112->37x60 | shiny: PMDCollab shiny [1018/0000/0001]
 OK 1037 과미드라 [1019] | 0:Idle:3f@40x56->21x37, 1:Walk:4f@48x56->40x33, 2:Walk:4f@48x56->40x34, 3:Sleep:2f@32x32->27x26, 5:Hurt:2f@40x64->29x38, 6:Attack:14f@80x72->22x60, 8:Hop:10f@40x104->33x59 | shiny: PMDCollab shiny [1019/0000/0001]
-OK 1038 꿰뚫는화염 [1020] | 0:Rotate:9f@112x96->108x68, 1:Rotate:9f@112x96->108x68, 2:Rotate:9f@112x96->108x68 | shiny: PMDCollab shiny [1020/0000/0001]
-OK 1039 날뛰는우레 [1021] | 0:Sleep:2f@40x56->32x36, 1:Sleep:2f@40x56->32x36, 2:Sleep:2f@40x56->32x36, 3:Sleep:2f@40x56->32x36 | shiny: PMDCollab shiny [1021/0000/0001]
+SKIP 1038 꿰뚫는화염: tracker has no behavior sprite
+SKIP 1039 날뛰는우레: tracker has no behavior sprite
 SKIP 1040 무쇠암석: tracker has no behavior sprite
 SKIP 1041 무쇠감투: tracker has no behavior sprite
 OK 1042 테라파고스 [1024] | 0:Idle:4f@32x32->17x19, 1:Walk:4f@32x32->28x21, 2:Walk:4f@32x32->28x21, 3:Sleep:2f@24x16->23x14, 5:Hurt:2f@32x48->27x27, 6:Attack:10f@64x72->17x39, 8:Hop:10f@32x72->17x41 | shiny: PMDCollab shiny [1024/0000/0001]
@@ -568,5 +568,5 @@ OK 1902 오거폰 Wellspring_Mask [1017/0005] | 0:Idle:6f@40x56->36x35, 1:Walk:1
 OK 1903 오거폰 Hearthflame_Mask [1017/0006] | 0:Idle:6f@40x64->36x37, 1:Walk:17f@40x80->30x42, 2:Walk:17f@40x80->30x42, 3:Sleep:2f@32x48->28x34, 5:Hurt:2f@48x64->34x35, 6:Attack:10f@80x88->35x58, 8:Hop:10f@32x104->32x57 | shiny: same animated normal (no separate shiny behavior sprite)
 OK 1904 오거폰 Cornerstone_Mask [1017/0007] | 0:Idle:6f@40x64->36x36, 1:Walk:17f@40x72->31x40, 2:Walk:17f@40x72->31x40, 3:Sleep:2f@32x48->28x33, 5:Hurt:2f@48x72->34x36, 6:Attack:10f@80x88->35x57, 8:Hop:10f@32x104->32x56 | shiny: same animated normal (no separate shiny behavior sprite)
 
-PACKED ADDED ENTRIES: 536
-DISABLED/MISSING: 29
+PACKED ADDED ENTRIES: 534
+DISABLED/MISSING: 31

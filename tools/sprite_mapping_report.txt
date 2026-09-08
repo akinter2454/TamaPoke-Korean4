@@ -1,7 +1,7 @@
 TamaPoke v3.62.5 canonical-form sprite ID/path audit
-catalog_fingerprint=ebdaeeabe1f6b339
+catalog_fingerprint=7195d22d781527c6
 Rule: internal ID -> NatDex owner -> PMDCollab path first component must agree.
-active_entries=1326
+active_entries=1324
 paldea_tauros_entries=3
 
 PALDEA TAUROS:

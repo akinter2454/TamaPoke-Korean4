@@ -2,11 +2,12 @@ TamaPoke v3.62.5 current PMDCollab catalog sync - canonical forms + regional evo
 Source: https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/tracker.json
 National Dex detected: 1..1025
 TamaPoke DEX_COUNT: 1904
-Added/managed entries with real current sprite: 536
+Added/managed entries with real current sprite: 534
 Form entries with real current sprite: 349
 Approved Mega entries with real current sprite: 36/36
 Excluded non-approved battle-gimmick forms: 16
 Retired presentation-only form IDs: 0
+User-disabled reserved National Dex: 1020,1021
 Current new/base locked entries without sprite: 29
 
 APPROVED MEGA EVOLUTIONS:
@@ -66,6 +67,10 @@ EXCLUDED GIMMICKS:
 - #1024 Terapagos Terastal (1024/0001)
 
 RETIRED PRESENTATION-ONLY PMDCOLLAB SLOTS:
+
+USER-DISABLED / RESERVED IDS:
+- id 1038 nat#1020 꿰뚫는화염 (reserved; not hatchable/encounterable/packed)
+- id 1039 nat#1021 날뛰는우레 (reserved; not hatchable/encounterable/packed)
 
 NO CURRENT SPRITE / DISABLED:
 - id 855 nat#837 탄동
