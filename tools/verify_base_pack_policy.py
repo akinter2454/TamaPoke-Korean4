@@ -4,6 +4,9 @@ import importlib.util, re
 
 ROOT=Path(__file__).resolve().parents[1]
 HTML=(ROOT/'TamaPoke-KO-OneClick-Installer.html').read_text(encoding='utf-8')
+INO=(ROOT/'TamaPoke.ino').read_text(encoding='utf-8')
+VM=re.search(r'^#define\s+FW_VERSION\s+"([^"]+)"', INO, re.M)
+FW=VM.group(1) if VM else 'unknown'
 SYNC=ROOT/'tools/sync_pmd_catalog.py'
 REPORT=ROOT/'tools/base_pack_policy_report.txt'
 PIN='7d5a2b3f4a4bee4f107cdae77ad13949dddfc615'
@@ -44,7 +47,7 @@ assert mod.base_sprite_path(25,group(has=True))=='0025'
 assert mod.base_sprite_path(25,group(children={'0000':group(has=True)}))=='0025/0000'
 
 lines=[
- 'TamaPoke v3.63.4 BASE PACK POLICY AUDIT',
+ f'TamaPoke v{FW} BASE PACK POLICY AUDIT',
  '',
  f'Pinned upstream commit: {PIN}',
  'Upstream repository: DylanPDao/TamaPoke',

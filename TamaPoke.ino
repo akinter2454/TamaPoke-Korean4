@@ -44,7 +44,7 @@
 
 // Version del firmware. Subir este numero en cada release (y manifest.json para
 // el instalador web). Se muestra en la pantalla de ajustes y por serie al arrancar.
-#define FW_VERSION "3.63.4"
+#define FW_VERSION "3.63.5"
 // Set to 1 only for a connected USB soak test. Serial printf can itself cause
 // a visible hitch, so normal builds keep frame diagnostics completely off.
 #define TAMAPOKE_FRAME_DIAG 0
@@ -3769,7 +3769,7 @@ static int defenseBlockHalf() {
   return v < 84 ? 84 : v;
 }
 
-// v3.63.4 training drops ----------------------------------------------------
+// v3.63.5 training drops ----------------------------------------------------
 // A properly completed training session always earns five IV berries. There is a
 // 30% bonus roll that upgrades the total reward to nine. A small 10% redirect keeps HP IV berries
 // obtainable even though HP has no dedicated minigame.

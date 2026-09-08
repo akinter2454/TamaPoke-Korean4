@@ -15,7 +15,8 @@ wfcopy=(root/'GITHUB_WORKFLOW_COPY.txt').read_text(encoding='utf-8')
 def need(cond,msg):
     if not cond: raise SystemExit('FAIL: '+msg)
 
-need('#define FW_VERSION "3.63.4"' in ino, 'firmware version')
+vm=re.search(r'^#define\s+FW_VERSION\s+"([0-9]+\.[0-9]+\.[0-9]+)"', ino, re.M)
+need(bool(vm), 'firmware semver marker missing')
 # Save compatibility: new item must be appended AFTER Gold Crown, while old XITEM_SHINY stays in place.
 need(re.search(r'XITEM_GOLD_CROWN,\s*XITEM_SHINY_BERRY,\s*XITEM_COUNT',h,re.S), 'Shiny Berry appended after legacy items')
 need('case XITEM_SHINY:' in cpp and '_shinyBoost = true' in cpp, 'original next-egg Shiny boost retained')
@@ -37,6 +38,12 @@ need('{ "xitem", SK_BYTES }' in save, 'xitem inventory remains in serial backup 
 need('if (!f && shiny)' in sd, 'missing Shiny sprite must fall back to normal sprite')
 need("score >= great ? 38 : (score >= good ? 22 : 0)" not in wf, 'workflow still checks obsolete random IV-drop formula')
 need(wf.count('verify_training_rewards.py') >= 2, 'workflow does not run training reward regression in both verification stages')
+
+# The workflow must not duplicate reward probability literals. Those checks belong
+# here so reward tuning cannot leave an obsolete grep that aborts Actions before compile.
+need('count = random(100) < 30 ? 2 : 1;' not in wf, 'workflow contains obsolete 1/2 IV-berry grep')
+need("grep -n 'random(100) >= 3'" not in wf and "grep -q 'random(100) >= 3'" not in wf,
+     'workflow contains obsolete 3-percent Shiny Berry grep')
 need(wf == wfcopy, 'GITHUB_WORKFLOW_COPY.txt drifted from .github/workflows/main.yml')
 need('다음 알: 반짝부적 적용 중", 1), 82' in ino, 'Shiny Charm armed label overlaps the fourth item row')
 print('Training reward regression OK: 5 IV berries guaranteed, 30% total x9, 30% current-Shiny berry, egg Shiny boost preserved, private Pet API compile guard OK')

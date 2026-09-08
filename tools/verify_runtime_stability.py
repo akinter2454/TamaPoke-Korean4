@@ -14,12 +14,16 @@ def need(cond,msg):
     if not cond: errs.append(msg)
 
 
-# Version/installer marker for this runtime stabilization release.
+# Version/installer marker. Keep this semantic instead of hard-coding a release
+# number so a future version bump cannot make Actions fail on a stale verifier.
 m=re.search(r'^#define\s+FW_VERSION\s+"([^"]+)"', ino, re.M)
-need(bool(m) and m.group(1)=='3.63.4','version: FW_VERSION is not 3.63.4')
+need(bool(m) and re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', m.group(1) if m else ''),
+     'version: FW_VERSION semver missing')
+fw_version=m.group(1) if m else ''
 installer=(root/'TamaPoke-KO-OneClick-Installer.html').read_text(encoding='utf-8')
-need('3.63.4-ko-training-reward-boost-persistence-stability-learnset-expansion-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36' in installer,
-     'version: installer marker is not v3.63.4 learnset/stability')
+im=re.search(r'const\s+FW_VERSION\s*=\s*["\']([^"\']+)["\']', installer)
+need(bool(im) and im.group(1).startswith(fw_version+'-ko-'),
+     'version: installer marker does not match firmware source version')
 
 def body(src, name):
     pat=re.compile(r'^[^;{}\n]*\b(?:[A-Za-z_]\w*::)?'+re.escape(name)+r'\s*\([^;{}\n]*\)\s*\{', re.M)

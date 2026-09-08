@@ -7,7 +7,8 @@ sd = (root / 'sdmon.cpp').read_text(encoding='utf-8')
 html = (root / 'TamaPoke-KO-OneClick-Installer.html').read_text(encoding='utf-8')
 
 m = re.search(r'^#define\s+FW_VERSION\s+"([^"]+)"', ino, re.M)
-assert m and m.group(1) == '3.63.4', m.group(1) if m else 'missing'
+assert m and re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', m.group(1)), m.group(1) if m else 'missing'
+fw_version = m.group(1)
 
 # Game/debug output remains non-blocking outside explicit transfer work.
 assert 'Serial.setTxTimeoutMs(0);' in ino
@@ -66,7 +67,8 @@ for needle in [
 ]:
     assert needle in html, needle
 assert "waitFor('#', 15000)" not in html, 'installer still uses legacy raw-block # ACK'
-assert '3.63.4-ko-training-reward-boost-persistence-stability-learnset-expansion-framed-put4-single-release-fullsd-canonical-forms-regional-evolution-mega36' in html
+im = re.search(r'const\s+FW_VERSION\s*=\s*["\']([^"\']+)["\']', html)
+assert im and im.group(1).startswith(fw_version + '-ko-'), im.group(1) if im else 'installer version missing'
 
 # CRC32 polynomial agrees with standard IEEE CRC32 used by browser/firmware.
 sample = b'TamaPoke PUT4 regression\x00\x01\xff'
@@ -109,4 +111,4 @@ assert rx.block(1,b,(zlib.crc32(b)+1)&0xffffffff)=='NAK' and rx.next_seq==1
 assert rx.block(1,b,zlib.crc32(b)&0xffffffff)=='ACK'
 assert bytes(rx.out)==a+b
 
-print('SD/WebSerial protocol regression OK: fw=3.63.4 proto=4 framed exact-read + CRC + numbered retry ACK + atomic commit')
+print(f'SD/WebSerial protocol regression OK: fw={fw_version} proto=4 framed exact-read + CRC + numbered retry ACK + atomic commit')
