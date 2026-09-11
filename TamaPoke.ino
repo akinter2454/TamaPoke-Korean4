@@ -4002,13 +4002,13 @@ void renderGame() {
     uiSetCursor(CX-uiTextHalfWidth(b,3),286); gfx->print(b);
     if (gameIvReward < XITEM_COUNT && gameIvRewardCount) {
       snprintf(b, sizeof(b), "훈련 보상: %s x%u", extras.itemNameKo(gameIvReward), (unsigned)gameIvRewardCount);
-      gfx->setTextColor(UI_BAR_OK); uiSetTextSize(1);
-      uiSetCursor(CX-uiTextHalfWidth(b,1),310); gfx->print(b);
+      gfx->setTextColor(UI_BAR_OK);
+      uiDrawCenteredFit(b, CX, 306, 318, 2, 1);
     }
     if (gameShinyBerryReward) {
       snprintf(b, sizeof(b), "희귀 보상: %s x1", extras.itemNameKo(XITEM_SHINY_BERRY));
-      gfx->setTextColor(UI_BAR_WARN); uiSetTextSize(1);
-      uiSetCursor(CX-uiTextHalfWidth(b,1),328); gfx->print(b);
+      gfx->setTextColor(UI_BAR_WARN);
+      uiDrawCenteredFit(b, CX, 326, 318, 2, 1);
     }
     const char *foot = gameNewHi ? "신기록!  터치해서 돌아가기" : "터치해서 돌아가기";
     gfx->setTextColor(gameNewHi ? UI_BAR_WARN : UI_TRACK); uiSetTextSize(2);
@@ -4147,13 +4147,13 @@ void renderSack() {
     }
     if (sackIvReward < XITEM_COUNT && sackIvRewardCount) {
       char rw[72]; snprintf(rw, sizeof(rw), "훈련 보상: %s x%u", extras.itemNameKo(sackIvReward), (unsigned)sackIvRewardCount);
-      gfx->setTextColor(UI_BAR_OK); uiSetTextSize(1);
-      uiSetCursor(CX - uiTextHalfWidth(rw, 1), 302); gfx->print(rw);
+      gfx->setTextColor(UI_BAR_OK);
+      uiDrawCenteredFit(rw, CX, 298, 390, 2, 1);
     }
     if (sackShinyBerryReward) {
       char rw[72]; snprintf(rw, sizeof(rw), "희귀 보상: %s x1", extras.itemNameKo(XITEM_SHINY_BERRY));
-      gfx->setTextColor(UI_BAR_WARN); uiSetTextSize(1);
-      uiSetCursor(CX - uiTextHalfWidth(rw, 1), 322); gfx->print(rw);
+      gfx->setTextColor(UI_BAR_WARN);
+      uiDrawCenteredFit(rw, CX, 320, 390, 2, 1);
     }
     gfx->flush();
     return;
@@ -4243,10 +4243,11 @@ void drawCardStat(int y, const char *label, uint16_t val, uint16_t maxBar,
   if (iv != IV_NONE) {
     char b[10];
     snprintf(b, sizeof(b), T(S_IV_FMT), iv);
-    // un IV perfecto se resalta: es el golpe de suerte que el jugador busca
-    gfx->setTextColor(iv >= 31 ? UI_BAR_WARN : UI_TRACK);
-    uiSetCursor(344, y);
-    gfx->print(b);
+    // IV is decision-critical information, so ordinary values use full black
+    // instead of the low-contrast disabled-text grey. Prefer size 3; localized
+    // labels that need more room automatically fall back to size 2.
+    gfx->setTextColor(iv >= 31 ? UI_BAR_WARN : UI_INK);
+    uiDrawLeftFit(b, 326, y - 4, 100, 3, 2);
   }
 }
 
@@ -6191,13 +6192,13 @@ void renderSpeed() {
     }
     if (spdIvReward < XITEM_COUNT && spdIvRewardCount) {
       char rw[72]; snprintf(rw, sizeof(rw), "훈련 보상: %s x%u", extras.itemNameKo(spdIvReward), (unsigned)spdIvRewardCount);
-      gfx->setTextColor(UI_BAR_OK); uiSetTextSize(1);
-      uiSetCursor(CX - uiTextHalfWidth(rw, 1), 316); gfx->print(rw);
+      gfx->setTextColor(UI_BAR_OK);
+      uiDrawCenteredFit(rw, CX, 312, 390, 2, 1);
     }
     if (spdShinyBerryReward) {
       char rw[72]; snprintf(rw, sizeof(rw), "희귀 보상: %s x1", extras.itemNameKo(XITEM_SHINY_BERRY));
-      gfx->setTextColor(UI_BAR_WARN); uiSetTextSize(1);
-      uiSetCursor(CX - uiTextHalfWidth(rw, 1), 336); gfx->print(rw);
+      gfx->setTextColor(UI_BAR_WARN);
+      uiDrawCenteredFit(rw, CX, 334, 390, 2, 1);
     }
     gfx->flush();
     return;
