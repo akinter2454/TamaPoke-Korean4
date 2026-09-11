@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_utc": "2026-09-08T16:52:47Z",
+  "generated_utc": "2026-09-11T11:02:57Z",
   "source": "https://raw.githubusercontent.com/PMDCollab/SpriteCollab/master/tracker.json",
   "national_dex_max": 1025,
   "dex_count": 1904,
@@ -647,7 +647,7 @@
       "enabled": true,
       "mega": false,
       "disabled_reason": null,
-      "sprite_status": "OK 848 백솜모카 [0830] | 0:Idle:4f@32x40->23x25, 1:Walk:6f@32x40->25x24, 2:Walk:6f@32x40->25x24, 3:Sleep:2f@24x32->21x21, 5:Hurt:2f@40x48->28x28, 6:Attack:13f@64x72->22x46, 8:Hop:10f@32x80->21x48 | shiny: PMDCollab shiny [0830/0000/0001]",
+      "sprite_status": "OK 848 백솜모카 [0830] | 0:Idle:9f@48x56->24x35, 1:Walk:8f@48x56->27x30, 2:Walk:8f@48x56->27x30, 3:Sleep:2f@32x40->22x28, 5:Hurt:2f@64x72->24x37, 6:Attack:14f@64x88->25x55, 8:Hop:10f@48x80->24x47 | shiny: PMDCollab shiny [0830/0000/0001]",
       "preview": "previews/p848.png"
     },
     {
