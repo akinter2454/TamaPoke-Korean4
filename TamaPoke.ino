@@ -173,6 +173,38 @@ static int uiTextWidth(const char *s, uint8_t size) {
 }
 static int uiTextHalfWidth(const char *s, uint8_t size) { return uiTextWidth(s, size) / 2; }
 
+// Prefer a more readable label size, but never let a single-line UI string run
+// outside its box.  The display font only supports integer scaling, so fitting
+// means stepping down one size at a time.  Callers provide the real usable
+// width (after padding/icons/counters), which keeps Korean names and translated
+// strings from being clipped when the accessibility-sized text is enabled.
+static uint8_t uiFitTextSize(const char *s, uint8_t preferred,
+                             uint8_t minimum, int16_t maxWidth) {
+  if (preferred < minimum) preferred = minimum;
+  while (preferred > minimum && uiTextWidth(s, preferred) > maxWidth) --preferred;
+  return preferred;
+}
+
+static uint8_t uiDrawCenteredFit(const char *s, int16_t centerX, int16_t y,
+                                 int16_t maxWidth, uint8_t preferred,
+                                 uint8_t minimum = 1) {
+  uint8_t size = uiFitTextSize(s, preferred, minimum, maxWidth);
+  uiSetTextSize(size);
+  uiSetCursor(centerX - uiTextHalfWidth(s, size), y);
+  gfx->print(s);
+  return size;
+}
+
+static uint8_t uiDrawLeftFit(const char *s, int16_t x, int16_t y,
+                             int16_t maxWidth, uint8_t preferred,
+                             uint8_t minimum = 1) {
+  uint8_t size = uiFitTextSize(s, preferred, minimum, maxWidth);
+  uiSetTextSize(size);
+  uiSetCursor(x, y);
+  gfx->print(s);
+  return size;
+}
+
 TouchDrvCST92xx touch;
 Pet pet;
 
@@ -3616,9 +3648,7 @@ void render() {
       else
         snprintf(hunt, sizeof(hunt), "찾기: N.%03d  %u/6", hd, pet.huntMisses());
       gfx->setTextColor(inkColor());
-      uiSetTextSize(1);
-      uiSetCursor(CX - uiTextHalfWidth(hunt, 1), 362);
-      gfx->print(hunt);
+      uiDrawCenteredFit(hunt, CX, 358, 420, 2, 1);
     }
 
     // Which generation this egg comes from. It lives HERE rather than in the
@@ -4600,8 +4630,8 @@ void renderCardProfile() {
 
   uint8_t pers = personalityIdFor(pet.speciesId, pet.ivAtk, pet.ivDef, pet.ivSpe, pet.ivHp);
   char ps[64]; snprintf(ps, sizeof(ps), "성격: %s · %s", personalityNameKo(pers), personalityEffectKo(pers));
-  gfx->setTextColor(UI_BAR_BAD); uiSetTextSize(1);
-  uiSetCursor(CX - uiTextHalfWidth(ps, 1), 322); gfx->print(ps);
+  gfx->setTextColor(UI_BAR_BAD);
+  uiDrawCenteredFit(ps, CX, 318, 410, 2, 1);
 
   gfx->setTextColor(UI_TRACK); uiSetTextSize(2);
   uiSetCursor(CX - uiTextHalfWidth(T(S_RENAME_HINT), 2), 344);
@@ -4700,9 +4730,7 @@ void renderCardMoves() {
   gfx->print(T(S_MOVES));
   for (int i = 0; i < MOVE_SLOTS; i++) drawMoveRow(MOVE_ROW_Y(i), pet.moves[i], false, pet.speciesId);
   gfx->setTextColor(UI_TRACK);
-  uiSetTextSize(1);
-  uiSetCursor(CX - uiTextHalfWidth(T(S_MOVE_TAP), 1), 340);
-  gfx->print(T(S_MOVE_TAP));
+  uiDrawCenteredFit(T(S_MOVE_TAP), CX, 336, 390, 2, 1);
 }
 
 // Every move the species can learn by this level, so a slot can be swapped for
@@ -7112,8 +7140,9 @@ void renderBag() {
         const int rx = bagRowBaseX();
         gfx->fillRoundRect(rx, y, BAG_ROW_W, BAG_ROW_H, 11, have ? UI_WHITE : UI_BG_DAY);
         gfx->drawRoundRect(rx, y, BAG_ROW_W, BAG_ROW_H, 11, have ? UI_INK : UI_TRACK);
-        gfx->setTextColor(have ? UI_INK : UI_TRACK); uiSetTextSize(2); uiSetCursor(bagRowTextX(), y + 8); gfx->print(extras.itemNameKo(id));
-        uiSetTextSize(1); uiSetCursor(bagRowTextX(), y + 31); gfx->print(extras.itemEffectKo(id));
+        gfx->setTextColor(have ? UI_INK : UI_TRACK);
+        uiDrawLeftFit(extras.itemNameKo(id), bagRowTextX(), y + 6, BAG_ROW_W - 86, 2, 1);
+        uiDrawLeftFit(extras.itemEffectKo(id), bagRowTextX(), y + 28, BAG_ROW_W - 86, 2, 1);
         char cnt[8]; snprintf(cnt, sizeof(cnt), "x%u", extras.itemCount(id));
         uiSetTextSize(2); uiSetCursor(bagRowQtyX(cnt), y + 13); gfx->print(cnt);
       }
@@ -7133,8 +7162,9 @@ void renderBag() {
         const int rx = bagRowBaseX();
         gfx->fillRoundRect(rx, y, BAG_ROW_W, BAG_ROW_H, 11, have ? UI_WHITE : UI_BG_DAY);
         gfx->drawRoundRect(rx, y, BAG_ROW_W, BAG_ROW_H, 11, have ? edge : UI_TRACK);
-        gfx->setTextColor(have ? UI_INK : UI_TRACK); uiSetTextSize(2); uiSetCursor(bagRowTextX(), y + 8); gfx->print(extras.itemNameKo(id));
-        uiSetTextSize(1); uiSetCursor(bagRowTextX(), y + 31); gfx->print(extras.itemEffectKo(id));
+        gfx->setTextColor(have ? UI_INK : UI_TRACK);
+        uiDrawLeftFit(extras.itemNameKo(id), bagRowTextX(), y + 6, BAG_ROW_W - 86, 2, 1);
+        uiDrawLeftFit(extras.itemEffectKo(id), bagRowTextX(), y + 28, BAG_ROW_W - 86, 2, 1);
         char cnt[8]; snprintf(cnt, sizeof(cnt), "x%u", extras.itemCount(id));
         uiSetTextSize(2); uiSetCursor(bagRowQtyX(cnt), y + 13); gfx->print(cnt);
       }
@@ -7157,11 +7187,13 @@ void renderBag() {
       gfx->fillRoundRect(rx, y, BAG_ROW_W, BAG_ROW_H, 11, have ? UI_WHITE : UI_BG_DAY);
       gfx->drawRoundRect(rx, y, BAG_ROW_W, BAG_ROW_H, 11, have ? col : UI_TRACK);
       char nm[64]; snprintf(nm, sizeof(nm), "%s 기술머신", localizedTypeName(t));
-      gfx->setTextColor(have ? UI_INK : UI_TRACK); uiSetTextSize(2); uiSetCursor(bagRowTextX(), y + 8); gfx->print(nm);
+      gfx->setTextColor(have ? UI_INK : UI_TRACK);
+      uiDrawLeftFit(nm, bagRowTextX(), y + 6, BAG_ROW_W - 86, 2, 1);
       uint8_t mv = extras.bestTmMove(pet, t);
-      uiSetTextSize(1); uiSetCursor(bagRowTextX(), y + 31);
-      if (mv) { gfx->print("가르칠 기술: "); gfx->print(localizedMoveName(mv)); }
-      else gfx->print("현재 배울 수 있는 기술 없음");
+      char tmEffect[80];
+      if (mv) snprintf(tmEffect, sizeof(tmEffect), "가르칠 기술: %s", localizedMoveName(mv));
+      else snprintf(tmEffect, sizeof(tmEffect), "현재 배울 수 있는 기술 없음");
+      uiDrawLeftFit(tmEffect, bagRowTextX(), y + 28, BAG_ROW_W - 86, 2, 1);
       char cnt[8]; snprintf(cnt, sizeof(cnt), "x%u", extras.tmCount(t));
       uiSetTextSize(2); uiSetCursor(bagRowQtyX(cnt), y + 13); gfx->print(cnt);
     }
@@ -7835,9 +7867,11 @@ void drawMenu() {
     char lbl[28];
     menuRowLabel(i, lbl, sizeof(lbl));
     gfx->setTextColor(UI_INK);
-    uiSetTextSize(2);
-    uiSetCursor(CX - uiTextHalfWidth(lbl, 2), y + 10);
-    gfx->print(lbl);
+    // Menu labels are the primary navigation: prefer size 3 and shrink only
+    // when a live count or translation cannot fit the padded row.
+    uint8_t mts = uiFitTextSize(lbl, 3, 2, MENU_W - 64);
+    uiDrawCenteredFit(lbl, CX, y + (mts == 3 ? 6 : 10),
+                      MENU_W - 64, 3, 2);
   }
 }
 
@@ -7886,9 +7920,8 @@ void renderTrain() {
   }
 
   gfx->setTextColor(UI_INK);
-  uiSetTextSize(1);
-  uiSetCursor(CX - uiTextHalfWidth(T(S_TR_DEF_HINT), 1), TRAIN_Y + TRAIN_H - 22);
-  gfx->print(T(S_TR_DEF_HINT));
+  uiDrawCenteredFit(T(S_TR_DEF_HINT), CX, TRAIN_Y + TRAIN_H - 25,
+                    TRAIN_W - 48, 2, 1);
   gfx->flush();   // without this the panel never updates and the screen freezes
 }
 
@@ -7911,9 +7944,7 @@ void renderBox() {
     snprintf(sub, sizeof(sub), T(S_BOX_SWAP),
              p.empty() ? "-" : (p.nick[0] ? p.nick : localizedSpeciesName(p.dex)));
     gfx->setTextColor(UI_BAR_WARN);
-    uiSetTextSize(1);
-    uiSetCursor(CX - uiTextHalfWidth(sub, 1), 64);
-    gfx->print(sub);
+    uiDrawCenteredFit(sub, CX, 62, 390, 2, 1);
   }
   for (uint8_t i = 0; i < BOX_PER_PAGE; i++) {
     uint8_t idx = boxPage * BOX_PER_PAGE + i;
@@ -7926,21 +7957,18 @@ void renderBox() {
     gfx->drawRoundRect(x, y, PARTY_CELL_W, PARTY_CELL_H, 10, UI_INK);
     if (m.empty()) {
       gfx->setTextColor(0x8410);
-      uiSetTextSize(1);
-      uiSetCursor(x + PARTY_CELL_W / 2 - 18, y + PARTY_CELL_H / 2 - 4);
-      gfx->print(T(S_PARTY_EMPTY));
+      uiDrawCenteredFit(T(S_PARTY_EMPTY), x + PARTY_CELL_W / 2,
+                        y + PARTY_CELL_H / 2 - 8, PARTY_CELL_W - 16, 2, 1);
       continue;
     }
     const uint8_t *th = thumbs.get(m.dex);
     if (th) drawThumb(th, x - 14, y - 4, 2, false);
     gfx->setTextColor(UI_INK);
-    uiSetTextSize(1);
-    uiSetCursor(x + 52, y + 16);
-    gfx->print(m.nick[0] ? m.nick : localizedSpeciesName(m.dex));
+    const char *boxName = m.nick[0] ? m.nick : localizedSpeciesName(m.dex);
+    uiDrawLeftFit(boxName, x + 52, y + 10, PARTY_CELL_W - 60, 2, 1);
     char l[16];
     snprintf(l, sizeof(l), "Lv.%u%s", (unsigned)m.level, m.shiny ? " *" : "");
-    uiSetCursor(x + 52, y + 34);
-    gfx->print(l);
+    uiDrawLeftFit(l, x + 52, y + 34, PARTY_CELL_W - 60, 2, 1);
   }
   uint8_t pages = BOX_SLOTS / BOX_PER_PAGE;
   for (uint8_t i = 0; i < pages; i++) {
@@ -8426,14 +8454,13 @@ void drawHeader(const char *name, uint16_t nameColor, const char *msg) {
   constexpr int HEADER_TEXT_LIFT = -2;
 
   gfx->setTextColor(nameColor);
-  uiSetTextSize(3);
-  uiSetCursor(CX - uiTextHalfWidth(name, 3), 52 + HEADER_NAME_Y_NUDGE - HEADER_TEXT_LIFT);
-  gfx->print(name);
+  uiDrawCenteredFit(name, CX, 52 + HEADER_NAME_Y_NUDGE - HEADER_TEXT_LIFT,
+                    390, 3, 2);
 
   gfx->setTextColor(inkColor());
-  uiSetTextSize(2);
-  uiSetCursor(CX - uiTextHalfWidth(msg, 2), 90);
-  gfx->print(msg);
+  // Status is read constantly during play. Prefer the larger scale, but keep
+  // long Korean status messages on one line instead of clipping them.
+  uiDrawCenteredFit(msg, CX, 88, 410, 3, 2);
 }
 
 // animacion de la ceremonia (10s): despedida = reverencia con corazones y se
