@@ -55,6 +55,8 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/verify_training_rewards.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_signature_moves.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_instant_farewell.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_iv_candy_bag.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_vitality_training.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_reserved_species.py"
           # Training reward amounts/probabilities are intentionally validated only by verify_training_rewards.py.
           grep -n 'APPROVED_MEGA_COUNT = 36' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
@@ -186,6 +188,8 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/verify_training_rewards.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_signature_moves.py"
           python3 "$GITHUB_WORKSPACE/tools/verify_instant_farewell.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_iv_candy_bag.py"
+          python3 "$GITHUB_WORKSPACE/tools/verify_vitality_training.py"
           grep -q 'regional-form descendant evolution' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -q 'PRESENTATION_VARIANT_WORDS' "$GITHUB_WORKSPACE/tools/sync_pmd_catalog.py"
           grep -q 'canonicalizeRetiredVariant' "$GITHUB_WORKSPACE/pet.cpp"
