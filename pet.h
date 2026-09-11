@@ -25,14 +25,14 @@
 #define HEART_MS 1500UL
 #define EVOLVE_ANIM_MS 5200UL              // animacion de evolucion (mas larga = mas epica)
 #define CEREMONY_MS 10000UL                // duracion de la despedida en pantalla
-#define FAREWELL_AGE_MIN (6UL * 60)        // buen adios tras 6 h de juego (en forma final)
+#define FAREWELL_AGE_MIN 0UL               // immediate good farewell after hatching
 // Early retirement still delays the next creature, but the old v3.57 value
 // was 144 LEVELS (24 h / the former 10-min clock). With MAX_LEVEL=100 that
 // could make ordinary Lv.16-64 evolutions display as Lv.160+ and become
 // impossible. v3.61.9 normalises the debt to a modest 12 levels and the
 // effective gate is always clamped to MAX_LEVEL. Old saves carrying 144 are
 // migrated on load.
-#define EVO_PENALTY_LEVELS ((uint8_t)12)
+#define EVO_PENALTY_LEVELS ((uint8_t)0)
 #define RUNAWAY_TICKS 60                   // se escapa tras 1 h con TODO a cero
 // Night, by the RTC: midnight to 06:00. Auto-sleep needs BOTH: the screen off
 // AND this window.

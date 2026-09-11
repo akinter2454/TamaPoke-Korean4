@@ -1382,9 +1382,7 @@ uint16_t Pet::registeredCount() const {
 // forma final que ya cumplio su ciclo (6 h): lista para despedirse. La
 // despedida la dispara el usuario con el boton (no salta sola, para que la vea)
 bool Pet::canFarewellNow() const {
-  if (frozen) return false;     // a companion cannot be lost; that is the point
-  return !isEgg() && !sleeping && ceremony == CER_NONE &&
-         !dexHasEvolution(speciesId) && ageMinutes >= FAREWELL_AGE_MIN;
+  return canRetireNow();
 }
 
 // abandono total durante 1h: lista para escaparse. La dispara el usuario con el
@@ -1412,7 +1410,7 @@ bool Pet::canRetireNow() const {
 // penalty rather than applying it to a creature that never got retired.
 void Pet::startRetire() {
   if (!canRetireNow()) return;
-  retirePending = !canFarewellNow();
+  retirePending = false;
   save();
   startFarewell();
   // An early retire is NOT the good ending and must not pay like one.
@@ -1423,10 +1421,6 @@ void Pet::startRetire() {
   // Neutral instead, exactly like a release. The ceremony on screen is still the
   // farewell -- this was a choice the player made, not a neglected creature
   // walking out -- but the reward is not.
-  if (retirePending) {
-    lastEnd = CER_RELEASE;
-    save();
-  }
 }
 
 void Pet::startFarewell() {

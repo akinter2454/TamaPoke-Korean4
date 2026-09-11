@@ -191,12 +191,31 @@ void battleAct(Combatant &atk, Combatant &def, uint8_t mv, TurnLog &log) {
   }
 
   // --- damage, including multi-hit
+  if (m.effect == EF_STEAL_STAGE) {
+    bool stole = false;
+    const uint8_t coreStats[] = { SI_ATK, SI_DEF, SI_SPE };
+    for (uint8_t n = 0; n < sizeof(coreStats); ++n) {
+      uint8_t i = coreStats[n];
+      if (def.stage[i] > 0) {
+        int8_t raised = (int8_t)(atk.stage[i] + def.stage[i]);
+        atk.stage[i] = raised > 6 ? 6 : raised;
+        def.stage[i] = 0;
+        stole = true;
+      }
+    }
+    atk.stage[SI_SPA] = atk.stage[SI_ATK];
+    atk.stage[SI_SPD] = atk.stage[SI_DEF];
+    def.stage[SI_SPA] = def.stage[SI_ATK];
+    def.stage[SI_SPD] = def.stage[SI_DEF];
+    log.stoleStages = stole;
+  }
   uint8_t hits = (m.effect == EF_MULTI) ? (uint8_t)(2 + random(4)) : 1;
   uint16_t total = 0;
   log.effPct = typeEffVsDex(m.type, def.dex);
   if (log.effPct == 0) { log.immune = true; return; }
   for (uint8_t h = 0; h < hits; h++) {
-    bool crit = random(16) == 0;                 // ~6%, the series' base rate
+    bool crit = m.effect == EF_ALWAYS_CRIT ||
+                (m.effect == EF_HIGH_CRIT ? random(8) == 0 : random(16) == 0);
     uint16_t d = battleDamage(atk, def, mv, crit, (uint8_t)(217 + random(39)));
     total += d;
     if (crit) log.crit = true;
@@ -207,8 +226,18 @@ void battleAct(Combatant &atk, Combatant &def, uint8_t mv, TurnLog &log) {
   log.damage = total;
 
   if (m.effect == EF_RECOIL && m.param > 0) hurt(atk, total / m.param ? total / m.param : 1);
-  if (m.effect == EF_DRAIN && m.param > 0) heal(atk, total * m.param / 100);
+  if (m.effect == EF_DRAIN && m.param > 0) {
+    uint16_t oldHp = atk.hp;
+    heal(atk, total * m.param / 100);
+    log.healed = atk.hp > oldHp;
+  }
   if (m.effect == EF_RECHARGE) atk.recharge = true;
+  if (m.effect == EF_STAGE_HIT && (m.target == TG_SELF || !def.fainted())) {
+    Combatant &t = (m.target == TG_SELF) ? atk : def;
+    applyStages(t, m.statMask, m.stages);
+    log.stageMask = m.statMask;
+    log.stageDelta = m.stages;
+  }
 
   // --- secondary ailment. Never overwrites an existing one, and confusion is
   // tracked separately so it can stack with a real status, as in the games.

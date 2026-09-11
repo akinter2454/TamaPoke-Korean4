@@ -24,6 +24,10 @@ enum : uint8_t {
   EF_HEAL,        // param = % de vitalidad maxima curada
   EF_RECHARGE,    // pierde el turno siguiente, expuesto
   EF_CHARGE,      // turno 1 carga; param 1 = invulnerable mientras
+  EF_STAGE_HIT,   // damaging move: apply statMask/stages after a hit
+  EF_ALWAYS_CRIT, // every successful hit is critical
+  EF_HIGH_CRIT,   // increased critical-hit rate
+  EF_STEAL_STAGE, // steal the foe's positive stat stages before damage
 };
 
 // Mascara de stats para EF_STAGE: un solo delta se aplica a
@@ -145,8 +149,42 @@ enum MoveId : uint8_t {
   MV_SOFT_BOILED,
   MV_STRUGGLE,
   MV_DARK_PULSE,
+  MV_VOLT_TACKLE,
+  MV_SACRED_FIRE,
+  MV_AEROBLAST,
+  MV_ORIGIN_PULSE,
+  MV_PRECIPICE_BLADES,
+  MV_ROAR_OF_TIME,
+  MV_SPACIAL_REND,
+  MV_SHADOW_FORCE,
+  MV_PSYSTRIKE,
+  MV_FUSION_FLARE,
+  MV_FUSION_BOLT,
+  MV_SECRET_SWORD,
+  MV_GEOMANCY,
+  MV_OBLIVION_WING,
+  MV_SUNSTEEL_STRIKE,
+  MV_MOONGEIST_BEAM,
+  MV_SPECTRAL_THIEF,
+  MV_DRUM_BEATING,
+  MV_PYRO_BALL,
+  MV_SNIPE_SHOT,
+  MV_FLOWER_TRICK,
+  MV_TORCH_SONG,
+  MV_AQUA_STEP,
+  MV_LUMINA_CRASH,
+  MV_THUNDER_CAGE,
+  MV_DRAGON_ENERGY,
+  MV_DIRE_CLAW,
+  MV_SPRINGTIDE_STORM,
+  MV_POPULATION_BOMB,
+  MV_SALT_CURE,
+  MV_ARMOR_CANNON,
+  MV_BITTER_BLADE,
+  MV_KOWTOW_CLEAVE,
+  MV_MAKE_IT_RAIN,
 };
-#define MOVE_COUNT 90
+#define MOVE_COUNT 124
 
 static const MoveEntry MOVE_TBL[MOVE_COUNT] = {
   { "-", T_NORMAL, MC_STATUS, 0, 0, EF_NONE, 0, 0, 0, TG_SELF, AIL_NONE, 0 },  // 0: sin usar
@@ -239,6 +277,40 @@ static const MoveEntry MOVE_TBL[MOVE_COUNT] = {
   { "SOFT-BOILED", T_NORMAL, MC_STATUS, 0, 0, EF_HEAL, 50, 0, 0, TG_SELF, AIL_NONE, 0 },  // 87
   { "STRUGGLE", T_NORMAL, MC_PHYS, 50, 0, EF_RECOIL, 4, 0, 0, TG_FOE, AIL_NONE, 0 },  // 88
   { "DARK PULSE", T_DARK, MC_SPEC, 80, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 },  // 89
+  { "VOLT TACKLE", T_ELECTRIC, MC_PHYS, 120, 100, EF_RECOIL, 3, 0, 0, TG_FOE, AIL_NONE, 0 }, // 90
+  { "SACRED FIRE", T_FIRE, MC_PHYS, 100, 95, EF_NONE, 0, 0, 0, TG_FOE, AIL_BURN, 50 }, // 91
+  { "AEROBLAST", T_FLYING, MC_SPEC, 100, 95, EF_HIGH_CRIT, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 92
+  { "ORIGIN PULSE", T_WATER, MC_SPEC, 110, 85, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 93
+  { "PRECIPICE BLADES", T_GROUND, MC_PHYS, 120, 85, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 94
+  { "ROAR OF TIME", T_DRAGON, MC_SPEC, 150, 90, EF_RECHARGE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 95
+  { "SPACIAL REND", T_DRAGON, MC_SPEC, 100, 95, EF_HIGH_CRIT, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 96
+  { "SHADOW FORCE", T_GHOST, MC_PHYS, 120, 100, EF_CHARGE, 1, 0, 0, TG_FOE, AIL_NONE, 0 }, // 97
+  { "PSYSTRIKE", T_PSYCHIC, MC_SPEC, 100, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 98
+  { "FUSION FLARE", T_FIRE, MC_SPEC, 100, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 99
+  { "FUSION BOLT", T_ELECTRIC, MC_PHYS, 100, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 100
+  { "SECRET SWORD", T_FIGHTING, MC_SPEC, 85, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 101
+  { "GEOMANCY", T_FAIRY, MC_STATUS, 0, 0, EF_STAGE, 0, ST_SPA | ST_SPD | ST_SPE, 2, TG_SELF, AIL_NONE, 0 }, // 102
+  { "OBLIVION WING", T_FLYING, MC_SPEC, 80, 100, EF_DRAIN, 75, 0, 0, TG_FOE, AIL_NONE, 0 }, // 103
+  { "SUNSTEEL STRIKE", T_STEEL, MC_PHYS, 100, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 104
+  { "MOONGEIST BEAM", T_GHOST, MC_SPEC, 100, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 105
+  { "SPECTRAL THIEF", T_GHOST, MC_PHYS, 90, 100, EF_STEAL_STAGE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 106
+  { "DRUM BEATING", T_GRASS, MC_PHYS, 80, 100, EF_STAGE_HIT, 0, ST_SPE, -1, TG_FOE, AIL_NONE, 0 }, // 107
+  { "PYRO BALL", T_FIRE, MC_PHYS, 120, 90, EF_NONE, 0, 0, 0, TG_FOE, AIL_BURN, 10 }, // 108
+  { "SNIPE SHOT", T_WATER, MC_SPEC, 80, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 109
+  { "FLOWER TRICK", T_GRASS, MC_PHYS, 70, 0, EF_ALWAYS_CRIT, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 110
+  { "TORCH SONG", T_FIRE, MC_SPEC, 80, 100, EF_STAGE_HIT, 0, ST_SPA, 1, TG_SELF, AIL_NONE, 0 }, // 111
+  { "AQUA STEP", T_WATER, MC_PHYS, 80, 100, EF_STAGE_HIT, 0, ST_SPE, 1, TG_SELF, AIL_NONE, 0 }, // 112
+  { "LUMINA CRASH", T_PSYCHIC, MC_SPEC, 80, 100, EF_STAGE_HIT, 0, ST_SPD, -2, TG_FOE, AIL_NONE, 0 }, // 113
+  { "THUNDER CAGE", T_ELECTRIC, MC_SPEC, 80, 90, EF_NONE, 0, 0, 0, TG_FOE, AIL_PARA, 20 }, // 114
+  { "DRAGON ENERGY", T_DRAGON, MC_SPEC, 150, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 115
+  { "DIRE CLAW", T_POISON, MC_PHYS, 80, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_POISON, 50 }, // 116
+  { "SPRINGTIDE STORM", T_FAIRY, MC_SPEC, 100, 80, EF_NONE, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 117
+  { "POPULATION BOMB", T_NORMAL, MC_PHYS, 20, 90, EF_MULTI, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 118
+  { "SALT CURE", T_ROCK, MC_PHYS, 40, 100, EF_NONE, 0, 0, 0, TG_FOE, AIL_POISON, 100 }, // 119
+  { "ARMOR CANNON", T_FIRE, MC_SPEC, 120, 100, EF_STAGE_HIT, 0, ST_DEF | ST_SPD, -1, TG_SELF, AIL_NONE, 0 }, // 120
+  { "BITTER BLADE", T_FIRE, MC_PHYS, 90, 100, EF_DRAIN, 50, 0, 0, TG_FOE, AIL_NONE, 0 }, // 121
+  { "KOWTOW CLEAVE", T_DARK, MC_PHYS, 85, 0, EF_NEVER_MISS, 0, 0, 0, TG_FOE, AIL_NONE, 0 }, // 122
+  { "MAKE IT RAIN", T_STEEL, MC_SPEC, 120, 100, EF_STAGE_HIT, 0, ST_SPA, -1, TG_SELF, AIL_NONE, 0 }, // 123
 };
 
 // Learnsets en formato CSR: la especie n ocupa
@@ -2407,11 +2479,58 @@ static inline uint8_t supplementalLearnCount(int16_t dex) {
   return n;
 }
 
+// Hand-picked species moves. DEX_NATDEX keeps alternate forms on the same
+// species rule while leaving the generated legacy table untouched.
+static inline uint8_t signatureLearnEntry(int16_t dex, uint8_t idx,
+                                           SupplementalLearnEntry &e) {
+  if (idx || dex < 1 || dex > DEX_COUNT) return 0;
+  switch (DEX_NATDEX[dex]) {
+    case 25: case 26: e = { MV_VOLT_TACKLE, 45 }; break;
+    case 150: e = { MV_PSYSTRIKE, 70 }; break;
+    case 249: e = { MV_AEROBLAST, 60 }; break;
+    case 250: e = { MV_SACRED_FIRE, 60 }; break;
+    case 382: e = { MV_ORIGIN_PULSE, 60 }; break;
+    case 383: e = { MV_PRECIPICE_BLADES, 60 }; break;
+    case 483: e = { MV_ROAR_OF_TIME, 70 }; break;
+    case 484: e = { MV_SPACIAL_REND, 70 }; break;
+    case 487: e = { MV_SHADOW_FORCE, 70 }; break;
+    case 643: e = { MV_FUSION_FLARE, 64 }; break;
+    case 644: e = { MV_FUSION_BOLT, 64 }; break;
+    case 647: e = { MV_SECRET_SWORD, 55 }; break;
+    case 716: e = { MV_GEOMANCY, 65 }; break;
+    case 717: e = { MV_OBLIVION_WING, 65 }; break;
+    case 791: e = { MV_SUNSTEEL_STRIKE, 55 }; break;
+    case 792: e = { MV_MOONGEIST_BEAM, 55 }; break;
+    case 802: e = { MV_SPECTRAL_THIEF, 60 }; break;
+    case 812: e = { MV_DRUM_BEATING, 46 }; break;
+    case 815: e = { MV_PYRO_BALL, 46 }; break;
+    case 818: e = { MV_SNIPE_SHOT, 46 }; break;
+    case 908: e = { MV_FLOWER_TRICK, 46 }; break;
+    case 911: e = { MV_TORCH_SONG, 46 }; break;
+    case 914: e = { MV_AQUA_STEP, 46 }; break;
+    case 956: e = { MV_LUMINA_CRASH, 42 }; break;
+    case 894: e = { MV_THUNDER_CAGE, 60 }; break;
+    case 895: e = { MV_DRAGON_ENERGY, 60 }; break;
+    case 903: e = { MV_DIRE_CLAW, 50 }; break;
+    case 905: e = { MV_SPRINGTIDE_STORM, 55 }; break;
+    case 925: e = { MV_POPULATION_BOMB, 40 }; break;
+    case 934: e = { MV_SALT_CURE, 35 }; break;
+    case 936: e = { MV_ARMOR_CANNON, 48 }; break;
+    case 937: e = { MV_BITTER_BLADE, 48 }; break;
+    case 983: e = { MV_KOWTOW_CLEAVE, 52 }; break;
+    case 1000: e = { MV_MAKE_IT_RAIN, 56 }; break;
+    default: return 0;
+  }
+  return 1;
+}
+
 // Public learnset accessors: old table first, supplemental level-up entries
 // after it. All callers (relearn, level-up queue, move picker, AI setup) now see
 // one consistent pool.
 static inline uint8_t learnCount(int16_t dex) {
-  uint16_t n = (uint16_t)legacyLearnCount(dex) + supplementalLearnCount(dex);
+  SupplementalLearnEntry e{};
+  uint16_t n = (uint16_t)legacyLearnCount(dex) + supplementalLearnCount(dex) +
+               signatureLearnEntry(dex, 0, e);
   return (uint8_t)(n > 255 ? 255 : n);
 }
 
@@ -2421,6 +2540,11 @@ static inline uint8_t learnMove(int16_t dex, uint8_t i) {
   if (i < base) return legacyLearnMove(dex, i);
   SupplementalLearnEntry e{};
   uint8_t si = (uint8_t)(i - base);
+  uint8_t supp = supplementalLearnCount(dex);
+  if (si >= supp) {
+    if (signatureLearnEntry(dex, (uint8_t)(si - supp), e)) return e.move;
+    return MV_STRUGGLE;
+  }
   if (DEX_NATDEX[dex] > 809) {
     if (post809SupplementEntry(dex, si, e)) return e.move;
   } else if (legacySupplementEntry(dex, si, e)) return e.move;
@@ -2433,6 +2557,11 @@ static inline uint8_t learnLevel(int16_t dex, uint8_t i) {
   if (i < base) return legacyLearnLevel(dex, i);
   SupplementalLearnEntry e{};
   uint8_t si = (uint8_t)(i - base);
+  uint8_t supp = supplementalLearnCount(dex);
+  if (si >= supp) {
+    if (signatureLearnEntry(dex, (uint8_t)(si - supp), e)) return e.level;
+    return 0;
+  }
   if (DEX_NATDEX[dex] > 809) {
     if (post809SupplementEntry(dex, si, e)) return e.level;
   } else if (legacySupplementEntry(dex, si, e)) return e.level;

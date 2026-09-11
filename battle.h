@@ -51,6 +51,7 @@ struct TurnLog {
   bool hurtSelf = false;   // confusion
   bool charged = false;    // spent the turn winding up
   bool healed = false;
+  bool stoleStages = false;
   bool targetFainted = false;
 };
 

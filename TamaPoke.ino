@@ -4897,6 +4897,10 @@ static void btlNarrate(const Combatant &actor, const Combatant &target, const Tu
   if (lg.missed) { btlSay(T(S_BTL_MISS), btlDisplayName(actor)); return; }
   if (lg.immune) { btlSay(T(S_BTL_IMMUNE)); return; }
   if (lg.crit) btlSay(T(S_BTL_CRIT));
+  if (lg.stoleStages) btlSay("상대의 능력 상승을 빼앗았다!");
+  if (lg.stageDelta > 0) btlSay("능력이 올랐다!");
+  else if (lg.stageDelta < 0) btlSay("상대의 능력이 떨어졌다!");
+  if (lg.healed) btlSay("HP를 회복했다!");
   if (lg.damage && lg.effPct > 100) btlSay(T(S_BTL_SUPER));
   else if (lg.damage && lg.effPct < 100) btlSay(T(S_BTL_WEAK));
   if (lg.inflicted) {
@@ -5659,22 +5663,20 @@ void renderBattle() {
     gfx->fillRoundRect(BTL_GRID_X, BTL_GRID_Y, 328, BTL_CELL_H * 2 + 8, 12, UI_WHITE);
     gfx->drawRoundRect(BTL_GRID_X, BTL_GRID_Y, 328, BTL_CELL_H * 2 + 8, 12, UI_INK);
     gfx->setTextColor(UI_TRACK);
-    uiSetTextSize(1);
     const char *w = T(S_LAN_WAITFOE);
-    uiSetCursor(CX - uiTextHalfWidth(w, 1), BTL_GRID_Y + 40);
-    gfx->print(w);
+    uiDrawCenteredFit(w, CX, BTL_GRID_Y + 36, 300, 2, 1);
   } else if (btlMsgCount) {            // narration takes over the menu area
     gfx->fillRoundRect(BTL_GRID_X, BTL_GRID_Y, 328, BTL_CELL_H * 2 + 8, 12, UI_WHITE);
     gfx->drawRoundRect(BTL_GRID_X, BTL_GRID_Y, 328, BTL_CELL_H * 2 + 8, 12, UI_INK);
     gfx->setTextColor(UI_INK);
-    uiSetTextSize(1);
     for (uint8_t i = 0; i < btlMsgCount && i < 4; i++) {
-      uiSetCursor(CX - uiTextHalfWidth(btlMsg[i], 1), BTL_GRID_Y + 14 + i * 18);
-      gfx->print(btlMsg[i]);
+      // Battle narration is essential feedback. Prefer size 2 for short and
+      // medium Korean sentences; long names/messages safely fall back to 1.
+      uiDrawCenteredFit(btlMsg[i], CX, BTL_GRID_Y + 8 + i * 19,
+                        306, 2, 1);
     }
     gfx->setTextColor(UI_TRACK);
-    uiSetCursor(CX - 30, BTL_GRID_Y + 84);
-    gfx->print("tap...");
+    uiDrawCenteredFit("터치", CX, BTL_GRID_Y + 84, 100, 1, 1);
   } else if (btlMenu == 0) {
     // FIGHT across the top, then POKEMON and RUN side by side. Three full-width
     // rows do not fit: the panel is round, and at that depth the chord is only
@@ -5706,13 +5708,11 @@ void renderBattle() {
       gfx->fillRoundRect(x, y, BTL_CELL_W, BTL_CELL_H, 10, usable ? UI_BG_DAY : UI_TRACK);
       gfx->drawRoundRect(x, y, BTL_CELL_W, BTL_CELL_H, 10, usable ? UI_INK : 0x8410);
       gfx->setTextColor(usable ? UI_INK : 0x8410);
-      uiSetTextSize(1);
-      uiSetCursor(x + 10, y + 10);
-      gfx->print(btlDisplayName(m));
+      uiDrawLeftFit(btlDisplayName(m), x + 10, y + 4,
+                    BTL_CELL_W - 20, 2, 1);
       char hp[20];
       snprintf(hp, sizeof(hp), "%u/%u", m.hp, m.maxHp);
-      uiSetCursor(x + 10, y + 28);
-      gfx->print(hp);
+      uiDrawLeftFit(hp, x + 10, y + 25, BTL_CELL_W - 20, 2, 1);
     }
   } else {
     drawBtlBack();
@@ -5724,9 +5724,8 @@ void renderBattle() {
       gfx->drawRoundRect(x, y, BTL_CELL_W, BTL_CELL_H, 10, UI_INK);
       if (!validMove) continue;
       gfx->setTextColor(UI_INK);
-      uiSetTextSize(1);
-      uiSetCursor(x + 10, y + 12);
-      gfx->print(localizedMoveName(mv));
+      uiDrawLeftFit(localizedMoveName(mv), x + 10, y + 4,
+                    BTL_CELL_W - 20, 2, 1);
       // Same chip as the move list: in a fight the type IS the decision, and
       // grey 6px text was the least visible thing on the busiest screen.
       int cw = drawTypeChip(x + 10, y + 26, MOVE_TBL[mv].type);
@@ -7840,11 +7839,7 @@ static void menuRowLabel(int i, char *out, size_t n) {
     case 2: snprintf(out, n, "오늘의 미션"); break;
     case 3: snprintf(out, n, "모험·탐험"); break;
     case 4: snprintf(out, n, "설정·시계"); break;
-    case 5:
-      if (!pet.canRetireNow()) snprintf(out, n, "좋은 이별 / 은퇴");
-      else if (pet.canFarewellNow()) snprintf(out, n, "좋은 이별");
-      else snprintf(out, n, "은퇴");
-      break;
+    case 5: snprintf(out, n, "좋은 이별"); break;
     default: snprintf(out, n, "닫기"); break;
   }
 }
@@ -8578,14 +8573,9 @@ void drawChoiceDialog() {
     q = T(S_EVO_Q); o1 = T(S_EVO_TAP); o2 = T(S_EVO_KEEP);
     c1 = UI_BAR_BAD; t1 = UI_WHITE; c2 = UI_TRACK; t2 = UI_INK;
   } else if (choiceKind == 3) {   // voluntary ending, opened only from menu
-    // Once the full-life condition has been earned, this row becomes a GOOD
-    // farewell rather than an early retirement. Before then it is still an
-    // early retire and clearly shows its penalty. Nothing here is auto-offered.
-    if (pet.retireIsFree()) q = T(S_FAR_Q);
-    else q = T(S_RETIRE_Q);
+    q = T(S_FAR_Q);
     o1 = T(S_FAR_GO); o2 = T(S_FAR_STAY);
     c1 = UI_BAR_WARN; t1 = UI_INK; c2 = UI_BAR_OK; t2 = UI_WHITE;
-    if (!pet.retireIsFree()) { sub1 = T(S_RETIRE_COST); sub2 = T(S_RETIRE_GONE); }
   } else {                // despedida
     q = T(S_FAR_Q); o1 = T(S_FAR_GO); o2 = T(S_FAR_STAY);
     c1 = UI_BAR_WARN; t1 = UI_INK; c2 = UI_BAR_OK; t2 = UI_WHITE;
@@ -9081,7 +9071,7 @@ const char *eggMsg() {
 
 const char *statusMsg() {
   if (pet.evolving()) return T(S_EVOLVING);
-  if (bathUntil) return "Splish splash!";  // onomatopeya universal
+  if (bathUntil) return "첨벙첨벙!";
   if (pet.sleeping) return "Zzz...";
   if (pet.eating()) return T(S_EATING);
   if (pet.showHeart()) return T(S_LIKES);
