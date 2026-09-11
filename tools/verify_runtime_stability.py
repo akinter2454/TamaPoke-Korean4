@@ -64,7 +64,7 @@ need('if (playing != MUS_NONE) gSyn.allOff();' in audio,
 # cannot steal an invisible tap.
 ui=body(ino,'uiCurrentScreen')
 on=body(ino,'onTap')
-need(ui.find('if (gameOpen || sackOpen || spdOpen)') < ui.find('if (pet.hasLearnOffer())'),
+need(ui.find('if (gameOpen || sackOpen || spdOpen || hpOpen)') < ui.find('if (pet.hasLearnOffer())'),
      'training: uiCurrentScreen gives learn offer priority over active minigame')
 need(ui.find('if (trainOpen)') < ui.find('if (pet.hasLearnOffer())'),
      'training: uiCurrentScreen gives learn offer priority over training menu')
@@ -73,7 +73,7 @@ need(on.find('if (trainOpen)') < on.find('if (pet.hasLearnOffer())'),
 
 # Training persistence: pet state must queue, not synchronously commit, and
 # GameExtras must consolidate mission/reward writes.
-for fn in ('playResult','trainSpeed','trainStrength'):
+for fn in ('playResult','trainSpeed','trainStrength','trainVitality'):
     b=body(pet,fn)
     need('pendingSave = true;' in b,f'training: {fn} does not defer pet save')
     # rewardTraining remains intentionally synchronous for gym battle rewards.
@@ -89,9 +89,9 @@ need('trainingPersistPhase' in ino and 'extras.flushPendingSave();' in ino,
 need('if (!trainingPersistPhase && pet.savePending()' in ino and
      'if (!trainingPersistPhase && extras.savePending()' in ino,
      'training: generic idle saver can bypass staggered persistence')
-need('bool trainingPersistSafe = (!gameOpen && !sackOpen && !spdOpen)' in ino and
+need('bool trainingPersistSafe = (!gameOpen && !sackOpen && !spdOpen && !hpOpen)' in ino and
      '(gameOpen && gameOverUntil)' in ino and '(sackOpen && sackOverUntil)' in ino and
-     '(spdOpen && spdOverUntil)' in ino,
+     '(spdOpen && spdOverUntil)' in ino and '(hpOpen && hpOverUntil)' in ino,
      'training: static result screens are not eligible for early durable persistence')
 
 # Preserve frame cadence; stabilization must not lower FPS.

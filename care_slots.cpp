@@ -87,6 +87,8 @@ bool CareSlots::validateSnapshot(CareSnapshot &s) const {
   if (s.ivDef > 31) s.ivDef = 31;
   if (s.ivSpe > 31) s.ivSpe = 31;
   if (s.ivHp > 31) s.ivHp = 31;
+  uint8_t hpCap = (uint8_t)(70 + (30 * (uint16_t)s.ivHp) / 31);
+  if (s.trHp > hpCap) s.trHp = hpCap;
   s.berryKnown = !!s.berryKnown;
   s.shiny = !!s.shiny;
   s.sleeping = !!s.sleeping;

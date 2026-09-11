@@ -148,6 +148,7 @@ struct CareSnapshot {
   // 0 = legacy v3.58 layout (eggByRegion[7] was ALL), 1 = v3.61 layout.
   // Appended at the END so older raw snapshots keep every preceding offset.
   uint8_t regionSchema = 0;
+  uint8_t trHp = 0;  // appended: older snapshots default to zero
 };
 
 class Pet {
@@ -165,7 +166,7 @@ public:
   // tope de entrenamiento (trMaxFor): un individuo
   // mediocre no solo empieza peor, es que no puede llegar tan lejos.
   uint8_t ivAtk = 16, ivDef = 16, ivSpe = 16, ivHp = 16;
-  uint8_t trAtk = 0, trDef = 0, trSpe = 0;
+  uint8_t trAtk = 0, trDef = 0, trSpe = 0, trHp = 0;
   bool berryKnown = false;  // ya descubrio su baya favorita
   bool shiny = false;       // variante de color rara (se sortea en el huevo)
   uint32_t ageMinutes = 0;
@@ -222,6 +223,7 @@ public:
   // Reaction test: its own trainer, so the ball game can go back to being purely
   // about joy instead of doubling as a stat grind.
   uint8_t trainSpeed(uint16_t hits);
+  uint8_t trainVitality(uint16_t score); // heart-ring endurance game
   // What beating a gym leader is worth. Random WHICH stat, but only among the
   // ones with room left -- a random grant that landed on an already-capped stat
   // would silently evaporate, which reads as a bug rather than as luck. Writes
@@ -235,7 +237,7 @@ public:
   uint16_t atkStat() const;
   uint16_t defStat() const;
   uint16_t speStat() const;
-  uint16_t vitStat() const;  // vitalidad (bHp): no se entrena, solo IV y nivel
+  uint16_t vitStat() const;  // HP base + IV + level + vitality training
   // Legacy SpA/SpD accessors remain for save/data compatibility. TamaPoke's
   // v3.61.6 casual battle rules use one Attack and one Defence regardless of
   // move category, so no separate special IVs or training are exposed.
@@ -360,6 +362,7 @@ public:
   uint8_t trMaxAtk() const { return trMaxFor(ivAtk); }
   uint8_t trMaxDef() const { return trMaxFor(ivDef); }
   uint8_t trMaxSpe() const { return trMaxFor(ivSpe); }
+  uint8_t trMaxHp() const { return trMaxFor(ivHp); }
   void play();
   void toggleLight();
   bool isNightHour() const;

@@ -32,6 +32,7 @@ struct PartyMon {
   // Appended at the END of the struct on purpose -- Party::begin() migrates
   // older, shorter blobs by length, and that only works if nothing moved.
   uint8_t moves[MOVE_SLOTS] = { 0, 0, 0, 0 };
+  uint8_t trHp = 0;  // append-only for backward-compatible bank migration
 
   bool empty() const { return dex < 1; }
 };

@@ -453,6 +453,10 @@ void treasureTap(int16_t x, int16_t y);
 void renderRival();
 void rivalTap(int16_t x, int16_t y);
 void startRivalBattle();
+void startVitalityGame();
+void renderVitality();
+void vitalityTap(int16_t x, int16_t y);
+void leaveVitality();
 void renderRandomEvent();
 static void extraRewardLabel(char *out, size_t n, uint8_t kind, uint8_t id, uint8_t count);
 void startTowerBattle();
@@ -548,6 +552,14 @@ uint16_t spdCombo = 0, spdBestCombo = 0;
 uint8_t spdGain = 0;
 bool spdNewHi = false;
 bool spdGold = false;                  // rare bonus lightning target
+
+bool hpOpen = false;
+uint32_t hpRoundStarted = 0, hpFeedbackUntil = 0, hpOverUntil = 0;
+uint8_t hpRound = 0, hpFeedback = 0, hpGain = 0;
+uint16_t hpScore = 0;
+uint8_t hpIvReward = XITEM_COUNT, hpIvRewardCount = 0;
+bool hpShinyBerryReward = false;
+#define HP_ROUNDS 12
 
 bool gymOpen = false;
 bool gymHard = false;   // which ladder the list is showing
@@ -801,9 +813,9 @@ static inline bool btlCellHit(int i, int16_t x, int16_t y) {
          y >= BTL_HIT_Y0(i) && y <= BTL_HIT_Y1(i);
 }
 #define TRAIN_X 73
-#define TRAIN_Y 96
+#define TRAIN_Y 52
 #define TRAIN_W 320
-#define TRAIN_H 274
+#define TRAIN_H 370
 #define TRAIN_ROW_H 56
 #define TRAIN_ROW_GAP 8
 #define TRAIN_ROW_Y(i) (TRAIN_Y + 54 + (i) * (TRAIN_ROW_H + TRAIN_ROW_GAP))
@@ -1128,10 +1140,11 @@ void loop() {
   // static result screen is also safe, so the earned berry/mission progress is
   // committed before the player dismisses the result instead of living only in
   // RAM for several seconds. Active gameplay still never writes flash here.
-  bool trainingPersistSafe = (!gameOpen && !sackOpen && !spdOpen) ||
+  bool trainingPersistSafe = (!gameOpen && !sackOpen && !spdOpen && !hpOpen) ||
                              (gameOpen && gameOverUntil) ||
                              (sackOpen && sackOverUntil) ||
-                             (spdOpen && spdOverUntil);
+                             (spdOpen && spdOverUntil) ||
+                             (hpOpen && hpOverUntil);
   if (trainingPersistSafe && trainingPersistPhase &&
       (int32_t)(now - trainingPersistAfter) >= 0) {
     if (trainingPersistPhase == 1) {
@@ -1161,7 +1174,7 @@ void loop() {
   bool extrasCanEvent = !battleOpen && !pickOpen && !lanOpen && !gymOpen &&
                         !partyOpen && !galleryOpen && !cardOpen && !playerOpen &&
                         !clockOpen && !kbOpen && !trainOpen && !gameOpen &&
-                        !sackOpen && !spdOpen && !bagOpen && !missionOpen &&
+                        !sackOpen && !spdOpen && !hpOpen && !bagOpen && !missionOpen &&
                         !adventureOpen && !exploreOpen && !bossOpen &&
                         !towerOpen && !treasureOpen && !rivalOpen && !menuOpen;
   extras.update(pet, extrasCanEvent);
@@ -1195,7 +1208,7 @@ void loop() {
   // next frame immediately after it finishes -- no extra 20/28/36 ms penalty and
   // no skipped deadline. This avoids the deliberate frame drops introduced by
   // the v3.61.2 heavy-scene pacing while preserving touch responsiveness.
-  bool activeAnimated = gameOpen || sackOpen || spdOpen || battleOpen;
+  bool activeAnimated = gameOpen || sackOpen || spdOpen || hpOpen || battleOpen;
   const uint32_t targetFrameMs = activeAnimated ? 85UL : 100UL;
   static uint32_t nextFrameAt = 0;
 
@@ -1617,6 +1630,14 @@ void handleTouch() {
     wasPressed = spdOpen ? pressed : false;
     return;
   }
+  if (hpOpen) {
+    if (pressed && !wasPressed) {
+      lastInteract = millis();
+      vitalityTap(x, y);
+    }
+    wasPressed = hpOpen ? pressed : false;
+    return;
+  }
 
   // saco de entrenamiento: cada toque cuenta al instante (aporrear rapido)
   if (sackOpen) {
@@ -1722,6 +1743,7 @@ void onSwipeV(int dir) {
   if (gameOpen) { leaveGame(); return; }
   if (sackOpen) { leaveSack(); return; }
   if (spdOpen) { leaveSpeed(); return; }
+  if (hpOpen) { leaveVitality(); return; }
   if (galleryOpen) {
     if (galleryDetail) { galleryDetail = 0; galleryPmd.unload(); galleryDirty = true; return; }
     galleryRegion = (uint8_t)((galleryRegion + (dir > 0 ? 1 : GAL_REGIONS - 1)) % GAL_REGIONS);
@@ -2120,6 +2142,7 @@ void onSwipe(int dir) {
   }
   if (gameOpen) { leaveGame(); return; }   // swipe out, keeping what you earned
   if (spdOpen) { leaveSpeed(); return; }
+  if (hpOpen) { leaveVitality(); return; }
   if (kbOpen || clockOpen) return;
   if (cardOpen) {  // dentro de la ficha: cambiar entre las 4 paginas
     int p = (int)cardPage + (dir > 0 ? -1 : 1);  // izquierda avanza
@@ -2273,7 +2296,7 @@ void onTap(int16_t x, int16_t y) {
     bool inPanel = (x >= TRAIN_X && x <= TRAIN_X + TRAIN_W &&
                     y >= TRAIN_Y && y <= TRAIN_Y + TRAIN_H);
     if (!inPanel) { trainOpen = false; return; }   // tap outside = back to the pet
-    for (int i = 0; i < 3; i++) {   // all three train something now
+    for (int i = 0; i < 4; i++) {
       int ry = TRAIN_ROW_Y(i);
       if (x < TRAIN_X + 18 || x > TRAIN_X + TRAIN_W - 18) continue;
       if (y < ry || y > ry + TRAIN_ROW_H) continue;
@@ -2281,7 +2304,8 @@ void onTap(int16_t x, int16_t y) {
       trainOpen = false;
       if (i == 0) startSack();
       else if (i == 1) startSpeedGame();
-      else startGame();          // gauge timing trains DEF
+      else if (i == 2) startGame();
+      else startVitalityGame();
       return;
     }
     return;
@@ -3393,7 +3417,7 @@ uint8_t uiCurrentScreen() {
   if (gymOpen) return gymPick ? SCR_GYMPICK : SCR_GYM;
   // Match render()/touch priority exactly. A level-up move offer can appear
   // while a training session is open; it must wait until training closes.
-  if (gameOpen || sackOpen || spdOpen) return SCR_GAME;
+  if (gameOpen || sackOpen || spdOpen || hpOpen) return SCR_GAME;
   if (trainOpen) return SCR_TRAIN;
   if (pet.hasLearnOffer()) return SCR_LEARN;
   if (menuOpen) return SCR_MENU;
@@ -3550,6 +3574,10 @@ void render() {
   }
   if (spdOpen) {
     renderSpeed();
+    return;
+  }
+  if (hpOpen) {
+    renderVitality();
     return;
   }
   if (trainOpen) {
@@ -3808,7 +3836,7 @@ static int defenseBlockHalf() {
 static uint8_t grantTrainingIvBerry(uint8_t primary, bool completed, uint8_t &count) {
   count = 0;
   if (!completed) return XITEM_COUNT;
-  uint8_t id = random(100) < 10 ? XITEM_IV_HP : primary;
+  uint8_t id = primary;
   count = random(100) < 30 ? 9 : 5;
   extras.giveItem(id, count);
   return id;
@@ -7133,8 +7161,11 @@ void renderBag() {
   if (bagTab == 0) {
     // Earned consumables only. Original unlimited food stays in the quick menu.
     if (bagPage == 0) {
+      // Put the four repeat-use IV candies on page 1 so training rewards are
+      // immediately reachable when the bag opens.
+      const uint8_t ivs[4] = { XITEM_IV_ATK, XITEM_IV_DEF, XITEM_IV_SPE, XITEM_IV_HP };
       for (int i = 0; i < 4; i++) {
-        uint8_t id = (uint8_t)i;
+        uint8_t id = ivs[i];
         int y = BAG_ROW_Y(i) - 20;
         bool have = extras.itemCount(id) > 0;
         const int rx = bagRowBaseX();
@@ -7148,11 +7179,11 @@ void renderBag() {
       }
     } else {
       // Page 2 keeps the original next-egg Shiny Charm, utility items and the
-      // v3.63.2 current-Pokemon Shiny Berry. Page 3 is the four IV berries.
+      // current-Pokemon Shiny Berry. Page 3 holds ordinary growth items.
       // Existing item IDs 0..10 never move; the new berry is appended.
       const uint8_t utility[4] = { XITEM_SHINY, XITEM_ENERGY, XITEM_GOLD_CROWN, XITEM_SHINY_BERRY };
-      const uint8_t ivs[4] = { XITEM_IV_ATK, XITEM_IV_DEF, XITEM_IV_SPE, XITEM_IV_HP };
-      const uint8_t *ids = bagPage == 1 ? utility : ivs;
+      const uint8_t growth[4] = { XITEM_ATK, XITEM_DEF, XITEM_SPE, XITEM_VITAL };
+      const uint8_t *ids = bagPage == 1 ? utility : growth;
       uint8_t rows = 4;
       for (uint8_t i = 0; i < rows; i++) {
         uint8_t id = ids[i];
@@ -7230,17 +7261,23 @@ void bagTap(int16_t x, int16_t y) {
     if (x < rx || x > rx + BAG_ROW_W || y < ry || y > ry + BAG_ROW_H) continue;
     if (bagTab == 0) {
       int id = -1;
-      if (bagPage == 0) id = i;
+      if (bagPage == 0) {
+        const int ids[4] = { XITEM_IV_ATK, XITEM_IV_DEF, XITEM_IV_SPE, XITEM_IV_HP };
+        id = ids[i];
+      }
       else if (bagPage == 1) {
         const int ids[4] = { XITEM_SHINY, XITEM_ENERGY, XITEM_GOLD_CROWN, XITEM_SHINY_BERRY };
         id = ids[i];
       } else if (bagPage == 2) {
-        const int ids[4] = { XITEM_IV_ATK, XITEM_IV_DEF, XITEM_IV_SPE, XITEM_IV_HP };
+        const int ids[4] = { XITEM_ATK, XITEM_DEF, XITEM_SPE, XITEM_VITAL };
         id = ids[i];
       }
       if (id < 0 || id >= XITEM_COUNT || !extras.useItem((uint8_t)id, pet)) { sfxPlay(SFX_DENY); return; }
       if (id != XITEM_SHINY) pet.itemEatReaction();
-      bagOpen = false;                 // one consumable per opening: feedback stays visible
+      // IV candies are commonly used several times in a row. Keep page 1 open
+      // and refresh its counts/IV effects; only the explicit Close button exits.
+      bool ivCandy = id >= XITEM_IV_ATK && id <= XITEM_IV_HP;
+      if (!ivCandy) bagOpen = false;
       sfxPlay((id == XITEM_SHINY || id == XITEM_SHINY_BERRY) ? SFX_MEDAL : SFX_EAT);
       return;
     }
@@ -7385,7 +7422,7 @@ static bool combatantFromCareSlot(uint8_t slot, Combatant &c, uint32_t nowEpoch)
   c = Combatant();
   c.dex = m.speciesId;
   c.level = lvl;
-  c.maxHp = personalityApply(careCalcStat(DEX_TBL[m.speciesId].bHp, m.ivHp, lvl, 10), pers, PST_HP);
+  c.maxHp = personalityApply(careCalcStat(DEX_TBL[m.speciesId].bHp, m.ivHp, lvl, (uint8_t)(10 + m.trHp)), pers, PST_HP);
   c.hp = c.maxHp;
   c.base[SI_ATK] = personalityApply(careCalcStat(DEX_TBL[m.speciesId].bAtk, m.ivAtk, lvl, m.trAtk), pers, PST_ATK);
   c.base[SI_DEF] = personalityApply(careCalcStat(DEX_TBL[m.speciesId].bDef, m.ivDef, lvl, m.trDef), pers, PST_DEF);
@@ -7871,6 +7908,105 @@ void drawMenu() {
   }
 }
 
+// ---------- 체력 훈련: 심장 고리 타이밍 ----------
+
+static int vitalityRingRadius(uint32_t now) {
+  uint32_t t = (now - hpRoundStarted) % 1800UL;
+  if (t > 900) t = 1800 - t;
+  return 42 + (int)(t * 88UL / 900UL);
+}
+
+static void finishVitality() {
+  if (hpOverUntil) return;
+  extras.beginBatch();
+  hpGain = pet.trainVitality(hpScore);
+  bool rewardReady = hpRound >= HP_ROUNDS;
+  hpIvReward = grantTrainingIvBerry(XITEM_IV_HP, rewardReady, hpIvRewardCount);
+  hpShinyBerryReward = grantTrainingShinyBerry(rewardReady);
+  extras.endBatch(false);
+  queueTrainingPersist();
+  sfxPlay(hpShinyBerryReward || hpIvRewardCount > 1 ? SFX_MEDAL : SFX_LEVEL);
+  hpOverUntil = millis() + 3500UL;
+}
+
+void startVitalityGame() {
+  if (pet.isEgg() || pet.sleeping || pet.ceremony) return;
+  hpOpen = true;
+  hpRoundStarted = millis();
+  hpFeedbackUntil = hpOverUntil = 0;
+  hpRound = hpFeedback = hpGain = 0;
+  hpScore = 0;
+  hpIvReward = XITEM_COUNT;
+  hpIvRewardCount = 0;
+  hpShinyBerryReward = false;
+}
+
+void leaveVitality() {
+  if (hpOpen && !hpOverUntil) finishVitality();
+  hpOpen = false;
+}
+
+void vitalityTap(int16_t x, int16_t y) {
+  (void)x; (void)y;
+  if (hpOverUntil) { hpOpen = false; return; }
+  uint32_t now = millis();
+  if (hpFeedbackUntil && (int32_t)(hpFeedbackUntil - now) > 0) return;
+  int r = vitalityRingRadius(now);
+  int dist = abs(r - 92);
+  hpFeedback = dist <= 7 ? 3 : (dist <= 17 ? 2 : (dist <= 30 ? 1 : 4));
+  if (hpFeedback < 4) hpScore += hpFeedback;
+  sfxPlay(hpFeedback == 3 ? SFX_MEDAL : hpFeedback == 2 ? SFX_LEVEL : hpFeedback == 1 ? SFX_PLAY : SFX_DENY);
+  hpRound++;
+  hpFeedbackUntil = now + 480UL;
+  hpRoundStarted = now;
+  if (hpRound >= HP_ROUNDS) finishVitality();
+}
+
+void renderVitality() {
+  uint32_t now = millis();
+  drawGaugeBackdrop(currentSceneType());
+  if (hpOverUntil) {
+    if (now > hpOverUntil) { hpOpen = false; return; }
+    gfx->fillRoundRect(62, 82, 342, 300, 24, UI_WHITE);
+    gfx->drawRoundRect(62, 82, 342, 300, 24, UI_INK);
+    gfx->setTextColor(UI_INK); uiSetTextSize(3);
+    uiSetCursor(CX-uiTextHalfWidth("체력 훈련 종료!",3),108); gfx->print("체력 훈련 종료!");
+    char b[72]; snprintf(b,sizeof(b),"점수 %u / 36",(unsigned)hpScore);
+    uiSetTextSize(4); uiSetCursor(CX-uiTextHalfWidth(b,4),164); gfx->print(b);
+    snprintf(b,sizeof(b),"체력 +%u",(unsigned)hpGain);
+    gfx->setTextColor(UI_BAR_OK); uiSetTextSize(3); uiSetCursor(CX-uiTextHalfWidth(b,3),224); gfx->print(b);
+    if (hpIvReward < XITEM_COUNT && hpIvRewardCount) {
+      snprintf(b,sizeof(b),"훈련 보상: %s x%u",extras.itemNameKo(hpIvReward),(unsigned)hpIvRewardCount);
+      uiDrawCenteredFit(b,CX,274,318,2,1);
+    }
+    if (hpShinyBerryReward) {
+      snprintf(b,sizeof(b),"희귀 보상: %s x1",extras.itemNameKo(XITEM_SHINY_BERRY));
+      gfx->setTextColor(UI_BAR_WARN); uiDrawCenteredFit(b,CX,304,318,2,1);
+    }
+    gfx->setTextColor(UI_INK); uiDrawCenteredFit("터치해서 돌아가기",CX,344,300,2,1);
+    gfx->flush(); return;
+  }
+  if (hpFeedbackUntil && (int32_t)(now - hpFeedbackUntil) >= 0) {
+    hpFeedbackUntil = 0;
+    hpFeedback = 0;
+    hpRoundStarted = now;
+  }
+  int r = vitalityRingRadius(now);
+  gfx->setTextColor(UI_INK); uiSetTextSize(3);
+  uiSetCursor(CX-uiTextHalfWidth("체력 훈련",3),54); gfx->print("체력 훈련");
+  gfx->fillCircle(CX,CY,101,UI_BAR_OK);
+  gfx->fillCircle(CX,CY,81,UI_BG_DAY);
+  gfx->drawCircle(CX,CY,r,UI_BAR_BAD);
+  gfx->drawCircle(CX,CY,r+2,UI_BAR_BAD);
+  gfx->fillCircle(CX-20,CY-8,28,UI_BAR_BAD); gfx->fillCircle(CX+20,CY-8,28,UI_BAR_BAD);
+  gfx->fillTriangle(CX-47,CY,CX+47,CY,CX,CY+55,UI_BAR_BAD);
+  char b[32]; snprintf(b,sizeof(b),"%u/%u  점수 %u",(unsigned)hpRound,(unsigned)HP_ROUNDS,(unsigned)hpScore);
+  gfx->setTextColor(UI_INK); uiSetTextSize(2); uiSetCursor(CX-uiTextHalfWidth(b,2),350); gfx->print(b);
+  const char *hint = hpFeedback == 3 ? "PERFECT!" : hpFeedback == 2 ? "GOOD!" : hpFeedback == 1 ? "OK!" : hpFeedback == 4 ? "MISS" : "초록 고리에 맞춰 터치!";
+  uiDrawCenteredFit(hint,CX,388,360,2,1);
+  gfx->flush();
+}
+
 // ---------- training submenu (5th icon) ----------
 
 // Bars here show progress toward the IV-capped ceiling, not a raw stat: 100%
@@ -7892,11 +8028,11 @@ void renderTrain() {
   uiSetCursor(CX - uiTextHalfWidth(T(S_TRAIN), 2), TRAIN_Y + 20);
   gfx->print(T(S_TRAIN));
 
-  const char *lbl[3] = { T(S_TR_ATK), T(S_TR_SPE), T(S_TR_DEF) };
-  uint8_t cur[3] = { pet.trAtk, pet.trSpe, pet.trDef };
-  uint8_t cap[3] = { pet.trMaxAtk(), pet.trMaxSpe(), pet.trMaxDef() };
+  const char *lbl[4] = { T(S_TR_ATK), T(S_TR_SPE), T(S_TR_DEF), "체력 훈련" };
+  uint8_t cur[4] = { pet.trAtk, pet.trSpe, pet.trDef, pet.trHp };
+  uint8_t cap[4] = { pet.trMaxAtk(), pet.trMaxSpe(), pet.trMaxDef(), pet.trMaxHp() };
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
     int y = TRAIN_ROW_Y(i);
     bool passive = false;      // every row opens a game now, DEF included
     gfx->fillRoundRect(TRAIN_X + 18, y, TRAIN_W - 36, TRAIN_ROW_H, 12,

@@ -37,6 +37,8 @@ static void sanitizeMon(PartyMon &m) {
   if (m.ivDef > 31) m.ivDef = 31;
   if (m.ivSpe > 31) m.ivSpe = 31;
   if (m.ivHp > 31) m.ivHp = 31;
+  uint8_t hpCap = (uint8_t)(70 + (30 * (uint16_t)m.ivHp) / 31);
+  if (m.trHp > hpCap) m.trHp = hpCap;
   m.shiny = !!m.shiny;
   m.nick[sizeof(m.nick)-1] = 0;
   for (uint8_t i=0;i<MOVE_SLOTS;i++) if (m.moves[i] >= MOVE_COUNT) m.moves[i]=0;
@@ -230,7 +232,7 @@ uint16_t Party::speOf(const PartyMon &m) const {
   return m.empty() ? 0 : personalityApply(calcStat(DEX_TBL[m.dex].bSpe, m.ivSpe, m.level, m.trSpe), persOf(m), PST_SPE);
 }
 uint16_t Party::vitOf(const PartyMon &m) const {
-  return m.empty() ? 0 : personalityApply(calcStat(DEX_TBL[m.dex].bHp, m.ivHp, m.level, 10), persOf(m), PST_HP);
+  return m.empty() ? 0 : personalityApply(calcStat(DEX_TBL[m.dex].bHp, m.ivHp, m.level, (uint8_t)(10 + m.trHp)), persOf(m), PST_HP);
 }
 uint16_t Party::spaOf(const PartyMon &m) const {
   return m.empty() ? 0 : personalityApply(calcStat(DEX_TBL[m.dex].bSpA, m.ivAtk, m.level, m.trAtk), persOf(m), PST_SPA);

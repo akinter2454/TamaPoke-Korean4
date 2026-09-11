@@ -6,7 +6,7 @@
 #define CARE_SLOT_COUNT 3
 // v3.57.5: version 5 appends the sleeping-growth remainder. Older snapshots
 // default that tail byte to zero, so their visible level remains unchanged.
-#define CARE_SLOT_VERSION 5
+#define CARE_SLOT_VERSION 6
 
 // Three simultaneously-aging raising slots. Only one is rendered/interactive
 // at a time; the other two are parked snapshots whose elapsed time is applied

@@ -54,14 +54,14 @@ static void loadBlob(Preferences &p, const char *key, void *dst, size_t n) {
 // only within one living creature, so each live-care slot stores an IV+shiny
 // signature and is restored only when that exact slot/signature still matches.
 #define PROGRESS_GUARD_MAGIC 0x47503436UL  // "GP46"
-#define PROGRESS_GUARD_VERSION 1
+#define PROGRESS_GUARD_VERSION 2
 #define PROGRESS_GUARD_SLOTS 3
 
 struct GuardTrain46 {
   uint8_t valid;
   uint8_t ivAtk, ivDef, ivSpe, ivHp;
   uint8_t shiny;
-  uint8_t trAtk, trDef, trSpe;
+  uint8_t trAtk, trDef, trSpe, trHp;
 };
 
 struct ProgressGuard46 {
@@ -125,6 +125,7 @@ static bool writeProgressGuard46(const Pet &pet, uint8_t activeSlot) {
     if (pet.trAtk > t.trAtk) t.trAtk = pet.trAtk;
     if (pet.trDef > t.trDef) t.trDef = pet.trDef;
     if (pet.trSpe > t.trSpe) t.trSpe = pet.trSpe;
+    if (pet.trHp > t.trHp) t.trHp = pet.trHp;
   }
 
   g.crc = guardCrc46(g);
@@ -160,12 +161,15 @@ static bool mergeProgressGuard46(Pet &pet, uint8_t activeSlot) {
       uint8_t a = t.trAtk > pet.trAtk ? t.trAtk : pet.trAtk;
       uint8_t d = t.trDef > pet.trDef ? t.trDef : pet.trDef;
       uint8_t e = t.trSpe > pet.trSpe ? t.trSpe : pet.trSpe;
+      uint8_t h = t.trHp > pet.trHp ? t.trHp : pet.trHp;
       if (a > pet.trMaxAtk()) a = pet.trMaxAtk();
       if (d > pet.trMaxDef()) d = pet.trMaxDef();
       if (e > pet.trMaxSpe()) e = pet.trMaxSpe();
+      if (h > pet.trMaxHp()) h = pet.trMaxHp();
       if (a != pet.trAtk) { pet.trAtk = a; changed = true; }
       if (d != pet.trDef) { pet.trDef = d; changed = true; }
       if (e != pet.trSpe) { pet.trSpe = e; changed = true; }
+      if (h != pet.trHp) { pet.trHp = h; changed = true; }
     }
   }
   return changed;
@@ -475,7 +479,7 @@ void Pet::reviveFrom(const PartyMon &m) {
   starterPick = false;
   shiny = m.shiny != 0;
   ivAtk = m.ivAtk; ivDef = m.ivDef; ivSpe = m.ivSpe; ivHp = m.ivHp;
-  trAtk = m.trAtk; trDef = m.trDef; trSpe = m.trSpe;
+  trAtk = m.trAtk; trDef = m.trDef; trSpe = m.trSpe; trHp = m.trHp;
   for (int i = 0; i < MOVE_SLOTS; i++) moves[i] = m.moves[i];
   // Restore the banked level directly into the awake progression clock.
   ageMinutes = (uint32_t)(m.level ? m.level - 1 : 0) * MINUTES_PER_LEVEL;
@@ -523,6 +527,7 @@ void Pet::snapshotForParty() {
   endedMon.trAtk = trAtk;
   endedMon.trDef = trDef;
   endedMon.trSpe = trSpe;
+  endedMon.trHp = trHp;
   endedMon.shiny = shiny ? 1 : 0;
   for (int i = 0; i < MOVE_SLOTS; i++) endedMon.moves[i] = moves[i];  // frozen too
   strncpy(endedMon.nick, nick, sizeof(endedMon.nick) - 1);
@@ -1115,7 +1120,7 @@ uint16_t Pet::speStat() const {
 uint16_t Pet::vitStat() const {
   if (isEgg()) return 0;
   uint8_t p = personalityIdFor(speciesId, ivAtk, ivDef, ivSpe, ivHp);
-  return personalityApply(calcStat(DEX_TBL[speciesId].bHp, ivHp, level(), 10), p, PST_HP);
+  return personalityApply(calcStat(DEX_TBL[speciesId].bHp, ivHp, level(), (uint8_t)(10 + trHp)), p, PST_HP);
 }
 uint16_t Pet::spaStat() const {
   if (isEgg()) return 0;
@@ -1461,7 +1466,7 @@ void Pet::hatch() {
   // IV del individuo (cada crianza es unica). Se tiran ANTES de resetear el
   // vinculo a proposito: el careBonus que los empuja es el del bicho anterior.
   rollIVs();
-  trAtk = trDef = trSpe = 0;
+  trAtk = trDef = trSpe = trHp = 0;
   goodTicks = 0;
   berryKnown = false;
   bond = 0;          // vinculo, medallas y nombre son del individuo
@@ -1586,8 +1591,8 @@ uint8_t Pet::playResult(uint16_t score) {
   // DEF gauge game: BLOCK/GOOD/PERFECT award 1/2/3 score. Keep the
   // roughly-two-score-per-training-point pace and the same session ceiling.
   uint8_t before = trDef;
-  uint16_t rawGain = score / 2;
-  uint8_t gain = rawGain > 18 ? 18 : (uint8_t)rawGain;
+  uint16_t rawGain = (uint16_t)score * 2 / 3;
+  uint8_t gain = rawGain > 24 ? 24 : (uint8_t)rawGain;
   uint16_t v = (uint16_t)trDef + gain;
   trDef = v > trMaxDef() ? trMaxDef() : (uint8_t)v;
   gain = trDef - before;
@@ -1640,8 +1645,8 @@ uint8_t Pet::rewardTraining(uint8_t amount, uint8_t &which) {
 
 uint8_t Pet::trainSpeed(uint16_t hits) {
   if (ceremony != CER_NONE || isEgg()) return 0;
-  uint8_t gain = hits / 2;          // ~2 reactions = 1 point
-  if (gain > 18) gain = 18;         // same per-session ceiling as the bag
+  uint8_t gain = (uint16_t)hits * 2 / 3;
+  if (gain > 24) gain = 24;
   uint8_t before = trSpe;
   uint8_t v = trSpe + gain;
   trSpe = v > trMaxSpe() ? trMaxSpe() : v;   // el IV pone el techo
@@ -1669,8 +1674,8 @@ uint8_t Pet::trainSpeed(uint16_t hits) {
 
 uint8_t Pet::trainStrength(uint16_t hits) {
   if (ceremony != CER_NONE || isEgg()) return 0;
-  uint8_t gain = hits / 4;          // ~4 golpes = 1 punto de entrenamiento
-  if (gain > 18) gain = 18;         // tope por sesion: la FUE se forja a fuego lento
+  uint8_t gain = hits / 3;
+  if (gain > 24) gain = 24;
   uint8_t before = trAtk;
   uint8_t v = trAtk + gain;
   trAtk = v > trMaxAtk() ? trMaxAtk() : v;  // el IV pone el techo
@@ -1693,6 +1698,26 @@ uint8_t Pet::trainStrength(uint16_t hits) {
     extras.missionAction(MIS_TRAIN, 1, *this);
   }
   // v3.62.9: avoid a full NVS commit inside the active minigame frame.
+  pendingSave = true;
+  return gain;
+}
+
+uint8_t Pet::trainVitality(uint16_t score) {
+  if (ceremony != CER_NONE || isEgg()) return 0;
+  uint16_t raw = (uint16_t)score * 2 / 3;
+  uint8_t gain = raw > 24 ? 24 : (uint8_t)raw;
+  uint8_t before = trHp;
+  trHp = (uint8_t)min<uint16_t>((uint16_t)trHp + gain, trMaxHp());
+  gain = trHp - before;
+  energy = dropTo(energy, 6, 8);
+  fullness = dropTo(fullness, 4, 5);
+  joy = clamp100(joy + 5);
+  addBond((uint8_t)(2 + gain / 6));
+  registerCare();
+  if (score > 0) {
+    extras.missionAction(MIS_PLAY, 1, *this);
+    extras.missionAction(MIS_TRAIN, 1, *this);
+  }
   pendingSave = true;
   return gain;
 }
@@ -1833,6 +1858,7 @@ void Pet::save() {
   criticalOk &= prefs.putUChar("tatk", trAtk) == 1;
   criticalOk &= prefs.putUChar("tdef", trDef) == 1;
   criticalOk &= prefs.putUChar("tspe", trSpe) == 1;
+  criticalOk &= prefs.putUChar("thp", trHp) == 1;
   prefs.putBytes("mvs", moves, sizeof(moves));
   prefs.putUChar("mvlv", lastLearnLevel);
   prefs.putUChar("avtr", avatar);
@@ -1914,10 +1940,12 @@ void Pet::load() {
   trAtk = prefs.getUChar("tatk", 0);
   trDef = prefs.getUChar("tdef", 0);
   trSpe = prefs.getUChar("tspe", 0);
+  trHp = prefs.getUChar("thp", 0);
   // un guardado antiguo puede traer entrenamiento por encima del nuevo tope
   if (trAtk > trMaxAtk()) trAtk = trMaxAtk();
   if (trDef > trMaxDef()) trDef = trMaxDef();
   if (trSpe > trMaxSpe()) trSpe = trMaxSpe();
+  if (trHp > trMaxHp()) trHp = trMaxHp();
   berryKnown = prefs.getBool("bk", false);
   shiny = prefs.getBool("shy", false);
   eggShiny = prefs.getBool("eshy", false);
@@ -2045,7 +2073,7 @@ void Pet::captureCareSnapshot(CareSnapshot &o, uint32_t nowEpoch) const {
   o.fullness = fullness; o.joy = joy; o.energy = energy; o.hygiene = hygiene;
   o.poops = poops; o.weight = weight;
   o.ivAtk = ivAtk; o.ivDef = ivDef; o.ivSpe = ivSpe; o.ivHp = ivHp;
-  o.trAtk = trAtk; o.trDef = trDef; o.trSpe = trSpe;
+  o.trAtk = trAtk; o.trDef = trDef; o.trSpe = trSpe; o.trHp = trHp;
   o.berryKnown = berryKnown; o.shiny = shiny; o.sleeping = sleeping; o.frozen = frozen;
   o.ageMinutes = ageMinutes; o.speciesId = speciesId; o.careMistakes = careMistakes; o.bond = bond;
   memcpy(o.nick, nick, sizeof(o.nick));
@@ -2074,7 +2102,7 @@ bool Pet::restoreCareSnapshot(const CareSnapshot &o, uint32_t nowEpoch) {
   hygiene = o.hygiene > 100 ? 100 : o.hygiene;
   poops = o.poops; weight = o.weight;
   ivAtk = o.ivAtk; ivDef = o.ivDef; ivSpe = o.ivSpe; ivHp = o.ivHp;
-  trAtk = o.trAtk; trDef = o.trDef; trSpe = o.trSpe;
+  trAtk = o.trAtk; trDef = o.trDef; trSpe = o.trSpe; trHp = o.trHp;
   berryKnown = o.berryKnown; shiny = o.shiny; sleeping = o.sleeping; frozen = o.frozen;
   ageMinutes = o.ageMinutes;
   levelMinutes = (o.levelMinutes == LEVEL_MINUTES_UNSET)
